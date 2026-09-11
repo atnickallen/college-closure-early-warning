@@ -72,11 +72,28 @@ College Scorecard is used only when `DATA_GOV_API_KEY` or `SCORECARD_API_KEY`
 is set. WICHE high-school graduate trends are used only if
 `data/external/wiche_hs_graduates.csv` exists (`state_abbr`, `year`, `hs_graduates`).
 
+## Verified live on this agent VM (2026-09-11)
+
+| Step | Result |
+| --- | --- |
+| Urban ingest (cached from Milestone 1–2) | Directory 2004–2024; 92,257 panel rows |
+| NCES finance | **2018–2022** parsed (`F1819`–`F2223` × F1A/F2/F3); **29,613** rows. `F2324_*` 404 (unpublished) |
+| Parent/child rollup | **3,028** child rows inherited parent totals |
+| FSA Urban composite | **37,589** rows, **2006–2016** |
+| Official FSA composite / HCM / Closed School | studentaid.gov timed out from this VM; Partner Connect `.xls` URLs 404. Labels use IPEDS status / `date_closed` only |
+| Scorecard / WICHE | Skipped (no API key / no static CSV) |
+| Labels h=3 | **3,703** positives / 50,315 complete *risk-universe* rows; last complete year 2024 |
+| Model | XGBoost test **PR-AUC 0.190** vs naive composite 0.055 / 5y-decline 0.123; recall@50 **0.099** vs 0.009 / 0.045. **Beats both baselines** on the 2020–2021 test window |
+| Watch list | Score year **2022** (latest right-censored year with finance; 2023–24 are 100% `miss_finance` because NCES zips are unpublished) |
+
+Unit tests: `PYTHONPATH=src python3 -m pytest tests -q` — **17 passed**.
+
 ## Outputs (committed)
 
 | File | Contents |
 | --- | --- |
-| [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit scores for the latest right-censored year |
+| [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit scores for the latest right-censored year that still has published finance |
+| [`outputs/watchlist_nonprofit.csv`](outputs/watchlist_nonprofit.csv) | Same ranking restricted to private nonprofits |
 | [`outputs/top50_report.html`](outputs/top50_report.html) | Evidence cards (FTE trend, discount, margins, composite, HCM, top drivers) |
 | [`outputs/model_card.md`](outputs/model_card.md) | Metrics, recall@K, caveats |
 | [`outputs/model_metrics.json`](outputs/model_metrics.json) | Machine-readable split metrics and baseline comparison |

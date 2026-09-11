@@ -21,8 +21,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 def recall_at_k(y_true: np.ndarray, scores: np.ndarray, k: int) -> float:
-    y_true = np.asarray(y_true)
-    scores = np.asarray(scores)
+    y_true = np.asarray(y_true, dtype=float)
+    scores = np.asarray(scores, dtype=float)
     n = len(y_true)
     if n == 0 or k <= 0:
         return float("nan")
@@ -33,7 +33,13 @@ def recall_at_k(y_true: np.ndarray, scores: np.ndarray, k: int) -> float:
 
 
 def available_features(df: pd.DataFrame) -> list[str]:
-    return [c for c in MODEL_FEATURE_COLUMNS if c in df.columns]
+    cols = []
+    for c in MODEL_FEATURE_COLUMNS:
+        if c not in df.columns:
+            continue
+        if pd.to_numeric(df[c], errors="coerce").notna().any():
+            cols.append(c)
+    return cols
 
 
 def _xy(df: pd.DataFrame, features: list[str], label: str) -> tuple[pd.DataFrame, np.ndarray]:
@@ -64,11 +70,11 @@ def _eval_block(y: np.ndarray, scores: np.ndarray, ks: list[int]) -> dict:
 
 def naive_scores(df: pd.DataFrame) -> dict[str, np.ndarray]:
     comp = pd.to_numeric(df["composite_score"], errors="coerce") if "composite_score" in df.columns else pd.Series(np.nan, index=df.index)
-    naive_comp = (comp < 1.0).fillna(False).astype(float).to_numpy()
+    naive_comp = (comp < 1.0).fillna(False).astype(np.float64).to_numpy()
     if "enr_decline_5y_gt30" in df.columns:
-        naive_enr = pd.to_numeric(df["enr_decline_5y_gt30"], errors="coerce").fillna(0).to_numpy()
+        naive_enr = pd.to_numeric(df["enr_decline_5y_gt30"], errors="coerce").fillna(0).astype(np.float64).to_numpy()
     else:
-        naive_enr = np.zeros(len(df))
+        naive_enr = np.zeros(len(df), dtype=np.float64)
     return {"composite_lt_1": naive_comp, "enr_decline_5y_gt30": naive_enr}
 
 

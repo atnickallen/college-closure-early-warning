@@ -93,10 +93,18 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
     if not shap_rows:
         shap_rows = "<li>SHAP unavailable for this row</li>"
 
+    def _flag(v) -> bool:
+        try:
+            if v is None or pd.isna(v):
+                return False
+        except (TypeError, ValueError):
+            return False
+        return bool(v)
+
     hcm = []
-    if bool(row.get("hcm2_current")):
+    if _flag(row.get("hcm2_current")):
         hcm.append("HCM2")
-    if bool(row.get("hcm1_current")):
+    if _flag(row.get("hcm1_current")):
         hcm.append("HCM1")
     hcm_txt = ", ".join(hcm) if hcm else "not on current HCM list (or list unavailable)"
 
@@ -153,8 +161,10 @@ def _html_page(cards: str, n: int, score_year: int, caveats: str) -> str:
   <div class="banner">
     <strong>Not a verdict.</strong> Ranked elevated-risk indicators from a statistical model
     trained on historical institution-year features. A high score means the school resembles
-    past closures/mergers on trailing observables — not that it will close. IPEDS finance
-    and composite scores lag; HCM is a current snapshot and was not used as a training feature.
+    past closures/mergers on trailing observables — not that it will close. The score year
+    is the latest <em>right-censored</em> year with published IPEDS finance (later directory
+    years are omitted because unpublished finance looks like pre-closure missingness).
+    Composite scores lag; HCM is a current snapshot and was not used as a training feature.
   </div>
   {cards}
   <h2>Limitations</h2>
@@ -293,7 +303,19 @@ def run_report(settings: Settings) -> dict:
         ymax = int(scored["year"].max())
         current = scored.loc[scored["year"] == ymax].copy()
         LOGGER.warning("No right-censored rows; scoring latest year %s", ymax)
+    # Do not rank a year where finance is still unpublished for everyone —
+    # miss_finance / NA ratios then look like pre-closure missingness.
     score_year = int(current["year"].max())
+    if "miss_finance" in current.columns:
+        rates = current.groupby("year")["miss_finance"].mean()
+        usable = rates[rates < 0.50]
+        if len(usable):
+            score_year = int(usable.index.max())
+            LOGGER.info(
+                "Primary watch-list year %s (latest right-censored year with finance; miss_finance=%.1f%%)",
+                score_year,
+                100 * float(usable.loc[score_year]),
+            )
     current = current.loc[current["year"] == score_year].copy()
     current = current.sort_values("risk_score", ascending=False)
 
@@ -310,16 +332,9 @@ def run_report(settings: Settings) -> dict:
     watch_cols = [c for c in WATCHLIST_COLS if c in current.columns]
     watch = current[watch_cols].head(500)
     watch.to_csv(out_dir / "watchlist.csv", index=False)
-
-    # Optional exploratory public ranking (not the primary product)
-    if "inst_control" in scored.columns:
-        pub = scored.loc[pd.to_numeric(scored["inst_control"], errors="coerce") == 1].copy()
-        if not pub.empty:
-            pub_year = int(pub["year"].max())
-            pub = pub.loc[pub["year"] == pub_year].sort_values("risk_score", ascending=False)
-            pub_cols = [c for c in watch_cols if c in pub.columns]
-            pub[pub_cols].head(200).to_csv(out_dir / "public_watchlist.csv", index=False)
-            LOGGER.info("Wrote exploratory public_watchlist.csv (not the primary risk universe)")
+    nonprofit = current.loc[pd.to_numeric(current.get("inst_control"), errors="coerce") == 2, watch_cols].head(250)
+    if not nonprofit.empty:
+        nonprofit.to_csv(out_dir / "watchlist_nonprofit.csv", index=False)
 
     shap_global = metrics.get("shap_global") or []
     top_n = 50

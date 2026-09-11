@@ -36,7 +36,13 @@ def download_file(
     for attempt in range(1, max_retries + 1):
         try:
             LOGGER.info("Downloading %s", url)
-            with sess.get(url, headers=DEFAULT_HEADERS, timeout=timeout, stream=True, allow_redirects=True) as response:
+            with sess.get(
+                url,
+                headers=DEFAULT_HEADERS,
+                timeout=timeout,
+                stream=True,
+                allow_redirects=True,
+            ) as response:
                 if response.status_code == 404:
                     LOGGER.warning("404 %s", url)
                     return None
@@ -64,7 +70,8 @@ def download_first(urls: list[str], dest_dir: Path, stem: str) -> Path | None:
     for url in urls:
         name = url.rstrip("/").split("/")[-1] or stem
         dest = dest_dir / name
-        path = download_file(url, dest)
+        # Stale FSA URLs often hang; fail fast and try the next candidate.
+        path = download_file(url, dest, timeout=(8, 20), max_retries=1, backoff=1.0)
         if path is not None:
             return path
     LOGGER.warning("No download succeeded for %s. Tried: %s", stem, urls)

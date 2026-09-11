@@ -14,15 +14,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _year_from_closedat(series: pd.Series) -> pd.Series:
-    dates = pd.to_datetime(series, errors="coerce")
-    years = dates.dt.year
-    # Also accept bare years like "2019" or "05/2018"
     as_str = series.astype("string")
-    extracted = as_str.str.extract(r"(19|20)\d{2}", expand=False)
-    # extract of (19|20) only gets prefix — do a full 4-digit extract
+    as_str = as_str.replace({"-1": pd.NA, "-2": pd.NA, "-3": pd.NA, "1": pd.NA, "2": pd.NA, "3": pd.NA})
+    dates = pd.to_datetime(as_str, errors="coerce")
+    years = dates.dt.year
     extracted = as_str.str.extract(r"((?:19|20)\d{2})", expand=False)
     extracted_y = pd.to_numeric(extracted, errors="coerce")
-    return years.where(years.notna(), extracted_y)
+    out = years.where(years.notna(), extracted_y)
+    return out.where((out >= 1980) & (out <= 2035))
 
 
 def institution_event_years(
