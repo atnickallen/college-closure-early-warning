@@ -1,0 +1,154 @@
+# College Closure Early-Warning Pipeline — Phase 0 config
+# Years follow IPEDS "fall of academic year" convention (2023 = 2023-24).
+
+years:
+  start: 2004
+  # null = latest year advertised on Urban Institute /api/v1/api-endpoints/
+  end: null
+
+label_horizon_years: 3
+label_horizons: [2, 3]
+labels:
+  mergers_are_positive: true
+  # Off by default: filtered-universe exits are not closures. IPEDS status +
+  # date_closed + FSA Closed School are the primary sources.
+  use_disappearance: false
+
+model:
+  train_end: 2016
+  val_years: [2017, 2018, 2019]
+  test_years: [2020, 2021]
+  recall_at_k: [25, 50, 100]
+  random_seed: 42
+
+paths:
+  raw: data/raw
+  processed: data/processed
+  outputs: outputs
+
+filters:
+  degree_granting: 1
+  # Urban IPEDS directory field is inst_control (user-facing alias: control)
+  control: [1, 2, 3]  # 1 public, 2 private nonprofit, 3 for-profit
+  # Title IV participating codes (applied only when title_iv_indicator is reported)
+  title_iv_participating: [1, 2, 4, 8]
+  drop_admin_sector: 0
+  drop_nondegree_inst_category: [5, 6]
+  drop_name_patterns:
+    - system office
+    - system administration
+    - central office
+    - administrative office
+    - administrative unit
+
+urban:
+  api_base: https://educationdata.urban.org/api/v1
+  csv_base: https://educationdata.urban.org/csv
+  request_timeout_seconds: 120
+  max_retries: 4
+  retry_backoff_seconds: 4
+
+# Verified 2026-09 against Urban api-endpoints + api-downloads.
+# CSV names come from https://educationdata.urban.org/api/v1/api-downloads/
+# Prefer a single all-years CSV when it is smaller/faster than paging the API.
+# Yearly fall-enrollment-race CSVs are ~110MB each; filtered API totals are faster.
+sources:
+  directory:
+    required: true
+    endpoint: directory
+    endpoint_id: 1
+    method: csv
+    csv_file: colleges_ipeds_directory.csv
+    csv_dir: ipeds
+  fall_enrollment:
+    required: true
+    endpoint: fall-enrollment
+    endpoint_id: 13
+    method: api_totals
+    # Fallback if the filtered API is unavailable
+    csv_dir: ipeds
+    csv_pattern: colleges_ipeds_fall-enrollment-race_{year}.csv
+    levels: [undergraduate, graduate, first-professional]
+    api_filters:
+      race: 99
+      sex: 99
+      ftpt: 99
+      degree_seeking: 99
+      class_level: 99
+  enrollment_fte:
+    required: false
+    endpoint: enrollment-full-time-equivalent
+    endpoint_id: 9
+    method: csv
+    csv_file: colleges_ipeds_enrollment-fte.csv
+    csv_dir: ipeds
+  finance:
+    required: false
+    endpoint: finance
+    endpoint_id: 91
+    method: csv
+    csv_file: colleges_ipeds_finance.csv
+    csv_dir: ipeds
+    # Urban metadata currently lists finance only through 2017; ingest logs the gap.
+  admissions:
+    required: false
+    endpoint: admissions-enrollment
+    endpoint_id: 3
+    method: csv
+    csv_file: colleges_ipeds_admissions-enrollment.csv
+    csv_dir: ipeds
+  instructional_staff:
+    required: false
+    endpoint: salaries-instructional-staff
+    endpoint_id: 102
+    method: api_totals
+    api_filters:
+      academic_rank: 99
+      sex: 99
+      contract_length: 99
+    csv_file: colleges_ipeds_salaries_is.csv
+    csv_dir: ipeds
+  noninstructional_staff:
+    required: false
+    endpoint: salaries-noninstructional-staff
+    endpoint_id: 103
+    method: api_totals
+    api_filters:
+      staff_category: 99
+    csv_file: colleges_ipeds_salaries_nis.csv
+    csv_dir: ipeds
+
+nces:
+  # Complete data files: https://nces.ed.gov/ipeds/datacenter/data/F{yy}{yy+1}_F{1A|2|3}.zip
+  # F1819 = FY 2018 (fills Urban's post-2017 gap). F2223 is the latest confirmed zip.
+  base_url: https://nces.ed.gov/ipeds/datacenter/data
+  year_start: 2018
+  year_end: 2023
+  forms: [F1A, F2, F3]
+
+fsa:
+  urban_composite_csv: colleges_fsa_composite_scores.csv
+  urban_csv_dir: fsa
+  # Current FSA Data Center locations (tried in order; pages move).
+  hcm_urls:
+    - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/hcm.xlsx
+    - https://studentaid.gov/sites/g/files/dbyssus161/files/media/data/hcm.xlsx
+    - https://www2.ed.gov/offices/OSFAP/PEPS/hcm.xlsx
+  composite_urls:
+    - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/CompositeScores.xlsx
+    - https://studentaid.gov/sites/default/files/CompositeScores.xlsx
+  closed_school_urls:
+    - https://fsapartners.ed.gov/sites/default/files/2025-09/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2025-01/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2024-12/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2024-01/ClosedSchoolSearchFile.xls
+    - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/ClosedSchoolSearchFile.xls
+    - https://www2.ed.gov/offices/OSFAP/PEPS/docs/closedschoolsearchfile.xls
+
+scorecard:
+  # Optional; only used if DATA_GOV_API_KEY or SCORECARD_API_KEY is set.
+  api_base: https://api.data.gov/ed/collegescorecard/v1/schools
+
+wiche:
+  # Optional static CSV: columns state_abbr, year, hs_graduates (or similar).
+  path: data/external/wiche_hs_graduates.csv

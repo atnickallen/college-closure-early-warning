@@ -1,0 +1,241 @@
+{
+  "booster": "xgboost",
+  "features": [
+    "log_fte",
+    "fte_under_1000",
+    "enr_pct_chg_1y",
+    "enr_pct_chg_5y",
+    "enr_pct_chg_10y",
+    "enr_decline_5y_gt30",
+    "ftft_pct_chg_1y",
+    "admit_rate",
+    "yield_rate",
+    "admit_rate_chg_5y",
+    "yield_rate_chg_5y",
+    "tuition_dependence",
+    "discount_rate",
+    "discount_rate_chg_5y",
+    "operating_margin",
+    "operating_margin_chg_5y",
+    "consec_neg_margin_yrs",
+    "endowment_per_fte",
+    "unrestricted_na_to_exp",
+    "high_tuition_dependence",
+    "miss_finance",
+    "finance_from_parent",
+    "composite_is_lagged",
+    "staff_pct_chg_1y",
+    "staff_pct_chg_5y",
+    "student_staff_ratio",
+    "student_staff_ratio_chg_1y",
+    "composite_score",
+    "composite_fail",
+    "composite_zone",
+    "years_in_zone",
+    "miss_composite",
+    "is_four_year",
+    "religious",
+    "urban",
+    "rural",
+    "inst_control",
+    "sector"
+  ],
+  "n_features": 38,
+  "splits": {
+    "train_end": 2016,
+    "val_years": [
+      2017,
+      2018,
+      2019
+    ],
+    "test_years": [
+      2020,
+      2021
+    ],
+    "train_n": 37855,
+    "train_pos": 2876,
+    "val_n": 7661,
+    "test_n": 4799
+  },
+  "beats_naive": {
+    "any_test_year": true,
+    "by_year": [
+      {
+        "year": 2020,
+        "model_pr_auc": 0.2551938240422155,
+        "model_recall_at_50": 0.18333333333333332,
+        "baseline": "composite_lt_1",
+        "baseline_pr_auc": 0.05681898282229271,
+        "baseline_recall_at_50": 0.016666666666666666,
+        "beats": true
+      },
+      {
+        "year": 2020,
+        "model_pr_auc": 0.2551938240422155,
+        "model_recall_at_50": 0.18333333333333332,
+        "baseline": "enr_decline_5y_gt30",
+        "baseline_pr_auc": 0.13800557251772638,
+        "baseline_recall_at_50": 0.075,
+        "beats": true
+      },
+      {
+        "year": 2021,
+        "model_pr_auc": 0.13321186620787548,
+        "model_recall_at_50": 0.0970873786407767,
+        "baseline": "composite_lt_1",
+        "baseline_pr_auc": 0.052961204470955904,
+        "baseline_recall_at_50": 0.019417475728155338,
+        "beats": true
+      },
+      {
+        "year": 2021,
+        "model_pr_auc": 0.13321186620787548,
+        "model_recall_at_50": 0.0970873786407767,
+        "baseline": "enr_decline_5y_gt30",
+        "baseline_pr_auc": 0.10757656297182835,
+        "baseline_recall_at_50": 0.06796116504854369,
+        "beats": true
+      }
+    ]
+  },
+  "train": {
+    "logit": {
+      "n": 37855,
+      "positives": 2876,
+      "pr_auc": 0.495359479241513,
+      "roc_auc": 0.8984413994313536,
+      "recall_at_25": 0.005563282336578581,
+      "recall_at_50": 0.012517385257301807,
+      "recall_at_100": 0.027468706536856746
+    },
+    "xgboost": {
+      "n": 37855,
+      "positives": 2876,
+      "pr_auc": 0.7035947650479267,
+      "roc_auc": 0.9602492669851861,
+      "recall_at_25": 0.008692628650904033,
+      "recall_at_50": 0.017385257301808066,
+      "recall_at_100": 0.03477051460361613
+    }
+  },
+  "val": {
+    "logit": {
+      "n": 7661,
+      "positives": 604,
+      "pr_auc": 0.22263694760716482,
+      "roc_auc": 0.8260709623716811,
+      "recall_at_25": 0.004966887417218543,
+      "recall_at_50": 0.004966887417218543,
+      "recall_at_100": 0.004966887417218543
+    },
+    "xgboost": {
+      "n": 7661,
+      "positives": 604,
+      "pr_auc": 0.524253151978318,
+      "roc_auc": 0.8618578425254338,
+      "recall_at_25": 0.028145695364238412,
+      "recall_at_50": 0.06622516556291391,
+      "recall_at_100": 0.12251655629139073
+    }
+  },
+  "test": {
+    "logit": {
+      "n": 4799,
+      "positives": 223,
+      "pr_auc": 0.11450433000472818,
+      "roc_auc": 0.7795762253441626,
+      "recall_at_25": 0.008968609865470852,
+      "recall_at_50": 0.013452914798206279,
+      "recall_at_100": 0.013452914798206279
+    },
+    "xgboost": {
+      "n": 4799,
+      "positives": 223,
+      "pr_auc": 0.19035179430221524,
+      "roc_auc": 0.7451442895669353,
+      "recall_at_25": 0.06278026905829596,
+      "recall_at_50": 0.09865470852017937,
+      "recall_at_100": 0.14349775784753363
+    },
+    "naive_composite_lt_1": {
+      "n": 4799,
+      "positives": 223,
+      "pr_auc": 0.05480965509262908,
+      "roc_auc": 0.5387418075198344,
+      "recall_at_25": 0.0,
+      "recall_at_50": 0.008968609865470852,
+      "recall_at_100": 0.02242152466367713
+    },
+    "naive_enr_decline_5y_gt30": {
+      "n": 4799,
+      "positives": 223,
+      "pr_auc": 0.1226508014539397,
+      "roc_auc": 0.7368121648530841,
+      "recall_at_25": 0.008968609865470852,
+      "recall_at_50": 0.04484304932735426,
+      "recall_at_100": 0.08968609865470852
+    }
+  },
+  "shap_global": [
+    {
+      "feature": "unrestricted_na_to_exp",
+      "mean_abs_shap": 0.9844926595687866
+    },
+    {
+      "feature": "composite_score",
+      "mean_abs_shap": 0.5241830945014954
+    },
+    {
+      "feature": "log_fte",
+      "mean_abs_shap": 0.4748784601688385
+    },
+    {
+      "feature": "endowment_per_fte",
+      "mean_abs_shap": 0.41960135102272034
+    },
+    {
+      "feature": "operating_margin",
+      "mean_abs_shap": 0.2644060254096985
+    },
+    {
+      "feature": "yield_rate",
+      "mean_abs_shap": 0.2535296678543091
+    },
+    {
+      "feature": "tuition_dependence",
+      "mean_abs_shap": 0.246126189827919
+    },
+    {
+      "feature": "enr_pct_chg_1y",
+      "mean_abs_shap": 0.19489505887031555
+    },
+    {
+      "feature": "student_staff_ratio",
+      "mean_abs_shap": 0.16469644010066986
+    },
+    {
+      "feature": "miss_composite",
+      "mean_abs_shap": 0.1334531158208847
+    },
+    {
+      "feature": "admit_rate",
+      "mean_abs_shap": 0.13181842863559723
+    },
+    {
+      "feature": "enr_pct_chg_10y",
+      "mean_abs_shap": 0.12055157870054245
+    },
+    {
+      "feature": "consec_neg_margin_yrs",
+      "mean_abs_shap": 0.12017689645290375
+    },
+    {
+      "feature": "yield_rate_chg_5y",
+      "mean_abs_shap": 0.11439746618270874
+    },
+    {
+      "feature": "staff_pct_chg_1y",
+      "mean_abs_shap": 0.09957443177700043
+    }
+  ]
+}
