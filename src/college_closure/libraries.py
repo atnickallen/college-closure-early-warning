@@ -14,6 +14,7 @@ means unknown — not “no library.”
 from __future__ import annotations
 
 import hashlib
+import html as html_mod
 import json
 import logging
 import re
@@ -108,6 +109,12 @@ _GENERIC_RE = re.compile(
     r"library hours|ask a librarian|interlibrary loan|search the catalog|"
     r"renew your books|off[- ]campus access|database list|hours of operation|"
     r"chat with a librarian|course reserves|citation (?:style|guide)",
+    re.I,
+)
+_PROMO_RE = re.compile(
+    r"thrilled|delighted|excited to|proud to (?:announce|launch)|"
+    r"click here|learn more|sign up|subscribe|newsletter|"
+    r"donate now|give now|follow us|online encyclopedia|wupedia",
     re.I,
 )
 _COLLECTION_NAME_RE = re.compile(
@@ -366,11 +373,16 @@ def extract_special_collections_note(raw_html: str, page_url: str | None = None)
         named = "; ".join(names[:5])
         extra = ""
         for sent in hits:
+            if _PROMO_RE.search(sent):
+                continue
             if any(n.lower() in sent.lower() for n in names):
                 extra = " " + sent
                 break
-        if not extra and hits:
-            extra = " " + hits[0]
+        if not extra:
+            for sent in hits:
+                if not _PROMO_RE.search(sent):
+                    extra = " " + sent
+                    break
         note = f"Named holdings on a public library page: {named}.{extra}".strip()
         if page_url:
             note += f" Source: {page_url}"
@@ -958,6 +970,27 @@ def enrich_watchlist_libraries(
     return attach_library_columns(watch, snapshot, notes if not notes.empty else None, arl)
 
 
+def distinctive_notes_html(shortlist: pd.DataFrame) -> str:
+    """Banner listing named collections on the top-50 ∪ nonprofit shortlist."""
+    if shortlist is None or shortlist.empty or "lib_unique_flag" not in shortlist.columns:
+        return ""
+    unique = shortlist.loc[shortlist["lib_unique_flag"].fillna(False).astype(bool)]
+    if unique.empty:
+        return ""
+    items = []
+    for _, row in unique.iterrows():
+        name = html_mod.escape(str(row.get("inst_name") or f"UNITID {row.get('unitid')}"))
+        note = html_mod.escape(str(row.get("lib_special_collections_note") or "").strip())
+        items.append(f"<li><strong>{name}</strong> — {note}</li>")
+    return (
+        '<div class="banner lib-unique">'
+        "<strong>Distinctive collections on the shortlist</strong> "
+        "(top 50 ∪ nonprofit). Named holdings only when a public page publishes them; "
+        "other cards say unknown or nothing distinctive."
+        f"<ul>{''.join(items)}</ul></div>"
+    )
+
+
 def write_libraries_summary(shortlist: pd.DataFrame, dest: Path) -> Path:
     """Markdown summary of unique / unknown library findings for the shortlist."""
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -1052,7 +1085,6 @@ def _md_money(v: Any) -> str:
 
 def library_section_html(row: pd.Series) -> str:
     """Evidence-card block. Framing: enrichment context, not a verdict."""
-    import html as html_mod
 
     def _esc(s: Any) -> str:
         if s is None or (isinstance(s, float) and pd.isna(s)):

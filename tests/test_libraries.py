@@ -10,6 +10,7 @@ from college_closure.libraries import (
     NOTHING_DISTINCTIVE_NOTE,
     UNKNOWN_NOTE,
     attach_library_columns,
+    distinctive_notes_html,
     extract_special_collections_note,
     latest_library_snapshot,
     library_section_html,
@@ -235,6 +236,21 @@ def test_extract_accepts_named_archive_in_a_real_sentence():
     got = extract_special_collections_note(html, page_url="https://library.example.edu/archives/")
     assert got["unique_flag"] is True
     assert any("Pacific Northwest Artists Archive" in n for n in got["names"])
+
+
+def test_extract_drops_promotional_extra_sentence():
+    html = """
+    <html><body>
+      <p>The Pacific Northwest Artists Archive documents regional studio practice.</p>
+      <p>Willamette University Archives is thrilled to launch WUpedia, a dynamic
+      online encyclopedia of campus history.</p>
+    </body></html>
+    """
+    got = extract_special_collections_note(html, page_url="https://library.example.edu/archives/")
+    assert got["unique_flag"] is True
+    assert "Pacific Northwest Artists Archive" in got["note"]
+    assert "thrilled" not in got["note"].lower()
+    assert "wupedia" not in got["note"].lower()
 
 
 def test_extract_rejects_nav_and_vendor_catalog_junk():

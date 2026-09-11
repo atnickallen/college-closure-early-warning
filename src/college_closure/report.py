@@ -17,6 +17,7 @@ from college_closure.config import Settings
 from college_closure.features import MODEL_FEATURE_COLUMNS
 from college_closure.libraries import (
     LIB_WATCHLIST_COLS,
+    distinctive_notes_html,
     enrich_watchlist_libraries,
     library_section_html,
     write_libraries_summary,
@@ -179,7 +180,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
     """
 
 
-def _html_page(cards: str, n: int, score_year: int, caveats: str) -> str:
+def _html_page(cards: str, n: int, score_year: int, caveats: str, intro: str = "") -> str:
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -212,6 +213,7 @@ def _html_page(cards: str, n: int, score_year: int, caveats: str) -> str:
     Library holdings and special-collection notes are <em>enrichment context</em> (IPEDS
     Academic Libraries + public library pages), not a model input.
   </div>
+  {intro}
   {cards}
   <h2>Limitations</h2>
   <p>{html.escape(caveats)}</p>
@@ -504,7 +506,13 @@ def run_report(settings: Settings, *, skip_scrape: bool = False, skip_libraries:
         "special-collection notes are best-effort. Missing library data ≠ no library."
     )
     (out_dir / "top50_report.html").write_text(
-        _html_page("\n".join(cards), n=len(top), score_year=score_year, caveats=caveats),
+        _html_page(
+            "\n".join(cards),
+            n=len(top),
+            score_year=score_year,
+            caveats=caveats,
+            intro=distinctive_notes_html(shortlist),
+        ),
         encoding="utf-8",
     )
     (out_dir / "model_card.md").write_text(
