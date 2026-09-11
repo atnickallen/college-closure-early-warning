@@ -20,7 +20,7 @@ close**; they stay in the panel for context. The risk model trains and ranks
 | Script | Role |
 | --- | --- |
 | `scripts/01_ingest.py` | Urban IPEDS directory, enrollment, FTE, finance (through 2017), admissions, staffing |
-| `scripts/02_crosswalk.py` | UNITID ↔ OPEID8 ↔ OPEID6 ↔ EIN; NCES finance backfill; FSA composite / HCM / Closed School |
+| `scripts/02_crosswalk.py` | UNITID ↔ OPEID8 ↔ OPEID6 ↔ EIN; NCES finance; FSA + Scorecard + WICHE + closure trackers |
 | `scripts/03_panel.py` | UNITID×year panel, parent/child finance rollup, composite join |
 | `scripts/04_features.py` | Trailing-window features only (no future leakage); winsorize 1st/99th |
 | `scripts/05_labels.py` | `closed_or_merged_within_h_years` for h=2 and h=3; right-censor last h years |
@@ -66,13 +66,41 @@ python3 scripts/06_model.py
 python3 scripts/07_report.py
 ```
 
-Optional flags: `02_crosswalk.py --skip-nces` / `--skip-fsa`.
+Optional flags: `02_crosswalk.py --skip-nces` / `--skip-fsa` / `--skip-wiche` / `--skip-closures`.
+The same flags are accepted by `scripts/run_pipeline.py`.
 
-College Scorecard is used only when `DATA_GOV_API_KEY` or `SCORECARD_API_KEY`
-is set. WICHE high-school graduate trends are used only if
-`data/external/wiche_hs_graduates.csv` exists (`state_abbr`, `year`, `hs_graduates`).
+## Environment variables
 
-## Verified live on this agent VM (2026-09-11)
+| Variable | Effect |
+| --- | --- |
+| `DATA_GOV_API_KEY` or `SCORECARD_API_KEY` | College Scorecard API. If absent, the official no-key most-recent institution ZIP is tried (`ed-public-download.scorecard.network`). |
+| none required for Urban / NCES / WICHE / data.ed.gov composites | Those hosts are public HTTPS downloads |
+
+## v2 runbook
+
+1. `pip install -r requirements.txt`
+2. `python3 scripts/run_pipeline.py` (first machine) or `--skip-ingest` when Urban Parquet already exists
+3. `PYTHONPATH=src python3 -m pytest tests -q`
+4. Read `outputs/fsa_ingest.md` for the **verified live vs still impossible** HTTP table
+5. Read `outputs/nces_finance_years.md` before trusting a later score year — never rank a year whose `miss_finance` is mostly unpublished NCES files
+
+## Verified live on this agent VM (v2, 2026-09-11)
+
+Live row counts below are **MVP (PR #1)** until this branch finishes a full retrain.
+v2 ingest sources that were confirmed reachable *before* the retrain:
+
+| Source | Status |
+| --- | --- |
+| Official FSA composites on **data.ed.gov** (AY 2006–07 through 2017–18 `.xls`) | **Live** (CKAN package `ff51fef3-9d22-49a7-b34b-54329a290307`) |
+| Urban FSA composite CSV | **Live** (2006–2016) |
+| College Scorecard most-recent institution ZIP (no API key) | **Live** (`Most-Recent-Cohorts-Institution_06102026.zip`) |
+| WICHE Knocking 11th edition workbook | **Live** (Dec 2024 xlsx on wiche.edu) |
+| NCES `F1819`–`F2223` finance zips | **Live** |
+| NCES `F2324_*` / `F2425_*` complete-data zips | **404** on the historical URL pattern (tables exist in NCES Spring 2025 release notes; standalone zip not posted) |
+| studentaid.gov Data Center HCM / post-2018 composite workbooks | JS Data Center; direct `.xlsx` URLs still fail (timeout/404). Scorecard `UNDER_INVESTIGATION` is the HCM2-style evidence flag when the ZIP downloads |
+| Partner Connect Closed School `.xls` | Dated URLs still 404 unless the weekly page exposes a new href |
+
+MVP metrics (until v2 retrain writes new files):
 
 | Step | Result |
 | --- | --- |
@@ -86,7 +114,7 @@ is set. WICHE high-school graduate trends are used only if
 | Model | XGBoost test **PR-AUC 0.190** vs naive composite 0.055 / 5y-decline 0.123; recall@50 **0.099** vs 0.009 / 0.045. **Beats both baselines** on the 2020–2021 test window |
 | Watch list | Score year **2022** (latest right-censored year with finance; 2023–24 are 100% `miss_finance` because NCES zips are unpublished) |
 
-Unit tests: `PYTHONPATH=src python3 -m pytest tests -q` — **17 passed**.
+Unit tests: `PYTHONPATH=src python3 -m pytest tests -q` — **26 passed** on the v2 branch (joins, OPEID 6/8, official composite parse, WICHE, Scorecard CLOSEDAT sentinels, tracker unique-match, no-leak features).
 
 ## Outputs (committed)
 
@@ -135,7 +163,9 @@ Live Urban directory (fall 2004–2024), after filters: **5,886** unique UNITID,
 
 - Positives: IPEDS `inst_status` ∈ {4, 7} (closed), {3} merger if
   `labels.mergers_are_positive` (default true), `date_closed` / `year_deleted`,
-  and FSA Closed School (OPEID6 + year) when that file downloads.
+  FSA Closed School (OPEID6 + year) when that file downloads, unique
+  name+state matches from Higher Ed Dive / BestColleges trackers, and
+  Scorecard `CLOSEDAT` only when the year is in 1980–2035 (sentinels rejected).
 - Events are taken from `directory_raw.parquet` (unfiltered) so leaving the
   *filtered* universe is not treated as a closure.
 - Panel-disappearance labels are **off** by default (`use_disappearance: false`).
@@ -173,11 +203,14 @@ URLs. FSA pages move; ingest tries several URLs and **continues** on failure.
   zeros that look like health.
 - Urban composite scores historically end in 2016. Later years use the last
   observed score (lagged) plus `composite_is_lagged`.
-- Official FSA HCM / Closed School / composite workbooks are downloaded when a
-  current file URL works. JavaScript Data Center pages are not scraped as data.
-- College Scorecard and WICHE are optional.
-- Accreditor actions, WARN notices, and IRS 990s are **not** ingested
-  (TODO — do not treat the watch list as a complete diligence file).
+- Official FSA HCM / post-2018 composite workbooks live on a JavaScript Data
+  Center. This pipeline tries direct files, data.ed.gov (through AY 2017–18),
+  and Wayback CDX; it does **not** invent later composites.
+- College Scorecard bulk ZIP is the no-key path; API key is optional.
+- WICHE 11th-edition workbook is downloaded when reachable; otherwise
+  `data/external/wiche_README.md` documents the placeholder path.
+- Accreditor / WARN / 990 flags are best-effort on the top-50 / nonprofit
+  shortlist only (name or EIN). They never change the model score.
 - For-profit chain collapses and public “closures” are different processes;
   publics are excluded from the primary ranking.
 - Do not publish ranks as “predicted closures.”

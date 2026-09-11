@@ -51,6 +51,28 @@ def test_merger_toggle():
     assert pd.isna(off.iloc[0]["event_year"])
 
 
+def test_sentinel_closedat_rejected():
+    directory = pd.DataFrame(
+        [
+            {"unitid": 9, "year": 2018, "opeid": "00500000", "inst_status": 1, "date_closed": "-2"},
+            {"unitid": 9, "year": 2019, "opeid": "00500000", "inst_status": 1, "date_closed": "3"},
+        ]
+    )
+    events = institution_event_years(directory, mergers_are_positive=True, use_disappearance=False)
+    assert pd.isna(events.iloc[0]["event_year"])
+
+
+def test_extra_events_fill_missing_unitid():
+    directory = pd.DataFrame(
+        [{"unitid": 8, "year": y, "opeid": "00600000", "inst_status": 1} for y in range(2018, 2022)]
+    )
+    extra = pd.DataFrame([{"unitid": 8, "event_year": 2021, "event_type": "closure", "event_source": "tracker"}])
+    events = institution_event_years(
+        directory, mergers_are_positive=True, extra_events=extra, use_disappearance=False
+    )
+    assert int(events.iloc[0]["event_year"]) == 2021
+
+
 def test_disappearance_requires_two_year_gap():
     directory = pd.DataFrame(
         [{"unitid": 3, "year": y, "opeid": "00400000", "inst_status": 1} for y in range(2018, 2024)]

@@ -11,10 +11,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from college_closure.closures_extra import ingest_closure_trackers  # noqa: E402
 from college_closure.config import load_settings  # noqa: E402
 from college_closure.crosswalk import write_crosswalk  # noqa: E402
 from college_closure.fsa import run_fsa_ingest  # noqa: E402
 from college_closure.nces_finance import ingest_nces_finance  # noqa: E402
+from college_closure.wiche import ingest_wiche  # noqa: E402
 
 
 def main() -> int:
@@ -24,6 +26,8 @@ def main() -> int:
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--skip-nces", action="store_true")
     parser.add_argument("--skip-fsa", action="store_true")
+    parser.add_argument("--skip-wiche", action="store_true")
+    parser.add_argument("--skip-closures", action="store_true")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     settings = load_settings(args.config)
@@ -39,6 +43,12 @@ def main() -> int:
         for key, frame in fsa.items():
             n = 0 if frame is None or frame.empty else len(frame)
             print(f"fsa {key} rows={n:,}")
+    if not args.skip_wiche:
+        wiche = ingest_wiche(settings)
+        print(f"wiche rows={0 if wiche is None or wiche.empty else len(wiche):,}")
+    if not args.skip_closures:
+        closures = ingest_closure_trackers(settings)
+        print(f"closure_trackers matches={0 if closures is None or closures.empty else len(closures):,}")
     return 0
 
 
