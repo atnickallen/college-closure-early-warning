@@ -27,7 +27,7 @@ def main() -> int:
     parser.add_argument(
         "--sources",
         default=None,
-        help="Comma-separated subset: directory,fall_enrollment,enrollment_fte,finance,admissions,instructional_staff,noninstructional_staff",
+        help="Comma-separated subset: directory,fall_enrollment,enrollment_fte,finance,admissions,instructional_staff,noninstructional_staff,academic_libraries",
     )
     parser.add_argument(
         "--milestone1-only",

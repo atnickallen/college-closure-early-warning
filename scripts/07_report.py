@@ -21,13 +21,22 @@ from college_closure.report import run_report  # noqa: E402
 def main() -> int:
     parser = argparse.ArgumentParser(description="Write watchlist.csv, top50_report.html, model_card.md")
     parser.add_argument("--config", type=Path, default=None)
+    parser.add_argument("--skip-scrape", action="store_true", help="Join IPEDS AL only; skip public library pages")
+    parser.add_argument("--cache-only", action="store_true", help="Re-extract notes from cached HTML only (no network)")
+    parser.add_argument("--skip-libraries", action="store_true", help="Do not attach library enrichment")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     settings = load_settings(args.config)
-    info = run_report(settings)
+    info = run_report(
+        settings,
+        skip_scrape=args.skip_scrape,
+        skip_libraries=args.skip_libraries,
+        cache_only=args.cache_only,
+    )
     print(
         f"watchlist year={info['score_year']} rows={info['n_watch']} "
-        f"cards={info['n_cards']} -> {settings.outputs_dir}"
+        f"cards={info['n_cards']} library_shortlist={info.get('n_library_shortlist', 0)} "
+        f"-> {settings.outputs_dir}"
     )
     return 0
 

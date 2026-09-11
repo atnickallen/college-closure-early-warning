@@ -15,6 +15,13 @@ import pandas as pd
 
 from college_closure.config import Settings
 from college_closure.features import MODEL_FEATURE_COLUMNS
+from college_closure.libraries import (
+    LIB_WATCHLIST_COLS,
+    distinctive_notes_html,
+    enrich_watchlist_libraries,
+    library_section_html,
+    write_libraries_summary,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +60,7 @@ WATCHLIST_COLS = [
     "enrichment_notes",
     "label_complete_h3",
     "closed_or_merged_within_3_years",
+    *LIB_WATCHLIST_COLS,
 ]
 
 
@@ -163,13 +171,16 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
       <ul>{shap_rows}</ul>
+      {library_section_html(row)}
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     """
 
 
-def _html_page(cards: str, n: int, score_year: int, caveats: str) -> str:
+def _html_page(cards: str, n: int, score_year: int, caveats: str, intro: str = "") -> str:
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -182,7 +193,8 @@ def _html_page(cards: str, n: int, score_year: int, caveats: str) -> str:
     .banner {{ background: #fff6e5; border: 1px solid #e0c48a; padding: 0.8rem 1rem; }}
     .card {{ border: 1px solid #ddd; padding: 1rem 1.2rem; margin: 1.2rem 0; }}
     .card h2 {{ margin-top: 0; font-size: 1.2rem; }}
-    .meta, .caveat {{ color: #555; font-size: 0.95rem; }}
+    .meta, .caveat, .lib-context, .lib-note {{ color: #555; font-size: 0.95rem; }}
+    .lib-note {{ margin-top: 0.4rem; }}
     table {{ border-collapse: collapse; width: 100%; margin: 0.6rem 0; }}
     th {{ text-align: left; width: 28%; color: #444; font-weight: 600; padding: 0.2rem 0.4rem; }}
     td {{ padding: 0.2rem 0.4rem; }}
@@ -198,7 +210,10 @@ def _html_page(cards: str, n: int, score_year: int, caveats: str) -> str:
     is the latest <em>right-censored</em> year with published IPEDS finance (later directory
     years are omitted because unpublished finance looks like pre-closure missingness).
     Composite scores lag; HCM is a current snapshot and was not used as a training feature.
+    Library holdings and special-collection notes are <em>enrichment context</em> (IPEDS
+    Academic Libraries + public library pages), not a model input.
   </div>
+  {intro}
   {cards}
   <h2>Limitations</h2>
   <p>{html.escape(caveats)}</p>
@@ -260,6 +275,8 @@ closures and mergers on trailing (no-leakage) features.
   ZIP column `HCM2` map to the same evidence flag; `CURROPER` is operating status.
 - WICHE Knocking at the College Door 11th edition (state HS-graduate totals) when the workbook downloads
 - Top-50 enrichment (flags only): accreditor public-action pages, WARN files, ProPublica 990 by EIN
+- IPEDS Academic Libraries (Urban portal, 2013–2023): **watch-list enrichment only**
+  (`lib_*` columns / evidence-card section). Not used as a training feature.
 
 ## Temporal split (no shuffle)
 
@@ -293,7 +310,7 @@ Configured feature columns not present in this run: {unused_txt}.
 
 - Score year: **{score_year}**
 - Rows written: **{n_watch}**
-- Files: `outputs/watchlist.csv`, `outputs/top50_report.html`
+- Files: `outputs/watchlist.csv`, `outputs/top50_report.html`, `outputs/libraries_top50.md`
 
 ## Caveats
 
@@ -313,46 +330,66 @@ Configured feature columns not present in this run: {unused_txt}.
   and were excluded from model training to avoid temporal leakage.
 - Accreditor / WARN / 990 flags on the top 50 are best-effort name or EIN matches
   and are **not** inputs to the model score.
+- Library holdings (`lib_*`) and scraped special-collection notes are
+  **enrichment context** on the evidence cards. They are not lagged training
+  features and were not used to fit the model.
 - Do not publish these ranks as “predicted closures.”
 """
 
 
-def run_report(settings: Settings) -> dict:
+def run_report(
+    settings: Settings,
+    *,
+    skip_scrape: bool = False,
+    skip_libraries: bool = False,
+    cache_only: bool = False,
+) -> dict:
     processed = settings.processed_dir
     out_dir = settings.outputs_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
     scored_path = processed / "scored.parquet"
-    if not scored_path.exists():
+    watch_fallback = out_dir / "watchlist.csv"
+    from_watchlist_only = False
+    if scored_path.exists():
+        scored = pd.read_parquet(scored_path)
+    elif watch_fallback.exists():
+        LOGGER.warning("scored.parquet missing; enriching committed watchlist.csv (ranks unchanged)")
+        scored = pd.read_csv(watch_fallback)
+        from_watchlist_only = True
+    else:
         raise FileNotFoundError("scored.parquet missing — run scripts/06_model.py")
-    scored = pd.read_parquet(scored_path)
     metrics_path = processed / "model_metrics.json"
     if not metrics_path.exists():
         metrics_path = out_dir / "model_metrics.json"
     metrics = json.loads(metrics_path.read_text(encoding="utf-8")) if metrics_path.exists() else {}
 
-    if "label_complete_h3" in scored.columns:
-        current = scored.loc[scored["label_complete_h3"] != True].copy()  # noqa: E712
+    if from_watchlist_only:
+        current = scored.copy()
+        score_year = int(current["year"].max()) if "year" in current.columns else 2022
     else:
-        current = scored.iloc[0:0].copy()
-    if current.empty:
-        ymax = int(scored["year"].max())
-        current = scored.loc[scored["year"] == ymax].copy()
-        LOGGER.warning("No right-censored rows; scoring latest year %s", ymax)
-    # Do not rank a year where finance is still unpublished for everyone —
-    # miss_finance / NA ratios then look like pre-closure missingness.
-    score_year = int(current["year"].max())
-    if "miss_finance" in current.columns:
-        rates = current.groupby("year")["miss_finance"].mean()
-        usable = rates[rates < 0.50]
-        if len(usable):
-            score_year = int(usable.index.max())
-            LOGGER.info(
-                "Primary watch-list year %s (latest right-censored year with finance; miss_finance=%.1f%%)",
-                score_year,
-                100 * float(usable.loc[score_year]),
-            )
-    current = current.loc[current["year"] == score_year].copy()
+        if "label_complete_h3" in scored.columns:
+            current = scored.loc[scored["label_complete_h3"] != True].copy()  # noqa: E712
+        else:
+            current = scored.iloc[0:0].copy()
+        if current.empty:
+            ymax = int(scored["year"].max())
+            current = scored.loc[scored["year"] == ymax].copy()
+            LOGGER.warning("No right-censored rows; scoring latest year %s", ymax)
+        # Do not rank a year where finance is still unpublished for everyone —
+        # miss_finance / NA ratios then look like pre-closure missingness.
+        score_year = int(current["year"].max())
+        if "miss_finance" in current.columns:
+            rates = current.groupby("year")["miss_finance"].mean()
+            usable = rates[rates < 0.50]
+            if len(usable):
+                score_year = int(usable.index.max())
+                LOGGER.info(
+                    "Primary watch-list year %s (latest right-censored year with finance; miss_finance=%.1f%%)",
+                    score_year,
+                    100 * float(usable.loc[score_year]),
+                )
+        current = current.loc[current["year"] == score_year].copy()
     current = current.sort_values("risk_score", ascending=False)
 
     hcm_path = processed / "fsa_hcm_current.parquet"
@@ -379,6 +416,9 @@ def run_report(settings: Settings) -> dict:
 
     from college_closure.enrichment import enrich_shortlist
 
+    cfg = (getattr(settings, "raw", None) or {}).get("libraries") or {}
+    top_n = int(cfg.get("scrape_top_n", 50))
+    nonprofit_n = int(cfg.get("scrape_nonprofit_n", 25))
     np_mask = pd.to_numeric(current.get("inst_control"), errors="coerce") == 2
     short = pd.concat([current.head(50), current.loc[np_mask].head(50)]).drop_duplicates("unitid")
     enriched = enrich_shortlist(settings, short)
@@ -397,15 +437,52 @@ def run_report(settings: Settings) -> dict:
     if extra_cols and "unitid" in enriched.columns:
         current = current.merge(enriched[["unitid", *extra_cols]].drop_duplicates("unitid"), on="unitid", how="left")
 
+    current = current.sort_values("risk_score", ascending=False).reset_index(drop=True)
+    nonprofit_ids = current.loc[
+        pd.to_numeric(current.get("inst_control"), errors="coerce") == 2, "unitid"
+    ]
+    scrape_ids = list(current.head(top_n)["unitid"]) + list(nonprofit_ids.head(nonprofit_n))
+
+    if not skip_libraries:
+        current = enrich_watchlist_libraries(
+            current,
+            settings,
+            score_year=score_year,
+            scrape_ids=scrape_ids,
+            skip_scrape=skip_scrape,
+            cache_only=cache_only,
+        )
+
+    current = current.sort_values("risk_score", ascending=False).reset_index(drop=True)
+    nonprofit_mask = pd.to_numeric(current.get("inst_control"), errors="coerce") == 2
     watch_cols = [c for c in WATCHLIST_COLS if c in current.columns]
     watch = current[watch_cols].head(500)
     watch.to_csv(out_dir / "watchlist.csv", index=False)
-    nonprofit = current.loc[pd.to_numeric(current.get("inst_control"), errors="coerce") == 2, watch_cols].head(250)
+    nonprofit = current.loc[nonprofit_mask, watch_cols].head(250)
     if not nonprofit.empty:
         nonprofit.to_csv(out_dir / "watchlist_nonprofit.csv", index=False)
 
+    shortlist = pd.concat(
+        [current.head(top_n), current.loc[nonprofit_mask].head(nonprofit_n)],
+        ignore_index=True,
+    ).drop_duplicates("unitid")
+    write_libraries_summary(shortlist, out_dir / "libraries_top50.md")
+    shortlist_cols = [
+        c
+        for c in (
+            "unitid",
+            "inst_name",
+            "state_abbr",
+            "inst_control",
+            "year",
+            "risk_score",
+            *LIB_WATCHLIST_COLS,
+        )
+        if c in shortlist.columns
+    ]
+    shortlist[shortlist_cols].to_csv(out_dir / "libraries_top50.csv", index=False)
+
     shap_global = metrics.get("shap_global") or []
-    top_n = 50
     top = current.head(top_n)
     cards = []
     for i, (_, row) in enumerate(top.iterrows(), start=1):
@@ -431,15 +508,31 @@ def run_report(settings: Settings) -> dict:
         "Watch list only. IPEDS lag; official FSA composites currently end FY 2018; "
         "NCES finance backfill covers published F-year zips only; HCM / Scorecard HCM2 "
         "are current-list evidence and were not training features; mergers count as "
-        "positives by default; publics excluded from the primary ranking."
+        "positives by default; publics excluded from the primary ranking. Library "
+        "holdings are IPEDS Academic Libraries enrichment (Urban 2013–2023); scraped "
+        "special-collection notes are best-effort. Missing library data ≠ no library."
     )
     (out_dir / "top50_report.html").write_text(
-        _html_page("\n".join(cards), n=len(top), score_year=score_year, caveats=caveats),
+        _html_page(
+            "\n".join(cards),
+            n=len(top),
+            score_year=score_year,
+            caveats=caveats,
+            intro=distinctive_notes_html(shortlist),
+        ),
         encoding="utf-8",
     )
     (out_dir / "model_card.md").write_text(
         _model_card_md(metrics, score_year, n_watch=len(watch), beats_note=beats_note),
         encoding="utf-8",
     )
-    LOGGER.info("Wrote watchlist.csv (%s), top50_report.html, model_card.md", len(watch))
-    return {"score_year": score_year, "n_watch": len(watch), "n_cards": int(len(top))}
+    LOGGER.info(
+        "Wrote watchlist.csv (%s), top50_report.html, libraries_top50.md, model_card.md",
+        len(watch),
+    )
+    return {
+        "score_year": score_year,
+        "n_watch": len(watch),
+        "n_cards": int(len(top)),
+        "n_library_shortlist": int(len(shortlist)),
+    }

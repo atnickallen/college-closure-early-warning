@@ -15,6 +15,7 @@ from college_closure.closures_extra import ingest_closure_trackers  # noqa: E402
 from college_closure.config import load_settings  # noqa: E402
 from college_closure.crosswalk import write_crosswalk  # noqa: E402
 from college_closure.fsa import run_fsa_ingest  # noqa: E402
+from college_closure.libraries import ingest_academic_libraries  # noqa: E402
 from college_closure.nces_finance import ingest_nces_finance  # noqa: E402
 from college_closure.wiche import ingest_wiche  # noqa: E402
 
@@ -28,6 +29,7 @@ def main() -> int:
     parser.add_argument("--skip-fsa", action="store_true")
     parser.add_argument("--skip-wiche", action="store_true")
     parser.add_argument("--skip-closures", action="store_true")
+    parser.add_argument("--skip-libraries", action="store_true")
     parser.add_argument(
         "--skip-scorecard",
         action="store_true",
@@ -44,6 +46,10 @@ def main() -> int:
 
     xw = write_crosswalk(settings)
     print(f"crosswalk rows={len(xw):,} -> {settings.processed_dir / 'crosswalk.parquet'}")
+
+    if not args.skip_libraries:
+        al = ingest_academic_libraries(settings)
+        print(f"academic libraries rows={len(al):,} -> {settings.processed_dir / 'libraries.parquet'}")
 
     if not args.skip_nces:
         nces = ingest_nces_finance(settings)
