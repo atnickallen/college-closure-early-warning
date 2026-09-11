@@ -117,6 +117,11 @@ _PROMO_RE = re.compile(
     r"donate now|give now|follow us|online encyclopedia|wupedia",
     re.I,
 )
+_EXTRA_VERB_RE = re.compile(
+    r"\b(is|are|was|were|has|have|holds|includes|contains|documents|"
+    r"houses|preserves|features|maintains|collects)\b",
+    re.I,
+)
 _COLLECTION_NAME_RE = re.compile(
     r"""
     (?:the\s+)?
@@ -302,6 +307,17 @@ def _sentences(text: str) -> list[str]:
     return out
 
 
+def _usable_extra_sentence(sent: str) -> bool:
+    """Keep supporting prose; drop promo copy and heading fragments."""
+    if not sent or _PROMO_RE.search(sent) or _GENERIC_RE.search(sent):
+        return False
+    if len(sent) < 40:
+        return False
+    if _EXTRA_VERB_RE.search(sent):
+        return True
+    return len(re.findall(r"\b[a-z]{3,}\b", sent)) >= 3
+
+
 def _is_mashed_nav(line: str) -> bool:
     caps = re.findall(r"\b[A-Z][A-Za-z]{2,}\b", line)
     lowers = re.findall(r"\b[a-z]{3,}\b", line)
@@ -373,14 +389,14 @@ def extract_special_collections_note(raw_html: str, page_url: str | None = None)
         named = "; ".join(names[:5])
         extra = ""
         for sent in hits:
-            if _PROMO_RE.search(sent):
+            if not _usable_extra_sentence(sent):
                 continue
             if any(n.lower() in sent.lower() for n in names):
                 extra = " " + sent
                 break
         if not extra:
             for sent in hits:
-                if not _PROMO_RE.search(sent):
+                if _usable_extra_sentence(sent):
                     extra = " " + sent
                     break
         note = f"Named holdings on a public library page: {named}.{extra}".strip()
@@ -737,9 +753,15 @@ def _get_html(
     url: str,
     dest: Path,
     timeout: int,
+    cache_only: bool = False,
 ) -> str | None:
     if dest.exists() and dest.stat().st_size > 0:
+        sidecar = dest.with_suffix(".url")
+        if not sidecar.exists():
+            sidecar.write_text(url, encoding="utf-8")
         return dest.read_text(encoding="utf-8", errors="replace")
+    if cache_only:
+        return None
     try:
         resp = session.get(url, timeout=timeout, allow_redirects=True)
         if resp.status_code >= 400:
@@ -753,6 +775,7 @@ def _get_html(
             return None
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(text, encoding="utf-8")
+        dest.with_suffix(".url").write_text(url, encoding="utf-8")
         return text
     except requests.RequestException as exc:
         LOGGER.info("Library fetch failed %s: %s", url, exc)
@@ -793,10 +816,12 @@ def scrape_library_notes(
     schools: pd.DataFrame,
     settings: Settings,
     session: requests.Session | None = None,
+    cache_only: bool = False,
 ) -> pd.DataFrame:
     """Fetch library / special-collections pages for a shortlist; cache HTML."""
     cfg = _libraries_cfg(settings)
     timeout = int(cfg.get("request_timeout_seconds", 20))
+    cache_only = cache_only or bool(cfg.get("cache_only", False))
     cache_dir = settings.raw_dir / "libraries" / "html"
     cache_dir.mkdir(parents=True, exist_ok=True)
     sess = session or requests.Session()
@@ -826,7 +851,7 @@ def scrape_library_notes(
             continue
 
         home_dest = _cache_html_path(cache_dir, unitid, home)
-        home_html = _get_html(sess, home, home_dest, timeout)
+        home_html = _get_html(sess, home, home_dest, timeout, cache_only=cache_only)
         if home_html is None:
             parsed = urlparse(home)
             host = parsed.netloc[4:] if parsed.netloc.startswith("www.") else parsed.netloc
@@ -853,7 +878,11 @@ def scrape_library_notes(
             url = ordered[idx]
             idx += 1
             dest = _cache_html_path(cache_dir, unitid, url)
-            html_text = home_html if url.rstrip("/") == home.rstrip("/") else _get_html(sess, url, dest, timeout)
+            html_text = (
+                home_html
+                if url.rstrip("/") == home.rstrip("/")
+                else _get_html(sess, url, dest, timeout, cache_only=cache_only)
+            )
             if not html_text:
                 continue
             found_any_page = True
@@ -884,12 +913,30 @@ def scrape_library_notes(
                     "lib_unique_flag": False,
                     "lib_note_url": extracted.get("source_url") or url,
                 }
+        if cache_only and not best.get("lib_unique_flag"):
+            for cached in sorted(cache_dir.glob(f"{int(unitid)}_*.html")):
+                sidecar = cached.with_suffix(".url")
+                page_url = sidecar.read_text(encoding="utf-8").strip() if sidecar.exists() else None
+                html_text = cached.read_text(encoding="utf-8", errors="replace")
+                extracted = extract_special_collections_note(html_text, page_url=page_url)
+                if not extracted["note"] or extracted["note"] == UNKNOWN_NOTE:
+                    continue
+                found_any_page = True
+                best = {
+                    "unitid": unitid,
+                    "lib_special_collections_note": extracted["note"],
+                    "lib_unique_flag": bool(extracted["unique_flag"]),
+                    "lib_note_url": extracted.get("source_url") or page_url or pd.NA,
+                }
+                if extracted["unique_flag"]:
+                    break
         if not found_any_page:
             best["lib_special_collections_note"] = (
                 f"Unknown — public website did not yield a usable library page for {name}."
             )
         records.append(best)
-        time.sleep(float(cfg.get("scrape_pause_seconds", 0.35)))
+        if not cache_only:
+            time.sleep(float(cfg.get("scrape_pause_seconds", 0.35)))
 
     return pd.DataFrame(records)
 
@@ -947,6 +994,7 @@ def enrich_watchlist_libraries(
     scrape_ids: Iterable[Any] | None = None,
     academic_libraries: pd.DataFrame | None = None,
     skip_scrape: bool = False,
+    cache_only: bool = False,
     client: UrbanClient | None = None,
     session: requests.Session | None = None,
 ) -> pd.DataFrame:
@@ -963,7 +1011,9 @@ def enrich_watchlist_libraries(
             schools = schools.merge(urls, on="unitid", how="left")
             if "inst_name_x" in schools.columns:
                 schools["inst_name"] = schools["inst_name_x"].fillna(schools.get("inst_name_y"))
-            notes = scrape_library_notes(schools, settings, session=session)
+            notes = scrape_library_notes(
+                schools, settings, session=session, cache_only=cache_only
+            )
     arl = load_arl_members(settings, session=session) if not skip_scrape else set(_ARL_FALLBACK_NAMES)
     if skip_scrape:
         arl = set(_ARL_FALLBACK_NAMES)

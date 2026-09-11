@@ -241,6 +241,7 @@ def test_extract_accepts_named_archive_in_a_real_sentence():
 def test_extract_drops_promotional_extra_sentence():
     html = """
     <html><body>
+      <h2>University Archives and Records</h2>
       <p>The Pacific Northwest Artists Archive documents regional studio practice.</p>
       <p>Willamette University Archives is thrilled to launch WUpedia, a dynamic
       online encyclopedia of campus history.</p>
@@ -251,6 +252,7 @@ def test_extract_drops_promotional_extra_sentence():
     assert "Pacific Northwest Artists Archive" in got["note"]
     assert "thrilled" not in got["note"].lower()
     assert "wupedia" not in got["note"].lower()
+    assert "University Archives and Records" not in got["note"]
 
 
 def test_extract_rejects_nav_and_vendor_catalog_junk():
@@ -340,3 +342,6 @@ def test_write_summary_roundtrip(tmp_path: Path):
     text = dest.read_text(encoding="utf-8")
     assert "Example Rare Book Collection" in text
     assert "Not a closure verdict" in text
+    banner = distinctive_notes_html(df)
+    assert "Example College" in banner
+    assert "Example Rare Book Collection" in banner

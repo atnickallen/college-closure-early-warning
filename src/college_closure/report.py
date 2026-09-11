@@ -337,7 +337,13 @@ Configured feature columns not present in this run: {unused_txt}.
 """
 
 
-def run_report(settings: Settings, *, skip_scrape: bool = False, skip_libraries: bool = False) -> dict:
+def run_report(
+    settings: Settings,
+    *,
+    skip_scrape: bool = False,
+    skip_libraries: bool = False,
+    cache_only: bool = False,
+) -> dict:
     processed = settings.processed_dir
     out_dir = settings.outputs_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -444,6 +450,7 @@ def run_report(settings: Settings, *, skip_scrape: bool = False, skip_libraries:
             score_year=score_year,
             scrape_ids=scrape_ids,
             skip_scrape=skip_scrape,
+            cache_only=cache_only,
         )
 
     current = current.sort_values("risk_score", ascending=False).reset_index(drop=True)
