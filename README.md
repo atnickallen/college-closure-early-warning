@@ -206,6 +206,7 @@ Optional flags (also accepted by `run_pipeline.py` unless noted):
 | `--skip-closures` | Skip Higher Ed Dive / BestColleges / curated CSV |
 | `--skip-libraries` | Skip IPEDS Academic Libraries CSV (`02_crosswalk.py` / `07_report.py`) |
 | `--skip-scrape` | `07_report.py` only: join AL counts without fetching public library pages |
+| `--cache-only` | `07_report.py` only: re-extract notes from cached HTML (no live library fetches) |
 
 Tests:
 
@@ -409,7 +410,9 @@ member list when that page downloads; otherwise a small built-in snapshot is
 used. Small watch-list campuses are almost never ARL members.
 
 Re-run: `python3 scripts/02_crosswalk.py` (downloads the AL CSV) then
-`python3 scripts/07_report.py`. Use `--skip-scrape` to refresh counts only.
+`python3 scripts/07_report.py`. Use `--skip-scrape` to refresh counts only, or
+`--cache-only` to re-extract unique notes from `data/raw/libraries/` without
+hitting the live web.
 
 ## Labels
 
@@ -534,7 +537,7 @@ remain open for years. False positives are expected.
 PYTHONPATH=src python3 -m pytest tests -q
 ```
 
-This revision: **51 passed**, including Academic Libraries join/HTML-extraction tests.
+This revision: **53 passed**, including Academic Libraries join/HTML-extraction tests.
 
 Covers universe filters, OPEID 6/8 (never pad a 6-digit root to 8 with leading
 zeros), official composite attach without dropping missing UNITID, trailing-
