@@ -1,31 +1,34 @@
 #!/usr/bin/env python3
-"""Phase 4 stub: logistic baseline + gradient-boosted trees.
-
-Following WP 24-20:
-- Train only on private nonprofit and for-profit (in_risk_model_universe).
-- Temporal / walk-forward validation (no random row splits that leak future closures).
-- Logistic regression as the transparent baseline.
-- XGBoost (or LightGBM) as the preferred missing-data-tolerant model.
-- Report recall@K / precision@K on the 100 (or K) highest-risk institutions,
-  the metric the Fed paper uses to compare against federal composite scores.
-- Missingness itself is informative; do not drop high-missing closed schools.
-
-This script must not run until 04_features.py and 05_labels.py exist.
-"""
+"""Logistic baseline + XGBoost, temporal validation, recall@K, SHAP."""
 
 from __future__ import annotations
 
+import argparse
+import logging
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from college_closure.config import load_settings  # noqa: E402
+from college_closure.model import run_model  # noqa: E402
+
 
 def main() -> int:
-    print("06_model.py is a later-phase stub (not implemented).")
-    print("Planned: logistic baseline + XGBoost, temporal validation, recall@K.")
-    print("Train on private nonprofit + for-profit only.")
+    parser = argparse.ArgumentParser(description="Fit temporal models and score the risk universe")
+    parser.add_argument("--config", type=Path, default=None)
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    settings = load_settings(args.config)
+    metrics = run_model(settings)
+    test = metrics.get("test", {})
+    booster = metrics.get("booster", "")
+    block = test.get(booster, {})
+    print(
+        f"model={booster} test PR-AUC={block.get('pr_auc')} "
+        f"recall@50={block.get('recall_at_50')} beats_naive={metrics.get('beats_naive', {}).get('any_test_year')}"
+    )
     return 0
 
 

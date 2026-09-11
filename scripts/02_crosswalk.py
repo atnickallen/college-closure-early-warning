@@ -1,35 +1,44 @@
 #!/usr/bin/env python3
-"""Phase 2 stub: UNITID ↔ OPEID ↔ EIN crosswalk.
-
-IPEDS reports most surveys at UNITID. Federal Student Aid (closed-school
-notifications, Heightened Cash Monitoring, financial-responsibility composite
-scores) is keyed on OPEID (8-digit, sometimes OPEID6). IRS Form 990 / NCCS
-nonprofit finances use EIN. The IPEDS directory already carries opeid and ein
-on each UNITID×year row; later phases will:
-
-1. Build a longitudinal crosswalk from data/processed/directory.parquet
-   (unitid, year, opeid, ein, newid for mergers).
-2. Attach FSA PEPS / Closed School and College Scorecard OPEID6 keys.
-3. Resolve parent/child campus reporting (finance parent_unitid).
-4. Persist data/processed/crosswalk.parquet for label construction.
-
-Do not invent mappings. Re-run after 01_ingest.py has a directory extract.
-"""
+"""Phase 2: UNITID↔OPEID↔EIN crosswalk, NCES finance backfill, FSA extracts."""
 
 from __future__ import annotations
 
+import argparse
+import logging
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from college_closure.config import load_settings  # noqa: E402
+from college_closure.crosswalk import write_crosswalk  # noqa: E402
+from college_closure.fsa import run_fsa_ingest  # noqa: E402
+from college_closure.nces_finance import ingest_nces_finance  # noqa: E402
+
 
 def main() -> int:
-    print("02_crosswalk.py is a Phase 2 stub.")
-    print("Inputs: data/processed/directory.parquet (unitid, opeid, ein, newid)")
-    print("Planned output: data/processed/crosswalk.parquet")
-    print("See README.md → Later phases.")
+    parser = argparse.ArgumentParser(
+        description="Build OPEID/EIN crosswalk, NCES finance backfill, and FSA extracts."
+    )
+    parser.add_argument("--config", type=Path, default=None)
+    parser.add_argument("--skip-nces", action="store_true")
+    parser.add_argument("--skip-fsa", action="store_true")
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    settings = load_settings(args.config)
+
+    xw = write_crosswalk(settings)
+    print(f"crosswalk rows={len(xw):,} -> {settings.processed_dir / 'crosswalk.parquet'}")
+
+    if not args.skip_nces:
+        nces = ingest_nces_finance(settings)
+        print(f"nces finance rows={len(nces):,} -> {settings.processed_dir / 'finance_nces.parquet'}")
+    if not args.skip_fsa:
+        fsa = run_fsa_ingest(settings)
+        for key, frame in fsa.items():
+            n = 0 if frame is None or frame.empty else len(frame)
+            print(f"fsa {key} rows={n:,}")
     return 0
 
 

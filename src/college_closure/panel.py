@@ -8,6 +8,10 @@ import pandas as pd
 
 from college_closure.config import Settings
 from college_closure.constants import DIRECTORY_PANEL_COLUMNS
+from college_closure.crosswalk import apply_parent_child_finance_rollup, build_crosswalk
+from college_closure.fsa import attach_composite
+from college_closure.ids import add_id_keys
+from college_closure.nces_finance import merge_urban_and_nces
 from college_closure.qa import missingness_table, write_qa_counts
 
 LOGGER = logging.getLogger(__name__)
@@ -61,9 +65,14 @@ def build_panel(settings: Settings) -> pd.DataFrame:
         panel = panel.merge(fte[fte_cols], on=["unitid", "year"], how="left")
 
     finance = _ensure_unitid_year(_read_optional(processed / "finance.parquet"))
+    nces = _ensure_unitid_year(_read_optional(processed / "finance_nces.parquet"))
+    if not nces.empty:
+        finance = merge_urban_and_nces(finance, nces)
+        LOGGER.info("Finance after NCES merge: %s rows, years %s–%s", len(finance), int(finance["year"].min()), int(finance["year"].max()))
     if not finance.empty:
         finance_cols = [c for c in finance.columns if c in {"unitid", "year"} or c not in panel.columns]
         panel = panel.merge(finance[finance_cols], on=["unitid", "year"], how="left")
+        panel = apply_parent_child_finance_rollup(panel)
 
     admissions = _ensure_unitid_year(_read_optional(processed / "admissions.parquet"))
     if not admissions.empty:
@@ -96,6 +105,19 @@ def build_panel(settings: Settings) -> pd.DataFrame:
         panel["instruc_staff_count"].isna() if "instruc_staff_count" in panel.columns else True
     )
 
+    panel = add_id_keys(panel)
+    xw = build_crosswalk(panel)
+    extra_xw = [c for c in ("opeid8", "opeid6", "opeid_is_main", "ein_norm", "opeid6_n_unitids") if c in xw.columns]
+    if extra_xw:
+        panel = panel.drop(columns=[c for c in extra_xw if c in panel.columns], errors="ignore")
+        panel = panel.merge(xw[["unitid", "year", *extra_xw]], on=["unitid", "year"], how="left")
+
+    composite = _ensure_unitid_year(_read_optional(processed / "fsa_composite.parquet"))
+    if not composite.empty:
+        if "composite_score" in panel.columns:
+            panel = panel.drop(columns=["composite_score"])
+        panel = attach_composite(panel, composite)
+
     panel = panel.sort_values(["unitid", "year"]).reset_index(drop=True)
     out_path = processed / "panel.parquet"
     panel.to_parquet(out_path, index=False)
@@ -123,7 +145,9 @@ def build_panel(settings: Settings) -> pd.DataFrame:
         notes=[
             "Panel is directory-left-joined to fall enrollment, FTE, finance, admissions, and staffing.",
             "Publics remain in the panel; in_risk_model_universe=True for private nonprofit and for-profit.",
-            "Urban finance currently ends in 2017, so miss_finance is expected for later years.",
+            "Urban finance ends in 2017; NCES F1A/F2/F3 zips backfill later years when downloaded.",
+            "Child campuses with $0/missing revenue inherit parent totals (finance_from_parent).",
+            "Composite scores join on UNITID×year, then unambiguous OPEID6×year (main campus if shared).",
         ],
         extra_sections=[("Missingness by year", miss)],
     )

@@ -7,6 +7,19 @@ years:
   end: null
 
 label_horizon_years: 3
+label_horizons: [2, 3]
+labels:
+  mergers_are_positive: true
+  # Off by default: filtered-universe exits are not closures. IPEDS status +
+  # date_closed + FSA Closed School are the primary sources.
+  use_disappearance: false
+
+model:
+  train_end: 2016
+  val_years: [2017, 2018, 2019]
+  test_years: [2020, 2021]
+  recall_at_k: [25, 50, 100]
+  random_seed: 42
 
 paths:
   raw: data/raw
@@ -104,3 +117,38 @@ sources:
       staff_category: 99
     csv_file: colleges_ipeds_salaries_nis.csv
     csv_dir: ipeds
+
+nces:
+  # Complete data files: https://nces.ed.gov/ipeds/datacenter/data/F{yy}{yy+1}_F{1A|2|3}.zip
+  # F1819 = FY 2018 (fills Urban's post-2017 gap). F2223 is the latest confirmed zip.
+  base_url: https://nces.ed.gov/ipeds/datacenter/data
+  year_start: 2018
+  year_end: 2023
+  forms: [F1A, F2, F3]
+
+fsa:
+  urban_composite_csv: colleges_fsa_composite_scores.csv
+  urban_csv_dir: fsa
+  # Current FSA Data Center locations (tried in order; pages move).
+  hcm_urls:
+    - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/hcm.xlsx
+    - https://studentaid.gov/sites/g/files/dbyssus161/files/media/data/hcm.xlsx
+    - https://www2.ed.gov/offices/OSFAP/PEPS/hcm.xlsx
+  composite_urls:
+    - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/CompositeScores.xlsx
+    - https://studentaid.gov/sites/default/files/CompositeScores.xlsx
+  closed_school_urls:
+    - https://fsapartners.ed.gov/sites/default/files/2025-09/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2025-01/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2024-12/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2024-01/ClosedSchoolSearchFile.xls
+    - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/ClosedSchoolSearchFile.xls
+    - https://www2.ed.gov/offices/OSFAP/PEPS/docs/closedschoolsearchfile.xls
+
+scorecard:
+  # Optional; only used if DATA_GOV_API_KEY or SCORECARD_API_KEY is set.
+  api_base: https://api.data.gov/ed/collegescorecard/v1/schools
+
+wiche:
+  # Optional static CSV: columns state_abbr, year, hs_graduates (or similar).
+  path: data/external/wiche_hs_graduates.csv

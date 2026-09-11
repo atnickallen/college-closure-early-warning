@@ -113,4 +113,19 @@ DIRECTORY_PANEL_COLUMNS = [
     "inst_system_name",
     "primarily_postsecondary",
     "in_risk_model_universe",
+    "urban_centric_locale",
+    "cc_basic_2021",
+    "cc_basic_2018",
+    "cc_basic_2015",
 ]
+
+# Carnegie "special focus: faith-related" codes (2015/2018/2021 basic).
+FAITH_RELATED_CC_BASIC = {24}
+
+# IPEDS directory status codes treated as closure / merger events.
+INST_STATUS_CLOSED = {4, 7}  # out of business; closed in current year
+INST_STATUS_MERGED = {3}  # combined with other institution
+
+# Parent-child finance codes (Urban + IPEDS)
+PARENT_CHILD_PARENT = {1, 6}
+PARENT_CHILD_CHILD = {2, 3, 4, 5}

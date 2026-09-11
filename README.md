@@ -1,46 +1,32 @@
 # College closure early-warning pipeline
 
-Reproducible Python pipeline that ranks U.S. **degree-granting** colleges (not trade / cosmetology / certificate-only schools) by the probability of **closure or merger within 2–3 years**. This repository is **Milestones 1–2**: Urban Institute IPEDS ingest, a filtered college universe, and a UNITID×year panel. Modeling, labels, and the public watch list come later.
+Reproducible Python pipeline that ranks U.S. **degree-granting** colleges by
+**elevated-risk indicators** of closure or merger within 2–3 years.
 
-Methodological blueprint: Kelchen, Ritter & Webber, [*Predicting College Closures and Financial Distress*](https://www.philadelphiafed.org/-/media/frbp/assets/working-papers/2024/wp24-20.pdf) (Philadelphia Fed WP 24-20 / FEDS 2025-3). Features in later phases follow their findings: enrollment trajectory, tuition dependence, liquidity/leverage, operating margins, staffing contraction, and prior distress flags (FSA composite scores / HCM). **Public institutions almost never close**; they stay in the panel for context, but risk models train on private nonprofit and for-profit rows only.
+**This is a watch list, not a verdict.** A high score means an institution-year
+resembles historical closures/mergers on trailing observables. It is **not** a
+determination that a college will close, lose accreditation, or fail.
 
-This is a **watch list, not a verdict.** Predicted risk is not a determination that a college will close.
+Methodological blueprint: Kelchen, Ritter & Webber,
+[*Predicting College Closures and Financial Distress*](https://www.philadelphiafed.org/-/media/frbp/assets/working-papers/2024/wp24-20.pdf)
+(Philadelphia Fed WP 24-20 / FEDS 2025-3). Features follow their constructs:
+enrollment trajectory, tuition dependence, operating margins, staffing, and
+lagged FSA financial-responsibility signals. **Public institutions almost never
+close**; they stay in the panel for context. The risk model trains and ranks
+**private nonprofit and for-profit** rows (`in_risk_model_universe`).
 
-## What works today (Milestones 1–2)
+## Pipeline
 
-| Script | Status | Role |
-| --- | --- | --- |
-| `scripts/01_ingest.py` | **Implemented** | Download/cache Urban IPEDS extracts; filter to colleges; write Parquet + `outputs/qa_counts.md` |
-| `scripts/03_panel.py` | **Implemented** | One row per UNITID×year; left-join enrollment (+ finance / admissions / staffing); `data/processed/panel.parquet` + `outputs/qa_panel.md` |
-| `scripts/02_crosswalk.py` | Stub | UNITID ↔ OPEID ↔ EIN (Phase 2) |
-| `scripts/04_features.py` | Stub | Fed-blueprint features |
-| `scripts/05_labels.py` | Stub | `closed_or_merged_within_h_years` from IPEDS + FSA Closed School |
-| `scripts/06_model.py` | Stub | Logistic baseline + XGBoost, temporal validation, recall@K |
-| `scripts/07_report.py` | Stub | Ranked watch list + top-50 evidence cards |
-
-Every institution is keyed on **UNITID**. The IPEDS directory also carries **opeid** and **ein** for the Phase 2 crosswalk to FSA and Form 990 / NCCS.
-
-## College universe
-
-From the Urban IPEDS directory (`inst_control` is the portal name for IPEDS CONTROL):
-
-- `degree_granting == 1`
-- `inst_control` / `control` in `{1 public, 2 private nonprofit, 3 for-profit}`
-- Title IV participating when `title_iv_indicator` is reported (`1, 2, 4, 8`); missing Title IV is kept
-- Drop `sector == 0` (administrative / system offices)
-- Drop non-degree institutional categories and name patterns such as “System Office”
-
-Live ingest (Urban IPEDS directory, fall 2004–2024), after the filters above:
-
-| | |
+| Script | Role |
 | --- | --- |
-| Unique UNITID over the panel | **5,886** (~6,000 with for-profit entry/exit) |
-| Institution-years | **92,257** |
-| Peak year (2013) | **4,876** |
-| Latest year (2024) | **3,887** |
-| Private nonprofit 4-year | **1,542** (2024) to **1,651** (2015) |
-
-Certificate-only / less-than-2-year trade schools are out. Single-year totals are below 6,000 because that figure is the **longitudinal** Title IV college count, not the 2024 cross-section. Full sector×year tables: [`outputs/qa_counts.md`](outputs/qa_counts.md).
+| `scripts/01_ingest.py` | Urban IPEDS directory, enrollment, FTE, finance (through 2017), admissions, staffing |
+| `scripts/02_crosswalk.py` | UNITID ↔ OPEID8 ↔ OPEID6 ↔ EIN; NCES finance backfill; FSA composite / HCM / Closed School |
+| `scripts/03_panel.py` | UNITID×year panel, parent/child finance rollup, composite join |
+| `scripts/04_features.py` | Trailing-window features only (no future leakage); winsorize 1st/99th |
+| `scripts/05_labels.py` | `closed_or_merged_within_h_years` for h=2 and h=3; right-censor last h years |
+| `scripts/06_model.py` | Logistic baseline + XGBoost; temporal split; PR-AUC + recall@K; SHAP |
+| `scripts/07_report.py` | `outputs/watchlist.csv`, `outputs/top50_report.html`, `outputs/model_card.md` |
+| `scripts/run_pipeline.py` | Runs 01 (optional) through 07 |
 
 ## Install
 
@@ -54,100 +40,147 @@ pip install -r requirements.txt
 
 `scripts/*.py` add `src/` to `sys.path`; you do not have to `pip install -e .`.
 
-## Configure
+## Run
 
-Edit `config.yaml`:
-
-- `years.start` / `years.end` — default **2004 → latest** advertised on the Urban [`api-endpoints`](https://educationdata.urban.org/api/v1/api-endpoints/) metadata (directory is currently through **2024**)
-- `label_horizon_years: 3` — used later for labels
-- `filters` — degree-granting, control, Title IV, system-office drop rules
-- `urban.api_base` / `urban.csv_base` — Education Data Portal
-
-## Run Milestone 1
+End-to-end (reuses cached Urban extracts if present):
 
 ```bash
-python scripts/01_ingest.py --milestone1-only
+python3 scripts/run_pipeline.py --skip-ingest
 ```
 
-This downloads the all-years directory CSV and fall-enrollment **totals** (Urban JSON API with `race=sex=ftpt=degree_seeking=class_level=99` for undergraduate / graduate / first-professional). Raw files cache under `data/raw/` (gitignored). Processed Parquet lands in `data/processed/`:
-
-- `directory_raw.parquet` — unfiltered IPEDS directory in the year window
-- `directory.parquet` — filtered college universe
-- `fall_enrollment.parquet` — UNITID×year fall headcount (UG / graduate / total)
-
-QA: [`outputs/qa_counts.md`](outputs/qa_counts.md) (committed; regenerate locally after ingest).
-
-Re-runs use the on-disk cache. Delete `data/raw/ipeds/...` to force a re-download.
-
-## Run Milestone 2
+First time on a new machine (downloads Urban CSVs/API extracts):
 
 ```bash
-python scripts/01_ingest.py          # directory + enrollment + finance + admissions + staffing
-python scripts/03_panel.py
+python3 scripts/run_pipeline.py
 ```
 
-Additional extracts (skipped with `--milestone1-only`):
-
-| Source | Urban endpoint | How we pull it |
-| --- | --- | --- |
-| Finance | `ipeds/finance` | Bulk CSV `colleges_ipeds_finance.csv` |
-| Admissions | `ipeds/admissions-enrollment` | Bulk CSV; keep `sex==99` totals |
-| Instructional staff | `ipeds/salaries-instructional-staff` | API totals (`academic_rank=sex=contract_length=99`) |
-| Noninstructional staff | `ipeds/salaries-noninstructional-staff` | API totals (`staff_category=99`) |
-| FTE enrollment | `ipeds/enrollment-full-time-equivalent` | Bulk CSV `colleges_ipeds_enrollment-fte.csv` |
-
-`scripts/03_panel.py` left-joins these onto the filtered directory and writes `data/processed/panel.parquet` (92,257 × 77) plus [`outputs/qa_panel.md`](outputs/qa_panel.md). Fall enrollment is ~99.8% complete; finance is populated through 2017 (~6% missing in 2016, 100% missing afterward — Urban gap); admissions is missing for open-admission schools (~50%); staffing is ~4–5% missing.
-
-Subset ingest:
+Step by step:
 
 ```bash
-python scripts/01_ingest.py --sources directory,fall_enrollment,finance
+python3 scripts/01_ingest.py          # skip if data/processed/directory.parquet exists
+python3 scripts/02_crosswalk.py       # NCES zips + FSA files; logs and continues on 404
+python3 scripts/03_panel.py
+python3 scripts/04_features.py
+python3 scripts/05_labels.py
+python3 scripts/06_model.py
+python3 scripts/07_report.py
 ```
 
-## Why some pulls use the API instead of CSV
+Optional flags: `02_crosswalk.py --skip-nces` / `--skip-fsa`.
 
-Verified against [Urban college docs](https://educationdata.urban.org/documentation/colleges.html) and [`api-downloads`](https://educationdata.urban.org/api/v1/api-downloads/):
+College Scorecard is used only when `DATA_GOV_API_KEY` or `SCORECARD_API_KEY`
+is set. WICHE high-school graduate trends are used only if
+`data/external/wiche_hs_graduates.csv` exists (`state_abbr`, `year`, `hs_graduates`).
 
-- Directory CSV is ~110MB for **all years** — faster than paging ~20 API years.
-- Yearly `colleges_ipeds_fall-enrollment-race_{year}.csv` files are ~110MB **each** because they include every race × sex × FT/PT × class-level cell. Filtered API totals are one page per year×level.
-- Instructional-staff CSV is ~400MB of rank/sex/contract cells; the totals API is a few thousand rows per year.
-- If a year or file is missing, ingest **logs the URL and continues**.
+## Outputs (committed)
 
-Known portal gap: Urban IPEDS **finance currently ends in 2017** (`api-endpoints` id 91). Later years will need a NCES IPEDS Finance backfill before modeling.
+| File | Contents |
+| --- | --- |
+| [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit scores for the latest right-censored year |
+| [`outputs/top50_report.html`](outputs/top50_report.html) | Evidence cards (FTE trend, discount, margins, composite, HCM, top drivers) |
+| [`outputs/model_card.md`](outputs/model_card.md) | Metrics, recall@K, caveats |
+| [`outputs/model_metrics.json`](outputs/model_metrics.json) | Machine-readable split metrics and baseline comparison |
+| [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed |
+| [`outputs/fsa_ingest.md`](outputs/fsa_ingest.md) | Which FSA files downloaded vs skipped |
+| [`outputs/qa_counts.md`](outputs/qa_counts.md) / [`outputs/qa_panel.md`](outputs/qa_panel.md) | Universe / panel QA |
 
-## Later phases (stubs only)
+`data/raw/` and `data/processed/` are gitignored (regenerate with the scripts).
 
-Documented in the script headers; **not implemented** in this launch.
+## College universe
 
-1. **02_crosswalk** — UNITID↔OPEID↔EIN, FSA / Scorecard keys, parent/child campuses.
-2. **04_features** — enrollment path, tuition dependence, margins, liquidity/leverage, staffing contraction, prior FSA flags (WP 24-20 covariate list).
-3. **05_labels** — `closed_or_merged_within_h_years` from IPEDS `inst_status` / `date_closed` / `newid` plus the FSA Closed School file.
-4. **06_model** — logistic baseline + XGBoost; temporal validation; recall@K vs federal composite scores.
-5. **07_report** — ranked watch list and top-50 evidence cards, with the watch-list-not-verdict caveat.
+From the Urban IPEDS directory (`inst_control` is the portal name for CONTROL):
+
+- `degree_granting == 1`
+- `inst_control` in `{1 public, 2 private nonprofit, 3 for-profit}`
+- Title IV participating when `title_iv_indicator` is reported (`1, 2, 4, 8`); missing Title IV is kept
+- Drop `sector == 0` and name patterns such as “system office”
+
+Live Urban directory (fall 2004–2024), after filters: **5,886** unique UNITID,
+**92,257** institution-years, **3,887** in 2024. Details: `outputs/qa_counts.md`.
+
+## Identifiers (OPEID 6 vs 8)
+
+- IPEDS OPEID is 8 digits: **6-digit FSA root + 2-digit branch** (`…00` = main).
+- FSA files often store only the 6-digit root. We do **not** left-pad a 6-digit
+  value to 8 (that would turn `002345` into `00002345`).
+- Joins: exact UNITID×year when possible; else OPEID6, preferring the main
+  campus when several UNITIDs share a root (`opeid6_n_unitids`).
+
+## Finance
+
+- Urban `colleges_ipeds_finance.csv` ends in **2017**.
+- NCES complete-data zips `F{yy}{yy+1}_{F1A|F2|F3}.zip` backfill later years
+  (e.g. `F1819_F2.zip` = FY 2018). `F2324_*` was not published as of this build.
+- Child campuses with $0 / missing revenue **inherit parent totals** and are
+  flagged `finance_from_parent`. Parents are not dropped or double-summed.
+
+## Labels
+
+- Positives: IPEDS `inst_status` ∈ {4, 7} (closed), {3} merger if
+  `labels.mergers_are_positive` (default true), `date_closed` / `year_deleted`,
+  and FSA Closed School (OPEID6 + year) when that file downloads.
+- Events are taken from `directory_raw.parquet` (unfiltered) so leaving the
+  *filtered* universe is not treated as a closure.
+- Panel-disappearance labels are **off** by default (`use_disappearance: false`).
+- `closed_or_merged_within_h_years` is 1 if the event year is in `(year, year+h]`.
+- Rows with `year + h > last_complete_year` are right-censored (training
+  excludes them; they are the watch-list scoring set).
+
+## Model
+
+- Train on `in_risk_model_universe` rows with complete h=3 labels.
+- Default split: train ≤2016, val 2017–2019, test 2020–2021 (no shuffle).
+  Years without complete labels are dropped from the split.
+- Naive baselines: (a) last-known composite &lt; 1.0; (b) 5-year FTE decline &gt; 30%.
+- HCM is **not** a training feature (current list only, shown on evidence cards).
+- Metrics and SHAP: `outputs/model_card.md`.
 
 ## Tests
 
 ```bash
-PYTHONPATH=src pytest tests -q
+PYTHONPATH=src python3 -m pytest tests -q
 ```
 
-Filter tests use synthetic rows only — they do not call the network.
+Covers universe filters, OPEID 6/8, trailing-window (no-leak) features,
+parent/child rollup, label horizon / right-censor / merger toggle, recall@K.
+
+## Configure
+
+`config.yaml`: year window, label horizons, temporal split, Urban / NCES / FSA
+URLs. FSA pages move; ingest tries several URLs and **continues** on failure.
+
+## Known limitations
+
+- IPEDS publications lag; recent finance and composite scores may be missing.
+  Missingness is a feature (`miss_finance`, `miss_composite`), not filled with
+  zeros that look like health.
+- Urban composite scores historically end in 2016. Later years use the last
+  observed score (lagged) plus `composite_is_lagged`.
+- Official FSA HCM / Closed School / composite workbooks are downloaded when a
+  current file URL works. JavaScript Data Center pages are not scraped as data.
+- College Scorecard and WICHE are optional.
+- Accreditor actions, WARN notices, and IRS 990s are **not** ingested
+  (TODO — do not treat the watch list as a complete diligence file).
+- For-profit chain collapses and public “closures” are different processes;
+  publics are excluded from the primary ranking.
+- Do not publish ranks as “predicted closures.”
 
 ## Data policy
 
 - Do not invent enrollment, finance, or closure dates.
 - Do not commit `data/raw/` or processed Parquet (see `.gitignore`).
-- Cite Urban + IPEDS when publishing: IPEDS via [Education Data Portal](https://educationdata.urban.org/documentation/), Urban Institute.
+- Cite Urban + IPEDS: [Education Data Portal](https://educationdata.urban.org/documentation/), Urban Institute;
+  NCES IPEDS complete data files; FSA Data Center when those files are used.
 
 ## Layout
 
 ```
 config.yaml
 requirements.txt
-scripts/01_ingest.py … 07_report.py
-src/college_closure/     # client, filters, ingest, panel, QA
-data/raw/                # cached Urban CSVs / API extracts (gitignored)
-data/processed/          # Parquet (gitignored)
-outputs/                 # qa_counts.md, qa_panel.md
+scripts/01_ingest.py … 07_report.py  run_pipeline.py
+src/college_closure/
+data/raw/            # cached downloads (gitignored)
+data/processed/      # Parquet (gitignored)
+outputs/             # QA, watchlist, model card (committed)
 tests/
 ```

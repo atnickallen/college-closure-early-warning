@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
-"""Phase 4 stub: ranked watch list + top-50 evidence cards.
+"""Ranked watch list, top-50 evidence cards, and model card.
 
-Outputs (later):
-- outputs/watchlist.csv — UNITID, name, sector, predicted P(close/merge within h years),
-  rank, key feature contributions, data-completeness flags.
-- outputs/evidence_cards/ — short markdown cards for the top 50 with enrollment
-  trajectory, tuition dependence, margins, liquidity/leverage, staffing, and
-  prior FSA distress flags.
-
-Caveat (must appear on every artifact): this is a watch list, not a verdict.
-Predicted risk is not a determination that an institution will close or merge.
+This is a watch list of elevated-risk indicators, not a closure verdict.
 """
 
 from __future__ import annotations
 
+import argparse
+import logging
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from college_closure.config import load_settings  # noqa: E402
+from college_closure.report import run_report  # noqa: E402
+
 
 def main() -> int:
-    print("07_report.py is a later-phase stub (not implemented).")
-    print("Planned outputs: outputs/watchlist.csv and top-50 evidence cards.")
-    print("Caveat: watch list, not a verdict.")
+    parser = argparse.ArgumentParser(description="Write watchlist.csv, top50_report.html, model_card.md")
+    parser.add_argument("--config", type=Path, default=None)
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    settings = load_settings(args.config)
+    info = run_report(settings)
+    print(
+        f"watchlist year={info['score_year']} rows={info['n_watch']} "
+        f"cards={info['n_cards']} -> {settings.outputs_dir}"
+    )
     return 0
 
 
