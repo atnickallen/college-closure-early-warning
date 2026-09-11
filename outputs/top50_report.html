@@ -10,7 +10,8 @@
     .banner { background: #fff6e5; border: 1px solid #e0c48a; padding: 0.8rem 1rem; }
     .card { border: 1px solid #ddd; padding: 1rem 1.2rem; margin: 1.2rem 0; }
     .card h2 { margin-top: 0; font-size: 1.2rem; }
-    .meta, .caveat { color: #555; font-size: 0.95rem; }
+    .meta, .caveat, .lib-context, .lib-note { color: #555; font-size: 0.95rem; }
+    .lib-note { margin-top: 0.4rem; }
     table { border-collapse: collapse; width: 100%; margin: 0.6rem 0; }
     th { text-align: left; width: 28%; color: #444; font-weight: 600; padding: 0.2rem 0.4rem; }
     td { padding: 0.2rem 0.4rem; }
@@ -26,6 +27,8 @@
     is the latest <em>right-censored</em> year with published IPEDS finance (later directory
     years are omitted because unpublished finance looks like pre-closure missingness).
     Composite scores lag; HCM is a current snapshot and was not used as a training feature.
+    Library holdings and special-collection notes are <em>enrichment context</em> (IPEDS
+    Academic Libraries + public library pages), not a model input.
   </div>
   
     <article class="card">
@@ -41,18 +44,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>1</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (3.689)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -65,22 +87,41 @@
         <tr><th>FTE</th><td>38</td>
             <th>FTE 5y %Δ</th><td>-65.8%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>-11.6%</td>
-            <th>First-time FY %Δ</th><td>50.0%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>2.50</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (2.500)</li><li><code>log_fte</code> (3.638)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.857)</li></ul>
+      <ul><li><code>composite_score</code> (2.500)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>1,500</td>
+            <th>Digital items</th><td>31</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -93,22 +134,41 @@
         <tr><th>FTE</th><td>224</td>
             <th>FTE 5y %Δ</th><td>-70.0%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>-43.6%</td>
-            <th>First-time FY %Δ</th><td>-28.6%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.70</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.700)</li><li><code>log_fte</code> (5.412)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.481)</li></ul>
+      <ul><li><code>composite_score</code> (1.700)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>311,954</td></tr>
+        <tr><th>Library expenditures</th><td>$130,336</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Bay State College.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -121,22 +181,41 @@
         <tr><th>FTE</th><td>57</td>
             <th>FTE 5y %Δ</th><td>-72.2%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>-32.9%</td>
-            <th>First-time FY %Δ</th><td>-75.0%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>1</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (4.043)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.571)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>268,354</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Hussian College-Daymar College Murfreesboro.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -153,18 +232,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (4.477)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>5,911</td>
+            <th>Digital items</th><td>369,987</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.5</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for The Art Institute of Virginia Beach.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -181,18 +279,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (4.357)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>4,189</td>
+            <th>Digital items</th><td>369,987</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for The Art Institute of Austin.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -209,18 +326,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.193)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>3,887</td>
+            <th>Digital items</th><td>369,987</td></tr>
+        <tr><th>Library expenditures</th><td>$104,677</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for The Art Institute of San Antonio.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -237,18 +373,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (3.258)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>406</td>
+            <th>Digital items</th><td>91,795</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Hussian College-Daymar College Columbus.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -265,18 +420,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>1</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.580)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>9,012</td>
+            <th>Digital items</th><td>369,987</td></tr>
+        <tr><th>Library expenditures</th><td>$115,919</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Miami International University of Art &amp; Design-Art Institute Dallas.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -293,18 +467,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>2.20</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (2.200)</li><li><code>log_fte</code> (4.234)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (2.200)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>500</td>
+            <th>Digital items</th><td>11,200,650</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Platt College-San Diego.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -317,22 +510,41 @@
         <tr><th>FTE</th><td>81</td>
             <th>FTE 5y %Δ</th><td>-69.7%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>-51.5%</td>
-            <th>First-time FY %Δ</th><td>-23.5%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>3.00</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 7034068</td></tr>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (3.000)</li><li><code>log_fte</code> (4.394)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.520)</li></ul>
+      <ul><li><code>composite_score</code> (3.000)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>2,660</td>
+            <th>Digital items</th><td>760,356</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>2019 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -349,18 +561,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>3</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (3.526)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -377,18 +608,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (3.219)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>2,445</td>
+            <th>Digital items</th><td>0</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.4</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Southwest Acupuncture College-Boulder.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -405,18 +655,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.704)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Trades Education Center.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -433,18 +702,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 31590718</td></tr>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.561)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>486,207</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Altierus Career College-Bissonnet.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -461,18 +749,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>-0.20</td>
             <th>Zone / failing</th><td>0 / 1</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (-0.200)</li><li><code>log_fte</code> (5.759)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (-0.200)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>16,533</td>
+            <th>Digital items</th><td>369,987</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for The Art Institute of Houston.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -485,22 +792,41 @@
         <tr><th>FTE</th><td>80</td>
             <th>FTE 5y %Δ</th><td>29.0%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>15.9%</td>
-            <th>First-time FY %Δ</th><td>40.0%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.00</td>
             <th>Zone / failing</th><td>1 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.000)</li><li><code>log_fte</code> (4.382)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.477)</li></ul>
+      <ul><li><code>composite_score</code> (1.000)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>1,628</td>
+            <th>Digital items</th><td>243,041</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Hussian College-Philadelphia.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -517,18 +843,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>1</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>-0.20</td>
             <th>Zone / failing</th><td>0 / 1</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (-0.200)</li><li><code>log_fte</code> (6.125)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (-0.200)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>24,681</td>
+            <th>Digital items</th><td>369,987</td></tr>
+        <tr><th>Library expenditures</th><td>$158,300</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for The Art Institute of Atlanta.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -545,18 +890,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.80</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.800)</li><li><code>log_fte</code> (1.946)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (1.800)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>2,088</td>
+            <th>Digital items</th><td>0</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.4</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Southwest Acupuncture College-Santa Fe.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -573,18 +937,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.971)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>1,646</td>
+            <th>Digital items</th><td>7,231</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -601,18 +984,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>3</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>0.00</td>
             <th>Zone / failing</th><td>0 / 1</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (0.000)</li><li><code>log_fte</code> (3.497)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (0.000)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>121,862</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Hussian College-Daymar College Nashville.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -629,18 +1031,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (4.868)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -657,18 +1078,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.60</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>0</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 50984721</td></tr>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.600)</li><li><code>log_fte</code> (5.273)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (1.600)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -681,22 +1121,41 @@
         <tr><th>FTE</th><td>50</td>
             <th>FTE 5y %Δ</th><td>-68.6%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>-28.6%</td>
-            <th>First-time FY %Δ</th><td>-21.4%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>3.00</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 1727186</td></tr>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (3.000)</li><li><code>log_fte</code> (3.912)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.440)</li></ul>
+      <ul><li><code>composite_score</code> (3.000)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>621</td>
+            <th>Digital items</th><td>0</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.1</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -713,18 +1172,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (4.263)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>88</td>
+            <th>Digital items</th><td>73</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2022 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -741,18 +1219,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.80</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.800)</li><li><code>log_fte</code> (3.401)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (1.800)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>3,415</td>
+            <th>Digital items</th><td>776</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2022 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Mountain State College.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -769,18 +1266,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.50</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.500)</li><li><code>log_fte</code> (6.129)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (1.500)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>2,529</td>
+            <th>Digital items</th><td>60,668</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Career College of Northern Nevada.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -797,18 +1313,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.704)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Rancho Cordova.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -825,18 +1360,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>0</td>
+        <tr><th>Scorecard operating</th><td>not currently operating (Scorecard snapshot — not a closure year)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (6.271)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Fresno.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -849,22 +1403,41 @@
         <tr><th>FTE</th><td>959</td>
             <th>FTE 5y %Δ</th><td>24.7%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>10.0%</td>
-            <th>First-time FY %Δ</th><td>38.8%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>3</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.70</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 94795030</td></tr>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.700)</li><li><code>log_fte</code> (6.866)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.148)</li></ul>
+      <ul><li><code>composite_score</code> (1.700)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>37,284</td>
+            <th>Digital items</th><td>384,357</td></tr>
+        <tr><th>Library expenditures</th><td>$535,968</td>
+            <th>Librarian FTE</th><td>4.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -881,18 +1454,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.273)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Rancho Mirage.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -909,18 +1501,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (6.748)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Temecula.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -937,18 +1548,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>2.70</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 31590718</td></tr>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (2.700)</li><li><code>log_fte</code> (5.765)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (2.700)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>486,207</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Altierus Career College-Norcross.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -965,18 +1595,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (7.114)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Ontario.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -993,18 +1642,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (4.585)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.083)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1017,22 +1685,41 @@
         <tr><th>FTE</th><td>450</td>
             <th>FTE 5y %Δ</th><td>25.3%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>15.7%</td>
-            <th>First-time FY %Δ</th><td>-7.9%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>1.00</td>
             <th>Zone / failing</th><td>1 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 18081025</td></tr>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (1.000)</li><li><code>log_fte</code> (6.109)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.127)</li></ul>
+      <ul><li><code>composite_score</code> (1.000)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>50,176</td>
+            <th>Digital items</th><td>419,314</td></tr>
+        <tr><th>Library expenditures</th><td>$137,248</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Finlandia University.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1045,22 +1732,41 @@
         <tr><th>FTE</th><td>1332</td>
             <th>FTE 5y %Δ</th><td>-21.3%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>44.2%</td>
-            <th>First-time FY %Δ</th><td>-8.9%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>2.20</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 34041193</td></tr>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (2.200)</li><li><code>log_fte</code> (7.194)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.151)</li></ul>
+      <ul><li><code>composite_score</code> (2.200)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>120,280</td>
+            <th>Digital items</th><td>341,840</td></tr>
+        <tr><th>Library expenditures</th><td>$454,348</td>
+            <th>Librarian FTE</th><td>3.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1077,18 +1783,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.565)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>1,106</td>
+            <th>Digital items</th><td>78,964</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>2013 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1105,18 +1830,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.124)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Santa Maria.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1133,18 +1877,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>1</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>2.60</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (2.600)</li><li><code>log_fte</code> (4.263)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (2.600)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>16,751</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.3</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Huntington University of Health Sciences.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1161,18 +1924,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>3</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>-0.20</td>
             <th>Zone / failing</th><td>0 / 1</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (-0.200)</li><li><code>log_fte</code> (6.812)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (-0.200)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>24,588</td>
+            <th>Digital items</th><td>369,987</td></tr>
+        <tr><th>Library expenditures</th><td>$173,116</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for AI Miami International University of Art and Design.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1185,22 +1967,41 @@
         <tr><th>FTE</th><td>424</td>
             <th>FTE 5y %Δ</th><td>-4.9%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>-5.1%</td>
-            <th>First-time FY %Δ</th><td>18.9%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (6.050)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.815)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>230</td>
+            <th>Digital items</th><td>1</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.3</td></tr>
+        <tr><th>AL year / source</th><td>2022 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for St Louis College of Health Careers-Fenton.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1217,18 +2018,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (6.227)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>26</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2022 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for InterCoast Colleges-West Covina.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1245,18 +2065,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.476)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>1,120</td>
+            <th>Digital items</th><td>78,964</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>2013 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1273,18 +2112,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (6.923)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for San Joaquin Valley College-Bakersfield.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1297,22 +2155,41 @@
         <tr><th>FTE</th><td>21</td>
             <th>FTE 5y %Δ</th><td>-83.8%</td></tr>
         <tr><th>FTE 1y %Δ</th><td>-61.4%</td>
-            <th>First-time FY %Δ</th><td>-75.0%</td></tr>
+            <th>First-time FY %Δ</th><td>—</td></tr>
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>2</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (3.045)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (0.889)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>931</td>
+            <th>Digital items</th><td>2</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>0.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1329,18 +2206,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>0</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (5.323)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>1,187</td>
+            <th>Digital items</th><td>78,964</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>2013 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1357,18 +2253,37 @@
         <tr><th>Discount rate</th><td>—</td>
             <th>Tuition dependence</th><td>—</td></tr>
         <tr><th>Operating margin</th><td>—</td>
-            <th>Consec. neg. margins</th><td>1</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>3.00</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>1</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>—</td>
-            <th>Enrichment flags</th><td>990 EIN verified; revenue 1936768</td></tr>
+        <tr><th>Scorecard operating</th><td>Scorecard operating unknown</td>
+            <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (3.000)</li><li><code>log_fte</code> (4.860)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (—)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (3.000)</li><li><code>operating_margin</code> (—)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>15,059</td>
+            <th>Digital items</th><td>566,428</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>1.0</td></tr>
+        <tr><th>AL year / source</th><td>2021 / urban</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Unknown — public website did not yield a usable library page for Chatfield College.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1385,18 +2300,37 @@
         <tr><th>Discount rate</th><td>12.7%</td>
             <th>Tuition dependence</th><td>97.9%</td></tr>
         <tr><th>Operating margin</th><td>-255.7%</td>
-            <th>Consec. neg. margins</th><td>3</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>0</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (4.127)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (-2.557)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (-2.557)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
 
@@ -1413,21 +2347,40 @@
         <tr><th>Discount rate</th><td>12.6%</td>
             <th>Tuition dependence</th><td>98.1%</td></tr>
         <tr><th>Operating margin</th><td>-395.4%</td>
-            <th>Consec. neg. margins</th><td>4</td></tr>
+            <th>Consec. neg. margins</th><td>—</td></tr>
         <tr><th>Composite score</th><td>—</td>
             <th>Zone / failing</th><td>0 / 0</td></tr>
         <tr><th>Finance missing</th><td>0</td>
             <th>HCM / investigation</th><td>not on current HCM / Scorecard investigation flags (or lists unavailable)</td></tr>
-        <tr><th>Scorecard operating</th><td>1</td>
+        <tr><th>Scorecard operating</th><td>currently operating (Scorecard)</td>
             <th>Enrichment flags</th><td>no extra accreditor / WARN / 990 hit</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
-      <ul><li><code>unrestricted_na_to_exp</code> (—)</li><li><code>composite_score</code> (—)</li><li><code>log_fte</code> (2.398)</li><li><code>endowment_per_fte</code> (—)</li><li><code>operating_margin</code> (-3.954)</li><li><code>yield_rate</code> (—)</li></ul>
+      <ul><li><code>composite_score</code> (—)</li><li><code>operating_margin</code> (-3.954)</li></ul>
+      
+      <h3>Libraries &amp; collections</h3>
+      <p class="lib-context">Enrichment context — cultural / asset value that may be at
+      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
+      counts are unknown when the survey cell is missing; that is not evidence the
+      school has no library. Scraped notes are best-effort from public pages.</p>
+      <table>
+        <tr><th>Physical books</th><td>—</td>
+            <th>Digital items</th><td>—</td></tr>
+        <tr><th>Library expenditures</th><td>—</td>
+            <th>Librarian FTE</th><td>—</td></tr>
+        <tr><th>AL year / source</th><td>— / —</td>
+            <th>ARL member</th><td>no / not listed</td></tr>
+        <tr><th>Unique / notable</th><td colspan="3">no</td></tr>
+      </table>
+      <p class="lib-note">Public library pages were reached; nothing distinctive (named special collection, archive, or rare-book area) was published.</p>
+    
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.</p>
+      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
+      Library holdings are enrichment context (what cultural/asset value might be at stake),
+      not a training feature.</p>
     </article>
     
   <h2>Limitations</h2>
-  <p>Watch list only. IPEDS lag; Urban composite scores end 2016 unless an official FSA workbook downloaded; NCES finance backfill covers published F-year zips only; HCM is current-list evidence and was not a training feature; mergers count as positives by default; publics excluded from the primary ranking.</p>
+  <p>Watch list only. IPEDS lag; official FSA composites currently end FY 2018; NCES finance backfill covers published F-year zips only; HCM / Scorecard HCM2 are current-list evidence and were not training features; mergers count as positives by default; publics excluded from the primary ranking. Library holdings are IPEDS Academic Libraries enrichment (Urban 2013–2023); scraped special-collection notes are best-effort. Missing library data ≠ no library.</p>
 </body>
 </html>

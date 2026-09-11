@@ -148,6 +148,44 @@ _BOILERPLATE_NAMES = {
     "institutional repository",
     "the archives",
     "archives",
+    "academic catalog archive",
+    "hnu academic catalog archive",
+    "sage digital library",
+    "ebsco digital library",
+    "proquest digital library",
+}
+_JUNK_NAME_RE = re.compile(
+    r"\b(hours|contact us|policies|mission|staff|alumni and friends|"
+    r"academic catalog|course catalog|resources alumni|menu|skip to|"
+    r"sage |ebsco|proquest|jstor|gale |credo )\b",
+    re.I,
+)
+_GENERIC_NAME_WORDS = {
+    "digital",
+    "academic",
+    "university",
+    "college",
+    "library",
+    "learning",
+    "studio",
+    "commons",
+    "institutional",
+    "online",
+    "the",
+    "and",
+    "of",
+    "for",
+    "in",
+    "at",
+    "pm",
+    "resources",
+    "alumni",
+    "friends",
+    "former",
+    "faculty",
+    "staff",
+    "home",
+    "main",
 }
 
 # Common paths relative to the institution homepage.
@@ -257,17 +295,48 @@ def _sentences(text: str) -> list[str]:
     return out
 
 
+def _is_mashed_nav(line: str) -> bool:
+    caps = re.findall(r"\b[A-Z][A-Za-z]{2,}\b", line)
+    lowers = re.findall(r"\b[a-z]{3,}\b", line)
+    return len(caps) >= 5 and len(lowers) <= 1
+
+
 def _named_collections(text: str) -> list[str]:
     names: list[str] = []
     seen: set[str] = set()
-    for match in _COLLECTION_NAME_RE.finditer(text):
-        name = re.sub(r"\s+", " ", match.group(1)).strip(" ,.;:")
-        key = name.lower()
-        if key in _BOILERPLATE_NAMES or len(name) < 12:
+    for line in text.splitlines():
+        line = re.sub(r"\s+", " ", line).strip(" •\t-|")
+        if len(line) < 15 or _is_mashed_nav(line):
             continue
-        if key not in seen:
-            seen.add(key)
-            names.append(name)
+        for match in _COLLECTION_NAME_RE.finditer(line):
+            name = re.sub(r"\s+", " ", match.group(1)).strip(" ,.;:")
+            key = name.lower()
+            if key in _BOILERPLATE_NAMES or len(name) < 12:
+                continue
+            if _JUNK_NAME_RE.search(name):
+                continue
+            if re.match(r"^(Search|Using|Advanced|Home|Menu|Skip)\b", name, re.I):
+                continue
+            words = name.split()
+            if len(words) > 8 or len(set(w.lower() for w in words)) < len(words) - 1:
+                continue
+            core = re.sub(
+                r"\s+(?:Special\s+Collections?|Rare\s+Books?.*|Archives?|"
+                r"Manuscript(?:s|\s+Collection)|Historical\s+(?:Library|Collection|Society)|"
+                r"Memorial\s+Library|Research\s+Collection|"
+                r"Digital\s+(?:Library|Collection|Repository))$",
+                "",
+                name,
+                flags=re.I,
+            )
+            distinctive = [
+                w for w in re.findall(r"[A-Za-z']+", core) if w.lower() not in _GENERIC_NAME_WORDS
+            ]
+            if not distinctive:
+                continue
+            if key not in seen:
+                seen.add(key)
+                names.append(name)
     return names[:8]
 
 
@@ -512,16 +581,6 @@ def ingest_academic_libraries(
 
 def _norm_inst_name(name: str) -> str:
     s = re.sub(r"[^a-z0-9]+", " ", str(name).lower()).strip()
-    for token in (
-        " university",
-        " college",
-        " institute",
-        " of",
-        " the",
-        " at",
-    ):
-        s = s.replace(token.strip(), " ") if False else s
-    s = re.sub(r"\b(university|college|institute|the|of|at)\b", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
 
@@ -586,10 +645,13 @@ def match_arl_member(inst_name: str, arl_names: Iterable[str]) -> bool:
         hay = _norm_inst_name(raw)
         if not hay or len(hay) < 6:
             continue
-        if needle == hay or needle in hay or hay in needle:
-            # Guard short fragments ("new york") matching NYPL vs a small NY college.
-            if min(len(needle), len(hay)) < 10 and needle != hay:
-                continue
+        if needle == hay:
+            return True
+        # Containment only when the shorter name is long enough to be distinctive
+        # ("harvard university" in a longer official string). Never collapse
+        # "Notre Dame College" into ARL member "University of Notre Dame".
+        shorter, longer = (needle, hay) if len(needle) <= len(hay) else (hay, needle)
+        if len(shorter) >= 18 and shorter in longer:
             return True
     return False
 
@@ -697,6 +759,13 @@ def discover_library_urls(homepage: str, homepage_html: str | None) -> list[str]
 
     parsed = urlparse(homepage)
     origin = f"{parsed.scheme}://{parsed.netloc}"
+    host = parsed.netloc
+    if host.startswith("www."):
+        bare = host[4:]
+    else:
+        bare = host
+    _add(f"{parsed.scheme}://library.{bare}")
+    _add(f"{parsed.scheme}://libraries.{bare}")
     for path in _LIBRARY_PATHS:
         _add(origin + path)
     if homepage_html:
@@ -746,7 +815,12 @@ def scrape_library_notes(
 
         home_dest = _cache_html_path(cache_dir, unitid, home)
         home_html = _get_html(sess, home, home_dest, timeout)
-        candidates = discover_library_urls(home, home_html)
+        if home_html is None:
+            parsed = urlparse(home)
+            host = parsed.netloc[4:] if parsed.netloc.startswith("www.") else parsed.netloc
+            candidates = [f"{parsed.scheme}://library.{host}"]
+        else:
+            candidates = discover_library_urls(home, home_html)
         # Prefer collection/archive URLs, then generic library pages, then homepage.
         def _rank(url: str) -> tuple[int, int]:
             u = url.lower()
@@ -761,13 +835,28 @@ def scrape_library_notes(
             ordered.append(home)
 
         found_any_page = False
-        for url in ordered[:8]:
+        seen_urls = set(ordered)
+        idx = 0
+        while idx < len(ordered) and idx < 10:
+            url = ordered[idx]
+            idx += 1
             dest = _cache_html_path(cache_dir, unitid, url)
             html_text = home_html if url.rstrip("/") == home.rstrip("/") else _get_html(sess, url, dest, timeout)
             if not html_text:
                 continue
             found_any_page = True
             extracted = extract_special_collections_note(html_text, page_url=url)
+            if not extracted["unique_flag"]:
+                _text, hrefs = html_to_text_and_links(html_text)
+                for href in hrefs:
+                    extra = _abs_url(url, href)
+                    if (
+                        extra
+                        and extra not in seen_urls
+                        and re.search(r"special|rare|archive|digitalcollect", extra, re.I)
+                    ):
+                        seen_urls.add(extra)
+                        ordered.append(extra)
             if extracted["unique_flag"]:
                 best = {
                     "unitid": unitid,
@@ -802,6 +891,9 @@ def attach_library_columns(
     """Left-join AL snapshot + optional scrape notes. Never fills holdings with zeros."""
     out = watch.copy()
     out["unitid"] = pd.to_numeric(out["unitid"], errors="coerce")
+    drop_existing = [c for c in (*LIB_WATCHLIST_COLS, *LIB_VALUE_COLS) if c in out.columns]
+    if drop_existing:
+        out = out.drop(columns=drop_existing)
     keep = ["unitid", "lib_year", "lib_source", *LIB_VALUE_COLS]
     if snapshot is None or snapshot.empty:
         slim = pd.DataFrame(columns=keep)
@@ -899,7 +991,7 @@ def write_libraries_summary(shortlist: pd.DataFrame, dest: Path) -> Path:
         for _, row in unique.iterrows():
             lines.append(f"### {row.get('inst_name')} (UNITID {row.get('unitid')})")
             lines.append("")
-            lines.append(f"- AL year: {row.get('lib_year', '—')}")
+            lines.append(f"- AL year: {_md_year(row.get('lib_year'))}")
             lines.append(f"- Physical books: {_md_num(row.get('lib_physical_books'))}")
             lines.append(f"- Digital items: {_md_num(row.get('lib_digital_items'))}")
             lines.append(f"- Expenditures: {_md_money(row.get('lib_expenditures'))}")
@@ -920,6 +1012,17 @@ def write_libraries_summary(shortlist: pd.DataFrame, dest: Path) -> Path:
     dest.write_text("\n".join(lines), encoding="utf-8")
     LOGGER.info("Wrote %s", dest)
     return dest
+
+
+def _md_year(v: Any) -> str:
+    if v is None:
+        return "unknown"
+    try:
+        if pd.isna(v):
+            return "unknown"
+        return str(int(v))
+    except (TypeError, ValueError):
+        return "unknown"
 
 
 def _md_num(v: Any, digits: int = 0) -> str:

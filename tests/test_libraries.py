@@ -110,6 +110,48 @@ def test_latest_al_prefers_score_year_then_latest():
     assert int(two["lib_year"]) == 2023  # no prior year; use latest available
 
 
+def test_reattach_drops_stale_lib_columns():
+    watch = pd.DataFrame(
+        [
+            {
+                "unitid": 1,
+                "inst_name": "Rejoin College",
+                "year": 2022,
+                "lib_physical_books": pd.NA,
+                "lib_special_collections_note": "Web note not collected (outside top-50 / nonprofit shortlist).",
+                "lib_unique_flag": False,
+            }
+        ]
+    )
+    snap = pd.DataFrame(
+        [
+            {
+                "unitid": 1,
+                "lib_year": 2022,
+                "lib_source": "urban",
+                "lib_physical_books": 5000,
+                "lib_digital_items": 100,
+                "lib_expenditures": 20000,
+                "lib_fte": 2.0,
+            }
+        ]
+    )
+    notes = pd.DataFrame(
+        [
+            {
+                "unitid": 1,
+                "lib_special_collections_note": "Named holdings on a public library page: Example Rare Book Collection.",
+                "lib_unique_flag": True,
+                "lib_note_url": "https://example.edu/library",
+            }
+        ]
+    )
+    out = attach_library_columns(watch, snap, notes, arl_names=[])
+    assert "lib_physical_books_x" not in out.columns
+    assert out.iloc[0]["lib_physical_books"] == 5000
+    assert bool(out.iloc[0]["lib_unique_flag"]) is True
+
+
 def test_attach_does_not_fill_missing_holdings_with_zero():
     watch = pd.DataFrame(
         [
@@ -182,6 +224,31 @@ def test_extract_generic_library_page_is_not_unique():
     assert "rare book" not in got["note"].lower() or "no named" in got["note"].lower()
 
 
+def test_extract_accepts_named_archive_in_a_real_sentence():
+    html = """
+    <html><body>
+      <h2>University Archives</h2>
+      <p>Holdings include the Pacific Northwest Artists Archive and the
+      Willamette University Archives of regional manuscripts.</p>
+    </body></html>
+    """
+    got = extract_special_collections_note(html, page_url="https://library.example.edu/archives/")
+    assert got["unique_flag"] is True
+    assert any("Pacific Northwest Artists Archive" in n for n in got["names"])
+
+
+def test_extract_rejects_nav_and_vendor_catalog_junk():
+    html = """
+    <html><body>
+      <nav>Collections Mission Hours Contact Us Staff Policies Archives</nav>
+      <p>Search SAGE Digital Library and the HNU Academic Catalog Archive.</p>
+    </body></html>
+    """
+    got = extract_special_collections_note(html, page_url="https://example.edu/nav")
+    assert got["unique_flag"] is False
+    assert "SAGE" not in (got.get("names") or [])
+
+
 def test_extract_mentions_special_collections_without_a_name():
     html = """
     <html><body>
@@ -209,6 +276,7 @@ def test_arl_name_match_does_not_false_positive_small_colleges():
     assert match_arl_member("Harvard University", arl) is True
     assert match_arl_member("The King's College", arl) is False
     assert match_arl_member("New York College of Health Professions", ["New York Public Library"]) is False
+    assert match_arl_member("Notre Dame College", ["University of Notre Dame"]) is False
 
 
 def test_library_section_html_uses_unknown_not_zero():

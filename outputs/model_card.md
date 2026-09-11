@@ -26,6 +26,8 @@ closures and mergers on trailing (no-leakage) features.
   ZIP column `HCM2` map to the same evidence flag; `CURROPER` is operating status.
 - WICHE Knocking at the College Door 11th edition (state HS-graduate totals) when the workbook downloads
 - Top-50 enrichment (flags only): accreditor public-action pages, WARN files, ProPublica 990 by EIN
+- IPEDS Academic Libraries (Urban portal, 2013–2023): **watch-list enrichment only**
+  (`lib_*` columns / evidence-card section). Not used as a training feature.
 
 ## Temporal split (no shuffle)
 
@@ -70,7 +72,7 @@ Configured feature columns not present in this run: none.
 
 - Score year: **2022**
 - Rows written: **500**
-- Files: `outputs/watchlist.csv`, `outputs/top50_report.html`
+- Files: `outputs/watchlist.csv`, `outputs/top50_report.html`, `outputs/libraries_top50.md`
 
 ## Caveats
 
@@ -90,4 +92,7 @@ Configured feature columns not present in this run: none.
   and were excluded from model training to avoid temporal leakage.
 - Accreditor / WARN / 990 flags on the top 50 are best-effort name or EIN matches
   and are **not** inputs to the model score.
+- Library holdings (`lib_*`) and scraped special-collection notes are
+  **enrichment context** on the evidence cards. They are not lagged training
+  features and were not used to fit the model.
 - Do not publish these ranks as “predicted closures.”

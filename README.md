@@ -534,7 +534,7 @@ remain open for years. False positives are expected.
 PYTHONPATH=src python3 -m pytest tests -q
 ```
 
-This revision: **36 passed** plus Academic Libraries join/HTML-extraction tests.
+This revision: **51 passed**, including Academic Libraries join/HTML-extraction tests.
 
 Covers universe filters, OPEID 6/8 (never pad a 6-digit root to 8 with leading
 zeros), official composite attach without dropping missing UNITID, trailing-
