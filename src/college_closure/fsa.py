@@ -3,17 +3,28 @@
 from __future__ import annotations
 
 import logging
-import os
+import re
 from pathlib import Path
 
 import pandas as pd
+import requests
 
+from college_closure.attempts import AttemptLog
 from college_closure.config import Settings
-from college_closure.download import download_file, download_first
+from college_closure.download import (
+    DEFAULT_HEADERS,
+    attempt_log,
+    download_file,
+    download_first,
+    wayback_candidates,
+)
 from college_closure.ids import add_id_keys, normalize_opeid8, opeid6
+from college_closure.scorecard import ingest_scorecard, scorecard_api_key
 from college_closure.urban import UrbanClient
 
 LOGGER = logging.getLogger(__name__)
+
+DATA_ED_COMPOSITE_PACKAGE = "ff51fef3-9d22-49a7-b34b-54329a290307"
 
 
 def _read_tabular(path: Path) -> pd.DataFrame:
@@ -50,7 +61,8 @@ def ingest_urban_composite(settings: Settings) -> pd.DataFrame:
     out["composite_score"] = pd.to_numeric(out["composite_score"], errors="coerce")
     out["composite_fail"] = out["composite_score"] < 1.0
     out["composite_zone"] = (out["composite_score"] >= 1.0) & (out["composite_score"] < 1.5)
-    dest_p = settings.processed_dir / "fsa_composite.parquet"
+    out["composite_file_source"] = "urban"
+    dest_p = settings.processed_dir / "fsa_composite_urban.parquet"
     out.to_parquet(dest_p, index=False)
     LOGGER.info(
         "Urban composite %s rows years %s–%s",
@@ -70,13 +82,158 @@ def _guess_col(df: pd.DataFrame, needles: list[str]) -> str | None:
     return None
 
 
+def _filename_year(name: str) -> int | None:
+    """Map official FSA filenames onto the fiscal-year-end calendar year."""
+    m = re.search(r"ay\s*(\d{2})\s*[-_/]?\s*(\d{2})", name, flags=re.I)
+    if m:
+        return 2000 + int(m.group(2))
+    m = re.search(r"(20\d{2})\s*[-_/]?\s*(20\d{2})", name)
+    if m:
+        return int(m.group(2))
+    m = re.search(r"(?:^|[^0-9])(\d{2})(\d{2})composite", name, flags=re.I)
+    if m:
+        return 2000 + int(m.group(2))
+    return None
+
+
+def parse_official_composite_workbook(path: Path, fallback_year: int | None = None) -> pd.DataFrame:
+    """Parse FSA eZ-Audit composite workbooks (header row is often not row 0)."""
+    try:
+        xl = pd.ExcelFile(path)
+        sheets = xl.sheet_names
+    except Exception:
+        sheets = [0]
+    frames = []
+    for sheet in sheets:
+        try:
+            raw = pd.read_excel(path, sheet_name=sheet, header=None)
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("Could not read %s sheet %s: %s", path.name, sheet, exc)
+            continue
+        header_idx = None
+        for i, row in raw.iterrows():
+            joined = " ".join(str(v) for v in row.tolist() if pd.notna(v)).lower()
+            if "ope" in joined and "composite" in joined:
+                header_idx = int(i)
+                break
+            if "ope id" in joined or "opeid" in joined.replace(" ", ""):
+                header_idx = int(i)
+                break
+        if header_idx is None:
+            continue
+        header = [str(v).strip() if pd.notna(v) else f"col_{j}" for j, v in enumerate(raw.iloc[header_idx])]
+        body = raw.iloc[header_idx + 1 :].copy()
+        body.columns = header
+        body = body.dropna(how="all")
+        opeid_col = _guess_col(body, ["opeid", "ope_id", "ope id", "opecode"])
+        score_col = _guess_col(body, ["composite", "score", "financial_resp"])
+        year_col = None
+        for c in body.columns:
+            key = str(c).lower().replace("\n", " ")
+            if any(x in key for x in ("ope", "composite", "score", "name", "city", "state", "zip")):
+                continue
+            if "fiscal year end" in key or key.strip() in {"year", "fy", "fiscal_year", "fy_end"}:
+                year_col = c
+                break
+        if opeid_col is None or score_col is None:
+            continue
+        out = pd.DataFrame(
+            {
+                "opeid_raw": body[opeid_col],
+                "composite_score": pd.to_numeric(body[score_col], errors="coerce"),
+            }
+        )
+        if year_col:
+            years = pd.to_datetime(body[year_col], errors="coerce")
+            numeric_y = pd.to_numeric(body[year_col], errors="coerce")
+            out["year"] = years.dt.year.astype("float")
+            still = out["year"].isna()
+            out.loc[still, "year"] = numeric_y.loc[still].to_numpy()
+        else:
+            out["year"] = fallback_year
+        out["opeid_raw"] = out["opeid_raw"].map(lambda v: "" if pd.isna(v) else str(v))
+        out["opeid6"] = out["opeid_raw"].map(opeid6)
+        out["opeid8"] = out["opeid_raw"].map(normalize_opeid8)
+        out["year"] = pd.to_numeric(out.get("year"), errors="coerce")
+        out["composite_score"] = pd.to_numeric(out["composite_score"], errors="coerce")
+        out = out[out["opeid6"] != ""].dropna(subset=["composite_score"])
+        if out["year"].isna().all() and fallback_year:
+            out["year"] = fallback_year
+        frames.append(out)
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
+def _ckan_composite_urls() -> list[tuple[str, str]]:
+    """(name, url) from data.ed.gov CKAN — official FSA year files through 2017-18."""
+    api = f"https://data.ed.gov/api/3/action/package_show?id={DATA_ED_COMPOSITE_PACKAGE}"
+    try:
+        resp = requests.get(api, headers=DEFAULT_HEADERS, timeout=30)
+        if resp.status_code >= 400:
+            LOGGER.warning("data.ed.gov CKAN %s", resp.status_code)
+            return []
+        resources = (resp.json().get("result") or {}).get("resources") or []
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.warning("data.ed.gov CKAN failed: %s", exc)
+        return []
+    out = []
+    for rec in resources:
+        url = rec.get("url") or rec.get("download_url") or ""
+        name = rec.get("name") or url
+        if not url or "studentaid.gov/data-center" in url:
+            continue
+        if not re.search(r"\.(xls|xlsx)$", url, flags=re.I) and "download" not in url:
+            continue
+        out.append((str(name), str(url)))
+    return out
+
+
+def ingest_data_ed_composites(settings: Settings) -> pd.DataFrame:
+    dest_dir = settings.raw_dir / "fsa" / "data_ed_gov"
+    pairs = _ckan_composite_urls()
+    frames = []
+    for name, url in pairs:
+        fname = url.rstrip("/").split("/")[-1] or re.sub(r"\W+", "_", name) + ".xls"
+        path = download_file(url, dest_dir / fname, timeout=(10, 60), max_retries=2, source="data.ed.gov_composite")
+        if path is None:
+            continue
+        parsed = parse_official_composite_workbook(path, fallback_year=_filename_year(fname + " " + name))
+        if parsed.empty:
+            LOGGER.warning("Official composite parsed empty: %s", path.name)
+            continue
+        parsed["composite_file_source"] = f"data.ed.gov:{path.name}"
+        frames.append(parsed)
+        LOGGER.info("Official composite %s -> %s rows years %s", path.name, len(parsed), parsed["year"].dropna().unique().tolist())
+    if not frames:
+        return pd.DataFrame()
+    out = pd.concat(frames, ignore_index=True)
+    out = out.dropna(subset=["composite_score"])
+    for c in ("opeid_raw", "opeid6", "opeid8", "composite_file_source"):
+        if c in out.columns:
+            out[c] = out[c].astype("string")
+    out["year"] = pd.to_numeric(out["year"], errors="coerce")
+    dest = settings.processed_dir / "fsa_composite_official.parquet"
+    out.to_parquet(dest, index=False)
+    LOGGER.info(
+        "Official data.ed.gov composites %s rows years %s–%s",
+        len(out),
+        int(out["year"].min()) if out["year"].notna().any() else "?",
+        int(out["year"].max()) if out["year"].notna().any() else "?",
+    )
+    return out
+
+
 def ingest_hcm_snapshot(settings: Settings) -> pd.DataFrame:
     """Current HCM list only — do not back-apply to historical training years."""
     cfg = settings.raw.get("fsa") or {}
     urls = list(cfg.get("hcm_urls") or [])
-    path = download_first(urls, settings.raw_dir / "fsa", "hcm")
+    for extra in wayback_candidates("studentaid.gov/sites/default/files/*hcm*", limit=12):
+        if extra not in urls:
+            urls.append(extra)
+    path = download_first(urls, settings.raw_dir / "fsa", "hcm", source="hcm")
     if path is None:
-        LOGGER.warning("HCM snapshot not downloaded; watchlist will omit HCM flags")
+        LOGGER.warning("HCM snapshot workbook not downloaded; Scorecard HCM2 flag may still apply")
         return pd.DataFrame()
     raw = _read_tabular(path)
     raw.columns = [str(c).strip() for c in raw.columns]
@@ -108,18 +265,13 @@ def ingest_hcm_snapshot(settings: Settings) -> pd.DataFrame:
 
 def _discover_closed_school_urls() -> list[str]:
     """Best-effort scrape of FSA Partner Connect closed-school page for .xls links."""
-    import re
-
-    import requests
-
-    from college_closure.download import DEFAULT_HEADERS
-
     page = "https://fsapartners.ed.gov/additional-resources/reports/weekly-closed-school-search-file"
     found: list[str] = []
     try:
-        resp = requests.get(page, headers=DEFAULT_HEADERS, timeout=60)
+        resp = requests.get(page, headers=DEFAULT_HEADERS, timeout=40)
         if resp.status_code < 400:
             hrefs = re.findall(r'href="([^"]+\.(?:xls|xlsx))"', resp.text, flags=re.I)
+            hrefs += re.findall(r"https?://[^\"']+ClosedSchool[^\"']+\.(?:xls|xlsx)", resp.text, flags=re.I)
             for href in hrefs:
                 if href.startswith("/"):
                     href = "https://fsapartners.ed.gov" + href
@@ -135,9 +287,12 @@ def ingest_closed_school(settings: Settings) -> pd.DataFrame:
     for extra in _discover_closed_school_urls():
         if extra not in urls:
             urls.insert(0, extra)
-    path = download_first(urls, settings.raw_dir / "fsa", "closed_school")
+    for extra in wayback_candidates("fsapartners.ed.gov/sites/default/files/*ClosedSchool*", limit=10):
+        if extra not in urls:
+            urls.append(extra)
+    path = download_first(urls, settings.raw_dir / "fsa", "closed_school", source="closed_school")
     if path is None:
-        LOGGER.warning("FSA Closed School file not downloaded; labels will use IPEDS status only")
+        LOGGER.warning("FSA Closed School file not downloaded; labels will use IPEDS + optional trackers")
         return pd.DataFrame()
     raw = _read_tabular(path)
     raw.columns = [str(c).strip() for c in raw.columns]
@@ -165,39 +320,45 @@ def ingest_closed_school(settings: Settings) -> pd.DataFrame:
 
 
 def ingest_published_composite(settings: Settings) -> pd.DataFrame:
-    """Optional FSA Data Center composite workbook (often newer than Urban 2016)."""
+    """data.ed.gov official year files + any Data Center workbook URL that still works."""
+    official = ingest_data_ed_composites(settings)
     cfg = settings.raw.get("fsa") or {}
     urls = list(cfg.get("composite_urls") or [])
-    path = download_first(urls, settings.raw_dir / "fsa", "composite_official")
-    if path is None:
-        LOGGER.info("Official FSA composite workbook not downloaded; Urban CSV only")
-        return pd.DataFrame()
-    raw = _read_tabular(path)
-    raw.columns = [str(c).strip() for c in raw.columns]
-    opeid_col = _guess_col(raw, ["opeid", "ope_id", "opecode"])
-    year_col = _guess_col(raw, ["year", "fiscal", "fy"])
-    score_col = _guess_col(raw, ["composite", "score", "financial_resp"])
-    if opeid_col is None or score_col is None:
-        LOGGER.warning("Official composite file missing OPEID/score: %s", list(raw.columns)[:25])
-        return pd.DataFrame()
-    out = pd.DataFrame(
-        {
-            "opeid_raw": raw[opeid_col],
-            "composite_score": pd.to_numeric(raw[score_col], errors="coerce"),
-        }
-    )
-    if year_col:
-        out["year"] = pd.to_numeric(raw[year_col], errors="coerce")
-        if out["year"].isna().all():
-            years = pd.to_datetime(raw[year_col], errors="coerce")
-            out["year"] = years.dt.year
-    out["opeid6"] = out["opeid_raw"].map(opeid6)
-    out["opeid8"] = out["opeid_raw"].map(normalize_opeid8)
-    out = out[out["opeid6"] != ""].dropna(subset=["composite_score"])
-    dest = settings.processed_dir / "fsa_composite_official.parquet"
-    out.to_parquet(dest, index=False)
-    LOGGER.info("Official FSA composite %s rows", len(out))
-    return out
+    for extra in wayback_candidates("studentaid.gov/sites/default/files/*omposite*", limit=10):
+        if extra not in urls:
+            urls.append(extra)
+    path = download_first(urls, settings.raw_dir / "fsa", "composite_official", source="fsa_composite_workbook")
+    extra = pd.DataFrame()
+    if path is not None:
+        extra = parse_official_composite_workbook(path, fallback_year=_filename_year(path.name))
+        if extra.empty:
+            # fallback to naive first-sheet reader
+            raw = _read_tabular(path)
+            raw.columns = [str(c).strip() for c in raw.columns]
+            opeid_col = _guess_col(raw, ["opeid", "ope_id", "opecode"])
+            year_col = _guess_col(raw, ["year", "fiscal", "fy"])
+            score_col = _guess_col(raw, ["composite", "score", "financial_resp"])
+            if opeid_col and score_col:
+                extra = pd.DataFrame(
+                    {
+                        "opeid_raw": raw[opeid_col],
+                        "composite_score": pd.to_numeric(raw[score_col], errors="coerce"),
+                    }
+                )
+                if year_col:
+                    extra["year"] = pd.to_numeric(raw[year_col], errors="coerce")
+                    if extra["year"].isna().all():
+                        extra["year"] = pd.to_datetime(raw[year_col], errors="coerce").dt.year
+                extra["opeid6"] = extra["opeid_raw"].map(opeid6)
+                extra["opeid8"] = extra["opeid_raw"].map(normalize_opeid8)
+                extra = extra[extra["opeid6"] != ""].dropna(subset=["composite_score"])
+        if not extra.empty:
+            extra["composite_file_source"] = f"workbook:{path.name}"
+    if official.empty:
+        return extra
+    if extra.empty:
+        return official
+    return pd.concat([official, extra], ignore_index=True)
 
 
 def merge_composite_sources(urban: pd.DataFrame, official: pd.DataFrame) -> pd.DataFrame:
@@ -206,8 +367,8 @@ def merge_composite_sources(urban: pd.DataFrame, official: pd.DataFrame) -> pd.D
         return urban
     if urban is None or urban.empty:
         return official
-    keep_u = [c for c in urban.columns if c in {"unitid", "year", "opeid", "opeid8", "opeid6", "composite_score"}]
-    keep_o = [c for c in official.columns if c in {"unitid", "year", "opeid", "opeid8", "opeid6", "composite_score"}]
+    keep_u = [c for c in urban.columns if c in {"unitid", "year", "opeid", "opeid8", "opeid6", "composite_score", "composite_file_source"}]
+    keep_o = [c for c in official.columns if c in {"unitid", "year", "opeid", "opeid8", "opeid6", "composite_score", "composite_file_source"}]
     u = urban[keep_u].copy()
     o = official[keep_o].copy()
     u["source"] = "urban"
@@ -217,7 +378,6 @@ def merge_composite_sources(urban: pd.DataFrame, official: pd.DataFrame) -> pd.D
     stacked["unitid"] = pd.to_numeric(stacked.get("unitid"), errors="coerce")
     stacked["_pref"] = (stacked["source"] == "fsa_official").astype(int)
     stacked = stacked.sort_values(["unitid", "opeid6", "year", "_pref"])
-    # Prefer unitid×year when unitid exists, else opeid6×year
     has_id = stacked["unitid"].notna()
     a = stacked.loc[has_id].drop_duplicates(subset=["unitid", "year"], keep="last")
     b = stacked.loc[~has_id].drop_duplicates(subset=["opeid6", "year"], keep="last")
@@ -248,7 +408,6 @@ def attach_composite(panel: pd.DataFrame, composite: pd.DataFrame) -> pd.DataFra
     still = out["composite_score"].isna() if "composite_score" in out.columns else pd.Series(True, index=out.index)
     if still.any() and "opeid6" in out.columns and "opeid6" in comp.columns:
         by6 = comp.dropna(subset=["opeid6", "year"]).copy()
-        # Prefer a single row per opeid6×year
         by6 = by6.sort_values(["opeid6", "year"])
         by6 = by6.drop_duplicates(subset=["opeid6", "year"], keep="last")
         add = by6[["opeid6", "year", "composite_score"]].rename(columns={"composite_score": "_c6"})
@@ -258,22 +417,21 @@ def attach_composite(panel: pd.DataFrame, composite: pd.DataFrame) -> pd.DataFra
         else:
             out["composite_score"] = out["composite_score"].where(out["composite_score"].notna(), out["_c6"])
         out = out.drop(columns=["_c6"])
-        # If several UNITIDs share an OPEID6, only the main campus (or singleton) keeps the join.
         if "opeid6_n_unitids" in out.columns:
             shared = (out["opeid6_n_unitids"] > 1) & ~out.get("opeid_is_main", False)
-            # Don't assign the OPEID6-level score to non-main branches when the root is shared
-            # unless they already had a UNITID match (those rows were not NA before this step
-            # only if unitid matched — we already filled those). Clear ambiguous leftovers:
             out.loc[shared & still.reindex(out.index, fill_value=True), "composite_score"] = pd.NA
     return out
 
 
-def write_fsa_notes(settings: Settings, results: dict[str, pd.DataFrame]) -> None:
+def write_fsa_notes(settings: Settings, results: dict[str, pd.DataFrame], log: AttemptLog | None = None) -> None:
     lines = [
-        "# FSA accountability ingest",
+        "# FSA accountability ingest (v2)",
         "",
-        "Tried current FSA Data Center / Partner Connect URLs and the Urban FSA CSV.",
+        "Tried Urban FSA CSV, **data.ed.gov official year workbooks**, current FSA Data Center /",
+        "Partner Connect URLs, Wayback CDX (best-effort), and College Scorecard (API or bulk ZIP).",
         "Missing files are skipped; they are **not** invented.",
+        "",
+        "## Row counts this run",
         "",
     ]
     for key, frame in results.items():
@@ -286,62 +444,44 @@ def write_fsa_notes(settings: Settings, results: dict[str, pd.DataFrame]) -> Non
             elif "closed_year" in frame.columns and frame["closed_year"].notna().any():
                 extra = f" years {int(frame['closed_year'].min())}–{int(frame['closed_year'].max())}"
             lines.append(f"- **{key}**: {len(frame):,} rows{extra}")
-    if not (os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY")):
-        lines.append("")
-        lines.append("College Scorecard skipped (no `DATA_GOV_API_KEY` / `SCORECARD_API_KEY`).")
-    lines.append("")
-    lines.append("HCM is a **current snapshot** and must not be used as a historical training feature.")
+    lines += [
+        "",
+        "## HTTP attempts (verified live vs still impossible)",
+        "",
+        (log or attempt_log()).markdown_table(),
+        "",
+        "## Join rules",
+        "",
+        "- OPEID: 6-digit FSA roots are **not** left-padded to 8 (that would shift the root).",
+        "  Six-digit values become `root + '00'` via `ids.normalize_opeid8`.",
+        "- Composites join UNITID×year first, then unambiguous OPEID6×year (main campus if shared).",
+        "- Official data.ed.gov files are preferred on overlap with Urban; Urban keeps 2006–2016 history.",
+        "",
+        "HCM / Scorecard `UNDER_INVESTIGATION` (API) / `HCM2` (bulk ZIP) are **current snapshots**",
+        "and must not be used as historical training features unless a lagged year-by-year series",
+        "is present (it is not in this build).",
+        "",
+    ]
+    if not scorecard_api_key(settings):
+        lines.append(
+            "College Scorecard API key absent (`DATA_GOV_API_KEY` unset); official no-key bulk ZIP used when it downloaded."
+        )
+    else:
+        lines.append("College Scorecard API key present in the environment; API path preferred over the bulk ZIP.")
     dest = settings.outputs_dir / "fsa_ingest.md"
     dest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (settings.outputs_dir / "fsa_attempts.json").write_text(
+        __import__("json").dumps((log or attempt_log()).to_dicts(), indent=2),
+        encoding="utf-8",
+    )
     LOGGER.info("Wrote %s", dest)
 
 
-def ingest_scorecard_optional(settings: Settings) -> pd.DataFrame:
-    key = os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY")
-    if not key:
-        LOGGER.info("No DATA_GOV_API_KEY / SCORECARD_API_KEY; skipping College Scorecard")
-        return pd.DataFrame()
-    cfg = settings.raw.get("scorecard") or {}
-    base = str(cfg.get("api_base", "https://api.data.gov/ed/collegescorecard/v1/schools"))
-    # Latest operating flag only — not used as a historical feature.
-    try:
-        import requests
-
-        rows = []
-        page = 0
-        while page < 80:
-            resp = requests.get(
-                base,
-                params={
-                    "api_key": key,
-                    "fields": "id,ope6_id,school.name,school.operating",
-                    "per_page": 100,
-                    "page": page,
-                },
-                timeout=60,
-            )
-            if resp.status_code >= 400:
-                LOGGER.warning("Scorecard API %s: %s", resp.status_code, resp.text[:200])
-                break
-            payload = resp.json()
-            results = payload.get("results") or []
-            if not results:
-                break
-            rows.extend(results)
-            page += 1
-        if not rows:
-            return pd.DataFrame()
-        frame = pd.json_normalize(rows)
-        dest = settings.processed_dir / "scorecard_operating.parquet"
-        frame.to_parquet(dest, index=False)
-        LOGGER.info("Scorecard operating snapshot %s rows", len(frame))
-        return frame
-    except Exception as exc:  # noqa: BLE001
-        LOGGER.warning("Scorecard fetch failed: %s", exc)
-        return pd.DataFrame()
+def ingest_scorecard_optional(settings: Settings, *, skip: bool = False) -> pd.DataFrame:
+    return ingest_scorecard(settings, skip=skip)
 
 
-def run_fsa_ingest(settings: Settings) -> dict[str, pd.DataFrame]:
+def run_fsa_ingest(settings: Settings, *, skip_scorecard: bool = False) -> dict[str, pd.DataFrame]:
     urban = ingest_urban_composite(settings)
     official = ingest_published_composite(settings)
     composite = merge_composite_sources(urban, official)
@@ -353,7 +493,7 @@ def run_fsa_ingest(settings: Settings) -> dict[str, pd.DataFrame]:
         "composite": composite,
         "hcm": ingest_hcm_snapshot(settings),
         "closed_school": ingest_closed_school(settings),
-        "scorecard": ingest_scorecard_optional(settings),
+        "scorecard": ingest_scorecard_optional(settings, skip=skip_scorecard),
     }
     write_fsa_notes(settings, results)
     return results

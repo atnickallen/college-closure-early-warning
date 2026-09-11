@@ -41,6 +41,16 @@ WATCHLIST_COLS = [
     "finance_from_parent",
     "hcm1_current",
     "hcm2_current",
+    "hcm2_scorecard",
+    "scorecard_operating",
+    "scorecard_currently_operating",
+    "scorecard_ownership",
+    "scorecard_under_investigation",
+    "accreditor_public_action",
+    "warn_layoff_mention",
+    "irs990_ein_verified",
+    "irs990_revenue",
+    "enrichment_notes",
     "label_complete_h3",
     "closed_or_merged_within_3_years",
 ]
@@ -103,10 +113,31 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
 
     hcm = []
     if _flag(row.get("hcm2_current")):
-        hcm.append("HCM2")
+        hcm.append("HCM2 (FSA list)")
     if _flag(row.get("hcm1_current")):
-        hcm.append("HCM1")
-    hcm_txt = ", ".join(hcm) if hcm else "not on current HCM list (or list unavailable)"
+        hcm.append("HCM1 (FSA list)")
+    if _flag(row.get("hcm2_scorecard")) or _flag(row.get("scorecard_under_investigation")):
+        hcm.append("Scorecard under_investigation / HCM2 (current snapshot)")
+    hcm_txt = ", ".join(hcm) if hcm else "not on current HCM / Scorecard investigation flags (or lists unavailable)"
+    op = row.get("scorecard_operating")
+    try:
+        op_n = int(op) if op is not None and not pd.isna(op) else None
+    except (TypeError, ValueError):
+        op_n = None
+    if op_n == 0:
+        op_txt = "not currently operating (Scorecard snapshot — not a closure year)"
+    elif op_n == 1:
+        op_txt = "currently operating (Scorecard)"
+    else:
+        op_txt = "Scorecard operating unknown"
+    enrich_bits = []
+    if row.get("accreditor_public_action"):
+        enrich_bits.append(f"accreditor page mention: {row.get('accreditor_public_action')}")
+    if _flag(row.get("warn_layoff_mention")):
+        enrich_bits.append("WARN layoff file name match")
+    if _flag(row.get("irs990_ein_verified")):
+        enrich_bits.append(f"990 EIN verified; revenue {_fmt(row.get('irs990_revenue'), 0)}")
+    enrich_txt = "; ".join(enrich_bits) if enrich_bits else "no extra accreditor / WARN / 990 hit"
 
     return f"""
     <article class="card">
@@ -126,7 +157,9 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
         <tr><th>Composite score</th><td>{_fmt(row.get("composite_score"), 2)}</td>
             <th>Zone / failing</th><td>{_fmt(row.get("composite_zone"), 0)} / {_fmt(row.get("composite_fail"), 0)}</td></tr>
         <tr><th>Finance missing</th><td>{_fmt(row.get("miss_finance"), 0)}</td>
-            <th>HCM (current list)</th><td>{html.escape(hcm_txt)}</td></tr>
+            <th>HCM / investigation</th><td>{html.escape(hcm_txt)}</td></tr>
+        <tr><th>Scorecard operating</th><td>{html.escape(op_txt)}</td>
+            <th>Enrichment flags</th><td>{html.escape(enrich_txt)}</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
       <ul>{shap_rows}</ul>
@@ -218,12 +251,15 @@ closures and mergers on trailing (no-leakage) features.
 - Urban Institute Education Data Portal IPEDS extracts (directory, enrollment, FTE,
   admissions, staffing, finance through 2017)
 - NCES IPEDS complete finance files (F1A / F2 / F3) for post-2017 backfill
-- FSA financial-responsibility composite scores via Urban FSA CSV (through 2016)
-  plus any official Data Center workbook that downloaded
+- Official FSA composite year workbooks from data.ed.gov (FY 2007–2018) plus
+  Urban Institute FSA CSV (2006–2016). Official scores win on overlap.
 - HCM and Closed School lists: ingested when a current Data Center file downloads;
   HCM is **current-only evidence** and is **not** a training feature
-- College Scorecard: only if `DATA_GOV_API_KEY` or `SCORECARD_API_KEY` is set
-- WICHE HS-grad trends: only if `data/external/wiche_hs_graduates.csv` is present
+- College Scorecard: `DATA_GOV_API_KEY` / `SCORECARD_API_KEY` **or** the official
+  no-key most-recent institution ZIP. API field `school.under_investigation` and
+  ZIP column `HCM2` map to the same evidence flag; `CURROPER` is operating status.
+- WICHE Knocking at the College Door 11th edition (state HS-graduate totals) when the workbook downloads
+- Top-50 enrichment (flags only): accreditor public-action pages, WARN files, ProPublica 990 by EIN
 
 ## Temporal split (no shuffle)
 
@@ -264,8 +300,8 @@ Configured feature columns not present in this run: {unused_txt}.
 - IPEDS publications lag; recent finance and composite scores may be missing
   (`miss_finance` is an explicit feature, not silently filled with zeros that
   look like health).
-- Urban composite scores end in 2016 unless an official FSA workbook downloaded;
-  later years use the last observed score (lagged) plus `composite_is_lagged`.
+- Official FSA composites via data.ed.gov currently end in FY 2018; later years
+  use the last observed score (lagged) plus `composite_is_lagged`.
 - Parent/child finance: child campuses with $0/missing revenue inherit parent
   totals for ratio features and are flagged `finance_from_parent` so they are
   not scored as empty shells.
@@ -275,8 +311,8 @@ Configured feature columns not present in this run: {unused_txt}.
 - Mergers are treated as positive labels by default (config toggle).
 - HCM1/HCM2 on the HTML cards are a **current snapshot** (if the list downloaded)
   and were excluded from model training to avoid temporal leakage.
-- Accreditor actions, WARN notices, and IRS 990s are not in this build
-  (documented TODO — do not treat the watch list as a complete diligence file).
+- Accreditor / WARN / 990 flags on the top 50 are best-effort name or EIN matches
+  and are **not** inputs to the model score.
 - Do not publish these ranks as “predicted closures.”
 """
 
@@ -329,6 +365,38 @@ def run_report(settings: Settings) -> dict:
         if c not in current.columns:
             current[c] = pd.NA
 
+    sc_path = processed / "scorecard_operating.parquet"
+    if sc_path.exists():
+        sc = pd.read_parquet(sc_path)
+        if "unitid" in sc.columns and "unitid" in current.columns:
+            keep_sc = [c for c in ("unitid", "scorecard_operating", "scorecard_currently_operating", "scorecard_ownership", "scorecard_under_investigation", "hcm2_scorecard") if c in sc.columns]
+            current = current.merge(sc[keep_sc].drop_duplicates("unitid"), on="unitid", how="left")
+        elif "opeid6" in sc.columns and "opeid6" in current.columns:
+            keep_sc = [c for c in ("opeid6", "scorecard_operating", "scorecard_currently_operating", "scorecard_ownership", "scorecard_under_investigation", "hcm2_scorecard") if c in sc.columns]
+            current = current.merge(sc[keep_sc].drop_duplicates("opeid6"), on="opeid6", how="left")
+    if "hcm2_scorecard" in current.columns:
+        current["hcm2_current"] = current["hcm2_current"].fillna(False) | current["hcm2_scorecard"].fillna(False)
+
+    from college_closure.enrichment import enrich_shortlist
+
+    np_mask = pd.to_numeric(current.get("inst_control"), errors="coerce") == 2
+    short = pd.concat([current.head(50), current.loc[np_mask].head(50)]).drop_duplicates("unitid")
+    enriched = enrich_shortlist(settings, short)
+    extra_cols = [
+        c
+        for c in (
+            "accreditor_public_action",
+            "warn_layoff_mention",
+            "irs990_ein_verified",
+            "irs990_revenue",
+            "irs990_assets",
+            "enrichment_notes",
+        )
+        if c in enriched.columns
+    ]
+    if extra_cols and "unitid" in enriched.columns:
+        current = current.merge(enriched[["unitid", *extra_cols]].drop_duplicates("unitid"), on="unitid", how="left")
+
     watch_cols = [c for c in WATCHLIST_COLS if c in current.columns]
     watch = current[watch_cols].head(500)
     watch.to_csv(out_dir / "watchlist.csv", index=False)
@@ -360,9 +428,9 @@ def run_report(settings: Settings) -> dict:
         )
 
     caveats = (
-        "Watch list only. IPEDS lag; Urban composite scores end 2016 unless an official "
-        "FSA workbook downloaded; NCES finance backfill covers published F-year zips only; "
-        "HCM is current-list evidence and was not a training feature; mergers count as "
+        "Watch list only. IPEDS lag; official FSA composites currently end FY 2018; "
+        "NCES finance backfill covers published F-year zips only; HCM / Scorecard HCM2 "
+        "are current-list evidence and were not training features; mergers count as "
         "positives by default; publics excluded from the primary ranking."
     )
     (out_dir / "top50_report.html").write_text(

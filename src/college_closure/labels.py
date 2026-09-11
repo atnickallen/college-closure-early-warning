@@ -24,11 +24,55 @@ def _year_from_closedat(series: pd.Series) -> pd.Series:
     return out.where((out >= 1980) & (out <= 2035))
 
 
+def _apply_extra_events(events: pd.DataFrame, extra: pd.DataFrame, source_label: str) -> pd.DataFrame:
+    """Fill or take an earlier event year from an extra UNITID or OPEID6 table."""
+    if extra is None or extra.empty:
+        return events
+    extra = extra.copy()
+    year_col = "event_year" if "event_year" in extra.columns else "closed_year"
+    if year_col not in extra.columns:
+        return events
+    extra[year_col] = pd.to_numeric(extra[year_col], errors="coerce")
+    extra = extra.dropna(subset=[year_col])
+    extra = extra[(extra[year_col] >= 1980) & (extra[year_col] <= 2035)]
+    if extra.empty:
+        return events
+    if "unitid" in extra.columns and extra["unitid"].notna().any():
+        extra["unitid"] = pd.to_numeric(extra["unitid"], errors="coerce")
+        add = extra.dropna(subset=["unitid"]).groupby("unitid")[year_col].min()
+        events = events.merge(add.rename("_extra_year"), on="unitid", how="left")
+        ey = pd.to_numeric(events["event_year"], errors="coerce")
+        ex = pd.to_numeric(events["_extra_year"], errors="coerce")
+        use = ey.isna() & ex.notna()
+        earlier = ey.notna() & ex.notna() & (ex < ey)
+        take = use | earlier
+        events.loc[take, "event_year"] = events.loc[take, "_extra_year"]
+        events.loc[take, "event_type"] = "closure"
+        events.loc[take, "event_source"] = source_label
+        events = events.drop(columns=["_extra_year"])
+        return events
+    if "opeid6" in extra.columns:
+        extra["opeid6"] = extra["opeid6"].astype(str)
+        add = extra.groupby("opeid6")[year_col].min()
+        events = events.merge(add.rename("_extra_year"), on="opeid6", how="left")
+        ey = pd.to_numeric(events["event_year"], errors="coerce")
+        ex = pd.to_numeric(events["_extra_year"], errors="coerce")
+        use = ey.isna() & ex.notna()
+        earlier = ey.notna() & ex.notna() & (ex < ey)
+        take = use | earlier
+        events.loc[take, "event_year"] = events.loc[take, "_extra_year"]
+        events.loc[take, "event_type"] = "closure"
+        events.loc[take, "event_source"] = source_label
+        events = events.drop(columns=["_extra_year"])
+    return events
+
+
 def institution_event_years(
     directory: pd.DataFrame,
     *,
     mergers_are_positive: bool,
     fsa_closed: pd.DataFrame | None = None,
+    extra_events: pd.DataFrame | None = None,
     use_disappearance: bool = True,
 ) -> pd.DataFrame:
     """One row per UNITID with earliest observed closure/merger year."""
@@ -98,6 +142,9 @@ def institution_event_years(
         events.loc[earlier, "event_year"] = events.loc[earlier, "fsa_closed_year"]
         events.loc[earlier, "event_source"] = "fsa_closed_school"
 
+    if extra_events is not None and not extra_events.empty:
+        events = _apply_extra_events(events, extra_events, "closure_tracker_or_scorecard")
+
     panel_max = int(work["year"].max())
     if use_disappearance:
         # Require a 2-year gap vs the latest directory year so a one-year IPEDS
@@ -159,10 +206,23 @@ def build_labels(settings: Settings, panel: pd.DataFrame | None = None) -> pd.Da
     fsa_path = processed / "fsa_closed_school.parquet"
     fsa = pd.read_parquet(fsa_path) if fsa_path.exists() else pd.DataFrame()
 
+    extras = []
+    for name in ("closure_trackers.parquet",):
+        p = processed / name
+        if p.exists():
+            extras.append(pd.read_parquet(p))
+    sc_path = processed / "scorecard_operating.parquet"
+    if sc_path.exists():
+        from college_closure.scorecard import scorecard_closure_events
+
+        extras.append(scorecard_closure_events(pd.read_parquet(sc_path)))
+    extra = pd.concat(extras, ignore_index=True) if extras else pd.DataFrame()
+
     events = institution_event_years(
         directory,
         mergers_are_positive=mergers,
         fsa_closed=fsa if not fsa.empty else None,
+        extra_events=extra if not extra.empty else None,
         use_disappearance=use_disappear,
     )
     events.to_parquet(processed / "closure_events.parquet", index=False)

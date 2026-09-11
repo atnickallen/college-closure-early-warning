@@ -121,23 +121,33 @@ sources:
 nces:
   # Complete data files: https://nces.ed.gov/ipeds/datacenter/data/F{yy}{yy+1}_F{1A|2|3}.zip
   # F1819 = FY 2018 (fills Urban's post-2017 gap). F2223 is the latest confirmed zip.
+  # F2324 / F2425 are tried (incl. _Data_Stata / _P / _RV suffixes). Standalone zips
+  # still 404 as of 2026-09 even though NCES published Spring 2025 finance in tables.
   base_url: https://nces.ed.gov/ipeds/datacenter/data
   year_start: 2018
-  year_end: 2023
+  year_end: 2025
   forms: [F1A, F2, F3]
 
 fsa:
   urban_composite_csv: colleges_fsa_composite_scores.csv
   urban_csv_dir: fsa
-  # Current FSA Data Center locations (tried in order; pages move).
+  # Official year workbooks on data.ed.gov (CKAN package ff51fef3-9d22-49a7-b34b-54329a290307).
+  data_ed_composite_package: ff51fef3-9d22-49a7-b34b-54329a290307
+  # Current FSA Data Center locations (tried in order; pages move / often JS-only).
   hcm_urls:
     - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/hcm.xlsx
     - https://studentaid.gov/sites/g/files/dbyssus161/files/media/data/hcm.xlsx
+    - https://studentaid.gov/sites/default/files/hcm.xlsx
     - https://www2.ed.gov/offices/OSFAP/PEPS/hcm.xlsx
   composite_urls:
     - https://studentaid.gov/sites/default/files/fsawg/datacenter/library/CompositeScores.xlsx
     - https://studentaid.gov/sites/default/files/CompositeScores.xlsx
+    - https://studentaid.gov/sites/default/files/financial-responsibility-composite-scores.xlsx
   closed_school_urls:
+    - https://fsapartners.ed.gov/sites/default/files/2026-09/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2026-08/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2026-01/ClosedSchoolSearchFile.xls
+    - https://fsapartners.ed.gov/sites/default/files/2025-12/ClosedSchoolSearchFile.xls
     - https://fsapartners.ed.gov/sites/default/files/2025-09/ClosedSchoolSearchFile.xls
     - https://fsapartners.ed.gov/sites/default/files/2025-01/ClosedSchoolSearchFile.xls
     - https://fsapartners.ed.gov/sites/default/files/2024-12/ClosedSchoolSearchFile.xls
@@ -146,9 +156,25 @@ fsa:
     - https://www2.ed.gov/offices/OSFAP/PEPS/docs/closedschoolsearchfile.xls
 
 scorecard:
-  # Optional; only used if DATA_GOV_API_KEY or SCORECARD_API_KEY is set.
+  # API used when DATA_GOV_API_KEY or SCORECARD_API_KEY is set in the environment.
+  # These are *names* of env vars — never put the key itself in this file.
+  api_key_env:
+    - DATA_GOV_API_KEY
+    - SCORECARD_API_KEY
+  # Otherwise the official no-key most-recent institution ZIP is tried.
   api_base: https://api.data.gov/ed/collegescorecard/v1/schools
+  bulk_urls:
+    - https://ed-public-download.scorecard.network/downloads/Most-Recent-Cohorts-Institution_06102026.zip
+    - https://ed-public-download.scorecard.network/downloads/Most-Recent-Cohorts-Institution_05192025.zip
 
 wiche:
-  # Optional static CSV: columns state_abbr, year, hs_graduates (or similar).
+  # Official 11th-edition Knocking workbook (Dec 2024). Derived CSV: state_abbr, year, hs_graduates.
   path: data/external/wiche_hs_graduates.csv
+  url: https://www.wiche.edu/wp-content/uploads/2024/12/Knocking-at-the-College-Door-11th-Edition-Projections-Dataset-12-11-2024.xlsx
+  urls:
+    - https://www.wiche.edu/wp-content/uploads/2024/12/Knocking-at-the-College-Door-11th-Edition-Projections-Dataset-12-11-2024.xlsx
+
+closure_trackers:
+  higher_ed_dive_url: https://www.highereddive.com/news/tracker-college-closings-and-mergers/546692/
+  bestcolleges_url: https://www.bestcolleges.com/research/closed-colleges-list-statistics-major-closures/
+  curated_csv: data/external/closures_curated.csv

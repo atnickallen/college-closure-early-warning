@@ -183,4 +183,3 @@ Sector codes: 1 public 4-year, 2 private nonprofit 4-year, 3 for-profit 4-year, 
 - Finance years present: 2004–2017. Urban portal finance currently ends in 2017 (api-endpoints id 91).
 - Every institution is keyed on UNITID. Directory also carries opeid and ein for the Phase 2 UNITID↔OPEID↔EIN crosswalk (see scripts/02_crosswalk.py).
 - Public institutions (control=1) remain in the panel; in_risk_model_universe flags private nonprofit and for-profit rows.
-- Unique UNITID across 2004–2024 is ~5,900 (the ~6,000 figure). Recent single-year counts are ~3,900 after for-profit contraction and dropping certificate-only schools.

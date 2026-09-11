@@ -1,0 +1,902 @@
+[
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F1819_F1A.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1210575,
+    "content_type": "",
+    "note": "cached F1819_F1A.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F1819_F2.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1013120,
+    "content_type": "",
+    "note": "cached F1819_F2.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F1819_F3.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 466858,
+    "content_type": "",
+    "note": "cached F1819_F3.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F1920_F1A.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1421820,
+    "content_type": "",
+    "note": "cached F1920_F1A.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F1920_F2.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1144147,
+    "content_type": "",
+    "note": "cached F1920_F2.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F1920_F3.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 497138,
+    "content_type": "",
+    "note": "cached F1920_F3.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2021_F1A.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1420852,
+    "content_type": "",
+    "note": "cached F2021_F1A.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2021_F2.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1147312,
+    "content_type": "",
+    "note": "cached F2021_F2.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2021_F3.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 479497,
+    "content_type": "",
+    "note": "cached F2021_F3.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2122_F1A.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1431839,
+    "content_type": "",
+    "note": "cached F2122_F1A.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2122_F2.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1139868,
+    "content_type": "",
+    "note": "cached F2122_F2.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2122_F3.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 466096,
+    "content_type": "",
+    "note": "cached F2122_F3.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2223_F1A.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 711679,
+    "content_type": "",
+    "note": "cached F2223_F1A.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:38+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2223_F2.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 560124,
+    "content_type": "",
+    "note": "cached F2223_F2.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:39+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2223_F3.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 228105,
+    "content_type": "",
+    "note": "cached F2223_F3.zip",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:39+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:39+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:39+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:39+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:40+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:40+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F2.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:40+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:41+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:41+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:41+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:41+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F3.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:42+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:42+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:42+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:43+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:43+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:43+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:43+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:44+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:44+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:44+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F2.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:45+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:45+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:45+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:45+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:46+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F3.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:46+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:46+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:47+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:47+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:47+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:47+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:48+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:48+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:48+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:48+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F2.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:49+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:49+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:49+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:50+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:50+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F3.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:50+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_Data_Stata.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:50+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_P.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:51+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_RV.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:51+00:00"
+  },
+  {
+    "url": "https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_rev.zip",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html",
+    "note": "",
+    "source": "nces",
+    "ts": "2026-09-11T05:55:51+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/8f7ea82b-0f47-4a3d-a999-a2a0377bb3d9/download/ay17-18-composite-scores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 810496,
+    "content_type": "",
+    "note": "cached ay17-18-composite-scores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/54455fd6-0c25-40ab-8b2a-d95e343eeff7/download/ay16-17-composite-scores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 1040384,
+    "content_type": "",
+    "note": "cached ay16-17-composite-scores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/9ac2022e-1033-4907-837a-e1b5c6fbf0c6/download/20152016compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 857600,
+    "content_type": "",
+    "note": "cached 20152016compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/c04c1fea-f4ad-4881-b8d1-c76ac1f45793/download/20142015compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 673792,
+    "content_type": "",
+    "note": "cached 20142015compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/24d7de6a-f3b3-4c33-8536-dd302a3d0d49/download/20132014compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 683520,
+    "content_type": "",
+    "note": "cached 20132014compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/a05ecde2-d0c1-48ee-8f02-9c34ca4b10f1/download/1213compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 678912,
+    "content_type": "",
+    "note": "cached 1213compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/020e80ac-c04a-4e93-867e-935e1320c043/download/1112compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 677888,
+    "content_type": "",
+    "note": "cached 1112compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/60dfc9bb-a0b5-4f1d-bbaf-0b0439047e12/download/1011compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 687616,
+    "content_type": "",
+    "note": "cached 1011compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/a0022964-8b7f-4e3d-92ed-e7ac8636173d/download/0910compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 684544,
+    "content_type": "",
+    "note": "cached 0910compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/4f949bd9-76ad-439c-960c-b610e6653f9f/download/0809compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 676352,
+    "content_type": "",
+    "note": "cached 0809compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/e66c0255-d77a-4059-98bc-e62ae972a976/download/0708compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 611328,
+    "content_type": "",
+    "note": "cached 0708compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:52+00:00"
+  },
+  {
+    "url": "https://data.ed.gov/dataset/ff51fef3-9d22-49a7-b34b-54329a290307/resource/329f11b4-06ac-4a7d-82c1-156c63435453/download/0607compositescores.xls",
+    "status": "cache",
+    "ok": true,
+    "bytes": 611840,
+    "content_type": "",
+    "note": "cached 0607compositescores.xls",
+    "source": "data.ed.gov_composite",
+    "ts": "2026-09-11T05:55:53+00:00"
+  },
+  {
+    "url": "https://studentaid.gov/sites/default/files/fsawg/datacenter/library/CompositeScores.xlsx",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "",
+    "note": "",
+    "source": "fsa_composite_workbook",
+    "ts": "2026-09-11T05:56:03+00:00"
+  },
+  {
+    "url": "https://studentaid.gov/sites/default/files/CompositeScores.xlsx",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "",
+    "note": "",
+    "source": "fsa_composite_workbook",
+    "ts": "2026-09-11T05:56:04+00:00"
+  },
+  {
+    "url": "https://studentaid.gov/sites/default/files/financial-responsibility-composite-scores.xlsx",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "",
+    "note": "",
+    "source": "fsa_composite_workbook",
+    "ts": "2026-09-11T05:56:04+00:00"
+  },
+  {
+    "url": "https://studentaid.gov/sites/default/files/fsawg/datacenter/library/hcm.xlsx",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "",
+    "note": "",
+    "source": "hcm",
+    "ts": "2026-09-11T05:56:16+00:00"
+  },
+  {
+    "url": "https://studentaid.gov/sites/g/files/dbyssus161/files/media/data/hcm.xlsx",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "",
+    "note": "",
+    "source": "hcm",
+    "ts": "2026-09-11T05:56:16+00:00"
+  },
+  {
+    "url": "https://studentaid.gov/sites/default/files/hcm.xlsx",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "",
+    "note": "",
+    "source": "hcm",
+    "ts": "2026-09-11T05:56:17+00:00"
+  },
+  {
+    "url": "https://www2.ed.gov/offices/OSFAP/PEPS/hcm.xlsx",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "hcm",
+    "ts": "2026-09-11T05:56:17+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2026-09/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:26+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2026-08/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:26+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2026-01/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:26+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2025-12/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:27+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2025-09/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:27+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2025-01/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:27+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2024-12/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:27+00:00"
+  },
+  {
+    "url": "https://fsapartners.ed.gov/sites/default/files/2024-01/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:27+00:00"
+  },
+  {
+    "url": "https://studentaid.gov/sites/default/files/fsawg/datacenter/library/ClosedSchoolSearchFile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:28+00:00"
+  },
+  {
+    "url": "https://www2.ed.gov/offices/OSFAP/PEPS/docs/closedschoolsearchfile.xls",
+    "status": "404",
+    "ok": false,
+    "bytes": 0,
+    "content_type": "text/html; charset=UTF-8",
+    "note": "",
+    "source": "closed_school",
+    "ts": "2026-09-11T05:56:28+00:00"
+  },
+  {
+    "url": "https://ed-public-download.scorecard.network/downloads/Most-Recent-Cohorts-Institution_06102026.zip",
+    "status": "cache",
+    "ok": true,
+    "bytes": 23559465,
+    "content_type": "",
+    "note": "cached Most-Recent-Cohorts-Institution_06102026.zip",
+    "source": "scorecard_bulk",
+    "ts": "2026-09-11T05:56:28+00:00"
+  }
+]

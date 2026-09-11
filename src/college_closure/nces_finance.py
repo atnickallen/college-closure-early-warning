@@ -113,11 +113,22 @@ def _harmonize(df: pd.DataFrame, form: str, year: int) -> pd.DataFrame:
     return out.dropna(subset=["unitid"])
 
 
+def _candidate_nces_urls(base: str, stem: str) -> list[str]:
+    """Complete-data zips have used several suffixes; try each before recording a miss."""
+    return [
+        f"{base}/{stem}.zip",
+        f"{base}/{stem}_Data_Stata.zip",
+        f"{base}/{stem}_P.zip",
+        f"{base}/{stem}_RV.zip",
+        f"{base}/{stem}_rev.zip",
+    ]
+
+
 def ingest_nces_finance(settings: Settings) -> pd.DataFrame:
     cfg = settings.raw.get("nces") or {}
     base = str(cfg.get("base_url", "https://nces.ed.gov/ipeds/datacenter/data")).rstrip("/")
     year_start = int(cfg.get("year_start", 2018))
-    year_end = int(cfg.get("year_end", 2023))
+    year_end = int(cfg.get("year_end", 2025))
     forms = list(cfg.get("forms") or ["F1A", "F2", "F3"])
     dest_dir = settings.raw_dir / "nces"
     frames: list[pd.DataFrame] = []
@@ -128,10 +139,15 @@ def ingest_nces_finance(settings: Settings) -> pd.DataFrame:
         year_frames: list[pd.DataFrame] = []
         for form in forms:
             stem = _nces_year_stem(year, form)
-            url = f"{base}/{stem}.zip"
-            path = download_file(url, dest_dir / f"{stem}.zip")
+            path = None
+            tried = _candidate_nces_urls(base, stem)
+            for url in tried:
+                dest_name = url.rstrip("/").split("/")[-1]
+                path = download_file(url, dest_dir / dest_name, timeout=(10, 90), max_retries=2, source="nces")
+                if path is not None:
+                    break
             if path is None:
-                missing.append(f"{url}")
+                missing.extend(tried)
                 continue
             try:
                 raw = _read_zip_csv(path)
@@ -180,7 +196,10 @@ def ingest_nces_finance(settings: Settings) -> pd.DataFrame:
         + "\n".join(f"- {g}" for g in got)
         + "\n\n## Missing / failed URLs\n\n"
         + ("\n".join(f"- `{u}`" for u in missing) if missing else "- none\n")
-        + "\n",
+        + "\n\nNCES released Spring 2025 provisional finance (FY 2024) in January 2026 "
+        "via the Use the Data / Access-database tools. The historical complete-data "
+        "zip pattern `F2324_F1A.zip` still 404s from this VM when unpublished as a "
+        "standalone file — we do not invent those rows.\n",
         encoding="utf-8",
     )
     LOGGER.info("NCES finance %s rows years %s–%s -> %s", len(out), year_min, year_max, dest)

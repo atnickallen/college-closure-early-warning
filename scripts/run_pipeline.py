@@ -23,6 +23,14 @@ def main() -> int:
     parser.add_argument("--skip-ingest", action="store_true", help="Reuse existing Urban Parquet extracts")
     parser.add_argument("--skip-nces", action="store_true")
     parser.add_argument("--skip-fsa", action="store_true")
+    parser.add_argument("--skip-wiche", action="store_true")
+    parser.add_argument("--skip-closures", action="store_true")
+    parser.add_argument("--skip-scorecard", action="store_true")
+    parser.add_argument(
+        "--with-scorecard",
+        action="store_true",
+        help="Use Scorecard (default). API if DATA_GOV_API_KEY is set, else official no-key ZIP.",
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -38,6 +46,14 @@ def main() -> int:
         extra.append("--skip-nces")
     if args.skip_fsa:
         extra.append("--skip-fsa")
+    if args.skip_wiche:
+        extra.append("--skip-wiche")
+    if args.skip_closures:
+        extra.append("--skip-closures")
+    if args.skip_scorecard:
+        extra.append("--skip-scorecard")
+    if args.with_scorecard:
+        extra.append("--with-scorecard")
     _run("02_crosswalk.py", extra)
     _run("03_panel.py")
     _run("04_features.py")
