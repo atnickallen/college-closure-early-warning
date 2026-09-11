@@ -48,15 +48,15 @@ def main() -> int:
     if not args.skip_nces:
         nces = ingest_nces_finance(settings)
         print(f"nces finance rows={len(nces):,} -> {settings.processed_dir / 'finance_nces.parquet'}")
+    if args.with_scorecard and args.skip_scorecard:
+        print("both --with-scorecard and --skip-scorecard set; skipping Scorecard")
     if not args.skip_fsa:
-        skip_scorecard = bool(args.skip_scorecard)
-        if args.with_scorecard and args.skip_scorecard:
-            print("both --with-scorecard and --skip-scorecard set; skipping Scorecard")
-        fsa = run_fsa_ingest(settings, skip_scorecard=skip_scorecard)
+        fsa = run_fsa_ingest(settings, skip_scorecard=bool(args.skip_scorecard))
         for key, frame in fsa.items():
             n = 0 if frame is None or frame.empty else len(frame)
             print(f"fsa {key} rows={n:,}")
-    elif args.with_scorecard and not args.skip_scorecard:
+    elif not args.skip_scorecard:
+        # Scorecard is independent of FSA workbooks: --skip-fsa still ingests it.
         from college_closure.scorecard import ingest_scorecard
 
         sc = ingest_scorecard(settings, skip=False)

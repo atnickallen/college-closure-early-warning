@@ -142,7 +142,35 @@ from `ed-public-download.scorecard.network`. Urban, NCES, WICHE, and data.ed.gov
 composites do not need a key.
 
 **Do not commit API keys.** The Scorecard client sends the key as the `api_key`
-query parameter and never writes it into parquet, logs, or `outputs/`.
+query parameter and never writes it into parquet, logs, or `outputs/`. A literal
+`scorecard.api_key` in `config.yaml` is ignored.
+
+## College Scorecard ingest
+
+Auto-detect: if `DATA_GOV_API_KEY` (or `SCORECARD_API_KEY`) is already in the
+environment, `02_crosswalk.py` / `run_pipeline.py` use the official API
+(`school.operating`, `school.ownership`, `school.under_investigation`, UNITID,
+OPEID6/8). Otherwise they download the official no-key most-recent ZIP
+(`CURROPER` / `HCM2`). `--with-scorecard` is the default; `--skip-scorecard`
+turns it off. `--skip-fsa` does **not** skip Scorecard.
+
+Live API on a machine that already has the key (do not paste the key):
+
+```bash
+python3 scripts/02_crosswalk.py --skip-nces --skip-fsa --skip-wiche --skip-closures --with-scorecard
+```
+
+Then rebuild labels/report so operating / HCM2 flags land on evidence cards:
+
+```bash
+python3 scripts/05_labels.py
+python3 scripts/07_report.py
+```
+
+Scorecard is a **current snapshot**: HCM2 / `under_investigation` and
+`operating=0` are evidence-card flags and a CLOSEDAT label cross-check when a
+valid year exists. They are **not** training features. Sentinel CLOSEDAT years
+are rejected. Unit tests mock HTTP so CI never needs a key.
 
 ## v2 runbook
 
@@ -286,7 +314,7 @@ Live Urban directory (fall 2004–2024), after filters: **5,886** unique UNITID,
 PYTHONPATH=src python3 -m pytest tests -q
 ```
 
-This revision: **31 passed**.
+This revision: **36 passed**.
 
 Covers universe filters, OPEID 6/8 (never pad a 6-digit root to 8 with leading
 zeros), official composite attach without dropping missing UNITID, trailing-

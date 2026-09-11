@@ -43,6 +43,8 @@ WATCHLIST_COLS = [
     "hcm2_current",
     "hcm2_scorecard",
     "scorecard_operating",
+    "scorecard_currently_operating",
+    "scorecard_ownership",
     "scorecard_under_investigation",
     "accreditor_public_action",
     "warn_layoff_mention",
@@ -115,8 +117,19 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
     if _flag(row.get("hcm1_current")):
         hcm.append("HCM1 (FSA list)")
     if _flag(row.get("hcm2_scorecard")) or _flag(row.get("scorecard_under_investigation")):
-        hcm.append("Scorecard UNDER_INVESTIGATION (HCM2-style)")
+        hcm.append("Scorecard under_investigation / HCM2 (current snapshot)")
     hcm_txt = ", ".join(hcm) if hcm else "not on current HCM / Scorecard investigation flags (or lists unavailable)"
+    op = row.get("scorecard_operating")
+    try:
+        op_n = int(op) if op is not None and not pd.isna(op) else None
+    except (TypeError, ValueError):
+        op_n = None
+    if op_n == 0:
+        op_txt = "not currently operating (Scorecard snapshot — not a closure year)"
+    elif op_n == 1:
+        op_txt = "currently operating (Scorecard)"
+    else:
+        op_txt = "Scorecard operating unknown"
     enrich_bits = []
     if row.get("accreditor_public_action"):
         enrich_bits.append(f"accreditor page mention: {row.get('accreditor_public_action')}")
@@ -145,7 +158,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
             <th>Zone / failing</th><td>{_fmt(row.get("composite_zone"), 0)} / {_fmt(row.get("composite_fail"), 0)}</td></tr>
         <tr><th>Finance missing</th><td>{_fmt(row.get("miss_finance"), 0)}</td>
             <th>HCM / investigation</th><td>{html.escape(hcm_txt)}</td></tr>
-        <tr><th>Scorecard operating</th><td>{_fmt(row.get("scorecard_operating"), 0)}</td>
+        <tr><th>Scorecard operating</th><td>{html.escape(op_txt)}</td>
             <th>Enrichment flags</th><td>{html.escape(enrich_txt)}</td></tr>
       </table>
       <h3>Top drivers (SHAP / global importance)</h3>
@@ -356,10 +369,10 @@ def run_report(settings: Settings) -> dict:
     if sc_path.exists():
         sc = pd.read_parquet(sc_path)
         if "unitid" in sc.columns and "unitid" in current.columns:
-            keep_sc = [c for c in ("unitid", "scorecard_operating", "scorecard_under_investigation", "hcm2_scorecard") if c in sc.columns]
+            keep_sc = [c for c in ("unitid", "scorecard_operating", "scorecard_currently_operating", "scorecard_ownership", "scorecard_under_investigation", "hcm2_scorecard") if c in sc.columns]
             current = current.merge(sc[keep_sc].drop_duplicates("unitid"), on="unitid", how="left")
         elif "opeid6" in sc.columns and "opeid6" in current.columns:
-            keep_sc = [c for c in ("opeid6", "scorecard_operating", "scorecard_under_investigation", "hcm2_scorecard") if c in sc.columns]
+            keep_sc = [c for c in ("opeid6", "scorecard_operating", "scorecard_currently_operating", "scorecard_ownership", "scorecard_under_investigation", "hcm2_scorecard") if c in sc.columns]
             current = current.merge(sc[keep_sc].drop_duplicates("opeid6"), on="opeid6", how="left")
     if "hcm2_scorecard" in current.columns:
         current["hcm2_current"] = current["hcm2_current"].fillna(False) | current["hcm2_scorecard"].fillna(False)

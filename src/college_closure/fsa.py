@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import re
 from pathlib import Path
 
@@ -20,7 +19,7 @@ from college_closure.download import (
     wayback_candidates,
 )
 from college_closure.ids import add_id_keys, normalize_opeid8, opeid6
-from college_closure.scorecard import ingest_scorecard
+from college_closure.scorecard import ingest_scorecard, scorecard_api_key
 from college_closure.urban import UrbanClient
 
 LOGGER = logging.getLogger(__name__)
@@ -463,12 +462,12 @@ def write_fsa_notes(settings: Settings, results: dict[str, pd.DataFrame], log: A
         "is present (it is not in this build).",
         "",
     ]
-    if not (os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY")):
+    if not scorecard_api_key(settings):
         lines.append(
             "College Scorecard API key absent (`DATA_GOV_API_KEY` unset); official no-key bulk ZIP used when it downloaded."
         )
     else:
-        lines.append("College Scorecard API key present; API path preferred over the bulk ZIP.")
+        lines.append("College Scorecard API key present in the environment; API path preferred over the bulk ZIP.")
     dest = settings.outputs_dir / "fsa_ingest.md"
     dest.write_text("\n".join(lines) + "\n", encoding="utf-8")
     (settings.outputs_dir / "fsa_attempts.json").write_text(

@@ -35,9 +35,43 @@ KEEP_FIELDS = [
 ]
 
 
-def scorecard_api_key() -> str:
-    """Return DATA_GOV_API_KEY or SCORECARD_API_KEY. Never log the value."""
-    return (os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY") or "").strip()
+DEFAULT_API_KEY_ENVS = ("DATA_GOV_API_KEY", "SCORECARD_API_KEY")
+
+
+def _redact(text: str, key: str) -> str:
+    if not text:
+        return text
+    if key and key in text:
+        return text.replace(key, "[redacted]")
+    return text
+
+
+def scorecard_api_key(settings: Settings | None = None) -> str:
+    """Read the Scorecard key from the environment only.
+
+    Config may list *names* of env vars (`scorecard.api_key_env`). A literal
+    key in config.yaml is ignored so it cannot be committed by accident.
+    Never log the returned value.
+    """
+    names: list[str] = list(DEFAULT_API_KEY_ENVS)
+    if settings is not None:
+        cfg = settings.raw.get("scorecard") or {}
+        extra = cfg.get("api_key_env")
+        if isinstance(extra, str) and extra.strip():
+            names = [extra.strip(), *names]
+        elif isinstance(extra, (list, tuple)):
+            names = [str(x).strip() for x in extra if str(x).strip()] + names
+        if cfg.get("api_key") or cfg.get("key"):
+            LOGGER.warning("scorecard.api_key in config is ignored; export DATA_GOV_API_KEY instead")
+    seen: set[str] = set()
+    for name in names:
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        val = (os.environ.get(name) or "").strip()
+        if val:
+            return val
+    return ""
 
 BULK_COL_MAP = {
     "UNITID": "unitid",
@@ -77,13 +111,27 @@ def _http_get(url: str, params: dict, timeout: int = 60):
     return requests.get(url, params=params, timeout=timeout)
 
 
+_API_RENAME = {
+    "id": "unitid",
+    "ope6_id": "opeid6_raw",
+    "ope8_id": "opeid",
+    "school.name": "inst_name",
+    "school.operating": "scorecard_operating",
+    "school.ownership": "scorecard_ownership",
+    "school.under_investigation": "scorecard_under_investigation",
+    "school.accreditor": "scorecard_accreditor",
+    "school.state": "state_abbr",
+    "school.city": "city",
+}
+
+
 def ingest_scorecard_api(settings: Settings, *, http_get=None) -> pd.DataFrame:
     """Paginated College Scorecard API. Requires DATA_GOV_API_KEY / SCORECARD_API_KEY.
 
     ``http_get(url, params, timeout)`` is injectable for unit tests. The key is
     sent as the ``api_key`` query param and is never written to parquet or logs.
     """
-    key = scorecard_api_key()
+    key = scorecard_api_key(settings)
     if not key:
         return pd.DataFrame()
     cfg = settings.raw.get("scorecard") or {}
@@ -107,7 +155,7 @@ def ingest_scorecard_api(settings: Settings, *, http_get=None) -> pd.DataFrame:
             )
             status = getattr(resp, "status_code", 0)
             if status >= 400:
-                body = getattr(resp, "text", "")[:160]
+                body = _redact(getattr(resp, "text", "")[:160], key)
                 LOGGER.warning("Scorecard API HTTP %s on page %s: %s", status, page, body)
                 break
             payload = resp.json() if hasattr(resp, "json") else {}
@@ -132,20 +180,7 @@ def ingest_scorecard_api(settings: Settings, *, http_get=None) -> pd.DataFrame:
         if not rows:
             return pd.DataFrame()
         frame = pd.json_normalize(rows)
-        frame = frame.rename(
-            columns={
-                "id": "unitid",
-                "ope6_id": "opeid6_raw",
-                "ope8_id": "opeid",
-                "school.name": "inst_name",
-                "school.operating": "scorecard_operating",
-                "school.ownership": "scorecard_ownership",
-                "school.under_investigation": "scorecard_under_investigation",
-                "school.accreditor": "scorecard_accreditor",
-                "school.state": "state_abbr",
-                "school.city": "city",
-            }
-        )
+        frame = frame.rename(columns=_API_RENAME)
         return _finalize(frame, settings, source="api")
     except Exception as exc:  # noqa: BLE001
         LOGGER.warning("Scorecard API fetch failed: %s", type(exc).__name__)
@@ -218,6 +253,8 @@ def _finalize(df: pd.DataFrame, settings: Settings, source: str) -> pd.DataFrame
         out["hcm2_scorecard"] = pd.to_numeric(out["scorecard_under_investigation"], errors="coerce") == 1
     else:
         out["hcm2_scorecard"] = False
+    if "scorecard_operating" in out.columns:
+        out["scorecard_currently_operating"] = pd.to_numeric(out["scorecard_operating"], errors="coerce") == 1
     out["scorecard_source"] = source
     dest = settings.processed_dir / "scorecard_operating.parquet"
     keep = [
@@ -255,7 +292,7 @@ def ingest_scorecard(settings: Settings, *, skip: bool = False, http_get=None) -
     if skip:
         LOGGER.info("Scorecard ingest skipped")
         return pd.DataFrame()
-    if scorecard_api_key():
+    if scorecard_api_key(settings):
         api = ingest_scorecard_api(settings, http_get=http_get)
         if not api.empty:
             return api

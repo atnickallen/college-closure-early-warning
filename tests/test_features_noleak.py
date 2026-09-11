@@ -60,6 +60,8 @@ def test_training_features_exclude_hcm_and_future_labels():
         "hcm2_scorecard",
         "scorecard_under_investigation",
         "scorecard_operating",
+        "scorecard_currently_operating",
+        "scorecard_ownership",
         "accreditor_public_action",
         "warn_layoff_mention",
         "irs990_revenue",
