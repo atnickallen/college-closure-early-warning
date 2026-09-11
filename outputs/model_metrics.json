@@ -38,9 +38,10 @@
     "urban",
     "rural",
     "inst_control",
-    "sector"
+    "sector",
+    "hs_grad_pct_chg_5y"
   ],
-  "n_features": 38,
+  "n_features": 39,
   "splits": {
     "train_end": 2016,
     "val_years": [
@@ -62,17 +63,17 @@
     "by_year": [
       {
         "year": 2020,
-        "model_pr_auc": 0.2551938240422155,
-        "model_recall_at_50": 0.18333333333333332,
+        "model_pr_auc": 0.2557411713376597,
+        "model_recall_at_50": 0.2,
         "baseline": "composite_lt_1",
-        "baseline_pr_auc": 0.05681898282229271,
-        "baseline_recall_at_50": 0.016666666666666666,
+        "baseline_pr_auc": 0.05470040257173067,
+        "baseline_recall_at_50": 0.05,
         "beats": true
       },
       {
         "year": 2020,
-        "model_pr_auc": 0.2551938240422155,
-        "model_recall_at_50": 0.18333333333333332,
+        "model_pr_auc": 0.2557411713376597,
+        "model_recall_at_50": 0.2,
         "baseline": "enr_decline_5y_gt30",
         "baseline_pr_auc": 0.13800557251772638,
         "baseline_recall_at_50": 0.075,
@@ -80,17 +81,17 @@
       },
       {
         "year": 2021,
-        "model_pr_auc": 0.13321186620787548,
-        "model_recall_at_50": 0.0970873786407767,
+        "model_pr_auc": 0.12965129335577136,
+        "model_recall_at_50": 0.08737864077669903,
         "baseline": "composite_lt_1",
-        "baseline_pr_auc": 0.052961204470955904,
-        "baseline_recall_at_50": 0.019417475728155338,
+        "baseline_pr_auc": 0.05002841637793236,
+        "baseline_recall_at_50": 0.04854368932038835,
         "beats": true
       },
       {
         "year": 2021,
-        "model_pr_auc": 0.13321186620787548,
-        "model_recall_at_50": 0.0970873786407767,
+        "model_pr_auc": 0.12965129335577136,
+        "model_recall_at_50": 0.08737864077669903,
         "baseline": "enr_decline_5y_gt30",
         "baseline_pr_auc": 0.10757656297182835,
         "baseline_recall_at_50": 0.06796116504854369,
@@ -102,17 +103,17 @@
     "logit": {
       "n": 37855,
       "positives": 2876,
-      "pr_auc": 0.495359479241513,
-      "roc_auc": 0.8984413994313536,
-      "recall_at_25": 0.005563282336578581,
-      "recall_at_50": 0.012517385257301807,
+      "pr_auc": 0.49447536164731204,
+      "roc_auc": 0.8982040724534065,
+      "recall_at_25": 0.005910987482614743,
+      "recall_at_50": 0.012169680111265646,
       "recall_at_100": 0.027468706536856746
     },
     "xgboost": {
       "n": 37855,
       "positives": 2876,
-      "pr_auc": 0.7035947650479267,
-      "roc_auc": 0.9602492669851861,
+      "pr_auc": 0.7078757202581677,
+      "roc_auc": 0.960211319519707,
       "recall_at_25": 0.008692628650904033,
       "recall_at_50": 0.017385257301808066,
       "recall_at_100": 0.03477051460361613
@@ -122,28 +123,28 @@
     "logit": {
       "n": 7661,
       "positives": 604,
-      "pr_auc": 0.22263694760716482,
-      "roc_auc": 0.8260709623716811,
+      "pr_auc": 0.22292107175852657,
+      "roc_auc": 0.8260376480259608,
       "recall_at_25": 0.004966887417218543,
       "recall_at_50": 0.004966887417218543,
-      "recall_at_100": 0.004966887417218543
+      "recall_at_100": 0.006622516556291391
     },
     "xgboost": {
       "n": 7661,
       "positives": 604,
-      "pr_auc": 0.524253151978318,
-      "roc_auc": 0.8618578425254338,
-      "recall_at_25": 0.028145695364238412,
+      "pr_auc": 0.5514851337261333,
+      "roc_auc": 0.8702556383357092,
+      "recall_at_25": 0.03642384105960265,
       "recall_at_50": 0.06622516556291391,
-      "recall_at_100": 0.12251655629139073
+      "recall_at_100": 0.1291390728476821
     }
   },
   "test": {
     "logit": {
       "n": 4799,
       "positives": 223,
-      "pr_auc": 0.11450433000472818,
-      "roc_auc": 0.7795762253441626,
+      "pr_auc": 0.11401008560521488,
+      "roc_auc": 0.7780484649879268,
       "recall_at_25": 0.008968609865470852,
       "recall_at_50": 0.013452914798206279,
       "recall_at_100": 0.013452914798206279
@@ -151,20 +152,20 @@
     "xgboost": {
       "n": 4799,
       "positives": 223,
-      "pr_auc": 0.19035179430221524,
-      "roc_auc": 0.7451442895669353,
-      "recall_at_25": 0.06278026905829596,
-      "recall_at_50": 0.09865470852017937,
-      "recall_at_100": 0.14349775784753363
+      "pr_auc": 0.1788727961858984,
+      "roc_auc": 0.747633392392361,
+      "recall_at_25": 0.04932735426008968,
+      "recall_at_50": 0.08968609865470852,
+      "recall_at_100": 0.14798206278026907
     },
     "naive_composite_lt_1": {
       "n": 4799,
       "positives": 223,
-      "pr_auc": 0.05480965509262908,
-      "roc_auc": 0.5387418075198344,
+      "pr_auc": 0.05231835840814542,
+      "roc_auc": 0.5290039276866632,
       "recall_at_25": 0.0,
       "recall_at_50": 0.008968609865470852,
-      "recall_at_100": 0.02242152466367713
+      "recall_at_100": 0.053811659192825115
     },
     "naive_enr_decline_5y_gt30": {
       "n": 4799,
@@ -179,63 +180,63 @@
   "shap_global": [
     {
       "feature": "unrestricted_na_to_exp",
-      "mean_abs_shap": 0.9844926595687866
+      "mean_abs_shap": 0.8832565546035767
     },
     {
       "feature": "composite_score",
-      "mean_abs_shap": 0.5241830945014954
+      "mean_abs_shap": 0.516187310218811
     },
     {
       "feature": "log_fte",
-      "mean_abs_shap": 0.4748784601688385
+      "mean_abs_shap": 0.4278431832790375
     },
     {
       "feature": "endowment_per_fte",
-      "mean_abs_shap": 0.41960135102272034
+      "mean_abs_shap": 0.4114828407764435
     },
     {
       "feature": "operating_margin",
-      "mean_abs_shap": 0.2644060254096985
+      "mean_abs_shap": 0.26668062806129456
     },
     {
       "feature": "yield_rate",
-      "mean_abs_shap": 0.2535296678543091
+      "mean_abs_shap": 0.25844067335128784
     },
     {
       "feature": "tuition_dependence",
-      "mean_abs_shap": 0.246126189827919
+      "mean_abs_shap": 0.23840895295143127
     },
     {
       "feature": "enr_pct_chg_1y",
-      "mean_abs_shap": 0.19489505887031555
+      "mean_abs_shap": 0.2172771692276001
     },
     {
-      "feature": "student_staff_ratio",
-      "mean_abs_shap": 0.16469644010066986
-    },
-    {
-      "feature": "miss_composite",
-      "mean_abs_shap": 0.1334531158208847
+      "feature": "hs_grad_pct_chg_5y",
+      "mean_abs_shap": 0.17801442742347717
     },
     {
       "feature": "admit_rate",
-      "mean_abs_shap": 0.13181842863559723
+      "mean_abs_shap": 0.15975576639175415
     },
     {
-      "feature": "enr_pct_chg_10y",
-      "mean_abs_shap": 0.12055157870054245
+      "feature": "student_staff_ratio",
+      "mean_abs_shap": 0.15164288878440857
+    },
+    {
+      "feature": "sector",
+      "mean_abs_shap": 0.1441306620836258
     },
     {
       "feature": "consec_neg_margin_yrs",
-      "mean_abs_shap": 0.12017689645290375
+      "mean_abs_shap": 0.1353369653224945
+    },
+    {
+      "feature": "miss_composite",
+      "mean_abs_shap": 0.12721319496631622
     },
     {
       "feature": "yield_rate_chg_5y",
-      "mean_abs_shap": 0.11439746618270874
-    },
-    {
-      "feature": "staff_pct_chg_1y",
-      "mean_abs_shap": 0.09957443177700043
+      "mean_abs_shap": 0.10001149773597717
     }
   ]
 }

@@ -26,5 +26,49 @@
 ## Missing / failed URLs
 
 - `https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F1A_rev.zip`
 - `https://nces.ed.gov/ipeds/datacenter/data/F2324_F2.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F2_rev.zip`
 - `https://nces.ed.gov/ipeds/datacenter/data/F2324_F3.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2324_F3_rev.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F1A_rev.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F2.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F2_rev.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F3.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2425_F3_rev.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F1A_rev.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F2.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F2_rev.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F3.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_Data_Stata.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_P.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_RV.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/F2526_F3_rev.zip`
+
+NCES released Spring 2025 provisional finance (FY 2024) in January 2026 via the Use the Data / Access-database tools. The historical complete-data zip pattern `F2324_F1A.zip` still 404s from this VM when unpublished as a standalone file — we do not invent those rows.

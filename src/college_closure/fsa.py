@@ -458,12 +458,17 @@ def write_fsa_notes(settings: Settings, results: dict[str, pd.DataFrame], log: A
         "- Composites join UNITID×year first, then unambiguous OPEID6×year (main campus if shared).",
         "- Official data.ed.gov files are preferred on overlap with Urban; Urban keeps 2006–2016 history.",
         "",
-        "HCM / Scorecard `UNDER_INVESTIGATION` are **current snapshots** and must not be used as",
-        "historical training features unless a lagged year-by-year series is present (it is not in this build).",
+        "HCM / Scorecard `UNDER_INVESTIGATION` (API) / `HCM2` (bulk ZIP) are **current snapshots**",
+        "and must not be used as historical training features unless a lagged year-by-year series",
+        "is present (it is not in this build).",
         "",
     ]
     if not (os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY")):
-        lines.append("College Scorecard API key absent; bulk ZIP path used when the official file downloaded.")
+        lines.append(
+            "College Scorecard API key absent (`DATA_GOV_API_KEY` unset); official no-key bulk ZIP used when it downloaded."
+        )
+    else:
+        lines.append("College Scorecard API key present; API path preferred over the bulk ZIP.")
     dest = settings.outputs_dir / "fsa_ingest.md"
     dest.write_text("\n".join(lines) + "\n", encoding="utf-8")
     (settings.outputs_dir / "fsa_attempts.json").write_text(
@@ -473,11 +478,11 @@ def write_fsa_notes(settings: Settings, results: dict[str, pd.DataFrame], log: A
     LOGGER.info("Wrote %s", dest)
 
 
-def ingest_scorecard_optional(settings: Settings) -> pd.DataFrame:
-    return ingest_scorecard(settings)
+def ingest_scorecard_optional(settings: Settings, *, skip: bool = False) -> pd.DataFrame:
+    return ingest_scorecard(settings, skip=skip)
 
 
-def run_fsa_ingest(settings: Settings) -> dict[str, pd.DataFrame]:
+def run_fsa_ingest(settings: Settings, *, skip_scorecard: bool = False) -> dict[str, pd.DataFrame]:
     urban = ingest_urban_composite(settings)
     official = ingest_published_composite(settings)
     composite = merge_composite_sources(urban, official)
@@ -489,7 +494,7 @@ def run_fsa_ingest(settings: Settings) -> dict[str, pd.DataFrame]:
         "composite": composite,
         "hcm": ingest_hcm_snapshot(settings),
         "closed_school": ingest_closed_school(settings),
-        "scorecard": ingest_scorecard_optional(settings),
+        "scorecard": ingest_scorecard_optional(settings, skip=skip_scorecard),
     }
     write_fsa_notes(settings, results)
     return results

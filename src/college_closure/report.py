@@ -238,13 +238,13 @@ closures and mergers on trailing (no-leakage) features.
 - Urban Institute Education Data Portal IPEDS extracts (directory, enrollment, FTE,
   admissions, staffing, finance through 2017)
 - NCES IPEDS complete finance files (F1A / F2 / F3) for post-2017 backfill
-- FSA financial-responsibility composite scores via Urban FSA CSV (through 2016)
-  plus any official Data Center workbook that downloaded
+- Official FSA composite year workbooks from data.ed.gov (FY 2007–2018) plus
+  Urban Institute FSA CSV (2006–2016). Official scores win on overlap.
 - HCM and Closed School lists: ingested when a current Data Center file downloads;
   HCM is **current-only evidence** and is **not** a training feature
-- Official FSA composite year workbooks from data.ed.gov (through AY 2017–18) plus Urban 2006–2016
-- College Scorecard: `DATA_GOV_API_KEY` / `SCORECARD_API_KEY` **or** the official no-key
-  most-recent institution ZIP (`UNDER_INVESTIGATION` is an HCM2-style evidence flag)
+- College Scorecard: `DATA_GOV_API_KEY` / `SCORECARD_API_KEY` **or** the official
+  no-key most-recent institution ZIP. API field `school.under_investigation` and
+  ZIP column `HCM2` map to the same evidence flag; `CURROPER` is operating status.
 - WICHE Knocking at the College Door 11th edition (state HS-graduate totals) when the workbook downloads
 - Top-50 enrichment (flags only): accreditor public-action pages, WARN files, ProPublica 990 by EIN
 
@@ -287,8 +287,8 @@ Configured feature columns not present in this run: {unused_txt}.
 - IPEDS publications lag; recent finance and composite scores may be missing
   (`miss_finance` is an explicit feature, not silently filled with zeros that
   look like health).
-- Urban composite scores end in 2016 unless an official FSA workbook downloaded;
-  later years use the last observed score (lagged) plus `composite_is_lagged`.
+- Official FSA composites via data.ed.gov currently end in FY 2018; later years
+  use the last observed score (lagged) plus `composite_is_lagged`.
 - Parent/child finance: child campuses with $0/missing revenue inherit parent
   totals for ratio features and are flagged `finance_from_parent` so they are
   not scored as empty shells.
@@ -415,9 +415,9 @@ def run_report(settings: Settings) -> dict:
         )
 
     caveats = (
-        "Watch list only. IPEDS lag; Urban composite scores end 2016 unless an official "
-        "FSA workbook downloaded; NCES finance backfill covers published F-year zips only; "
-        "HCM is current-list evidence and was not a training feature; mergers count as "
+        "Watch list only. IPEDS lag; official FSA composites currently end FY 2018; "
+        "NCES finance backfill covers published F-year zips only; HCM / Scorecard HCM2 "
+        "are current-list evidence and were not training features; mergers count as "
         "positives by default; publics excluded from the primary ranking."
     )
     (out_dir / "top50_report.html").write_text(

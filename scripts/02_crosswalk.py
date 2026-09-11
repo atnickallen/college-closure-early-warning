@@ -28,6 +28,16 @@ def main() -> int:
     parser.add_argument("--skip-fsa", action="store_true")
     parser.add_argument("--skip-wiche", action="store_true")
     parser.add_argument("--skip-closures", action="store_true")
+    parser.add_argument(
+        "--skip-scorecard",
+        action="store_true",
+        help="Skip College Scorecard (API and bulk ZIP).",
+    )
+    parser.add_argument(
+        "--with-scorecard",
+        action="store_true",
+        help="Use Scorecard (default). API if DATA_GOV_API_KEY is set, else official no-key ZIP.",
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     settings = load_settings(args.config)
@@ -39,10 +49,18 @@ def main() -> int:
         nces = ingest_nces_finance(settings)
         print(f"nces finance rows={len(nces):,} -> {settings.processed_dir / 'finance_nces.parquet'}")
     if not args.skip_fsa:
-        fsa = run_fsa_ingest(settings)
+        skip_scorecard = bool(args.skip_scorecard)
+        if args.with_scorecard and args.skip_scorecard:
+            print("both --with-scorecard and --skip-scorecard set; skipping Scorecard")
+        fsa = run_fsa_ingest(settings, skip_scorecard=skip_scorecard)
         for key, frame in fsa.items():
             n = 0 if frame is None or frame.empty else len(frame)
             print(f"fsa {key} rows={n:,}")
+    elif args.with_scorecard and not args.skip_scorecard:
+        from college_closure.scorecard import ingest_scorecard
+
+        sc = ingest_scorecard(settings, skip=False)
+        print(f"scorecard rows={0 if sc is None or sc.empty else len(sc):,}")
     if not args.skip_wiche:
         wiche = ingest_wiche(settings)
         print(f"wiche rows={0 if wiche is None or wiche.empty else len(wiche):,}")

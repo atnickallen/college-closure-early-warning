@@ -173,11 +173,21 @@ def enrich_shortlist(settings: Settings, watch: pd.DataFrame) -> pd.DataFrame:
     notes = []
     for _, row in out.iterrows():
         bits = []
-        if row.get("accreditor_public_action"):
+        def _truthy(v) -> bool:
+            try:
+                if v is None or pd.isna(v):
+                    return False
+            except (TypeError, ValueError):
+                return False
+            if isinstance(v, str) and not v.strip():
+                return False
+            return bool(v)
+
+        if _truthy(row.get("accreditor_public_action")):
             bits.append(f"accreditor page mention: {row['accreditor_public_action']}")
-        if row.get("warn_layoff_mention"):
+        if _truthy(row.get("warn_layoff_mention")):
             bits.append("WARN file mention (name match)")
-        if row.get("irs990_ein_verified"):
+        if _truthy(row.get("irs990_ein_verified")):
             bits.append("ProPublica 990 EIN verified")
         notes.append("; ".join(bits))
     out["enrichment_notes"] = notes

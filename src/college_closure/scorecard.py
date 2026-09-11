@@ -16,6 +16,9 @@ from college_closure.ids import add_id_keys, opeid6
 
 LOGGER = logging.getLogger(__name__)
 
+# Official College Scorecard API field names (api.data.gov).
+# school.under_investigation is the HCM2-style flag on the API;
+# the most-recent bulk ZIP uses column HCM2 for the same construct.
 KEEP_FIELDS = [
     "id",
     "ope6_id",
@@ -30,6 +33,11 @@ KEEP_FIELDS = [
     "school.alias",
     "latest.student.size",
 ]
+
+
+def scorecard_api_key() -> str:
+    """Return DATA_GOV_API_KEY or SCORECARD_API_KEY. Never log the value."""
+    return (os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY") or "").strip()
 
 BULK_COL_MAP = {
     "UNITID": "unitid",
@@ -63,37 +71,64 @@ def _guess_bulk_urls(settings: Settings) -> list[str]:
     return urls
 
 
-def ingest_scorecard_api(settings: Settings) -> pd.DataFrame:
-    key = os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY")
+def _http_get(url: str, params: dict, timeout: int = 60):
+    import requests
+
+    return requests.get(url, params=params, timeout=timeout)
+
+
+def ingest_scorecard_api(settings: Settings, *, http_get=None) -> pd.DataFrame:
+    """Paginated College Scorecard API. Requires DATA_GOV_API_KEY / SCORECARD_API_KEY.
+
+    ``http_get(url, params, timeout)`` is injectable for unit tests. The key is
+    sent as the ``api_key`` query param and is never written to parquet or logs.
+    """
+    key = scorecard_api_key()
     if not key:
         return pd.DataFrame()
     cfg = settings.raw.get("scorecard") or {}
     base = str(cfg.get("api_base", "https://api.data.gov/ed/collegescorecard/v1/schools"))
+    getter = http_get or _http_get
     try:
-        import requests
-
         rows = []
         page = 0
-        while page < 80:
-            resp = requests.get(
+        total = None
+        per_page = 100
+        while page < 200:
+            resp = getter(
                 base,
-                params={
+                {
                     "api_key": key,
                     "fields": ",".join(KEEP_FIELDS),
-                    "per_page": 100,
+                    "per_page": per_page,
                     "page": page,
                 },
-                timeout=60,
+                60,
             )
-            if resp.status_code >= 400:
-                LOGGER.warning("Scorecard API %s: %s", resp.status_code, resp.text[:200])
+            status = getattr(resp, "status_code", 0)
+            if status >= 400:
+                body = getattr(resp, "text", "")[:160]
+                LOGGER.warning("Scorecard API HTTP %s on page %s: %s", status, page, body)
                 break
-            payload = resp.json()
+            payload = resp.json() if hasattr(resp, "json") else {}
             results = payload.get("results") or []
             if not results:
                 break
             rows.extend(results)
+            meta = payload.get("metadata") or {}
+            if total is None:
+                try:
+                    total = int(meta.get("total") or 0) or None
+                except (TypeError, ValueError):
+                    total = None
+            try:
+                per_page = int(meta.get("per_page") or per_page)
+            except (TypeError, ValueError):
+                pass
+            LOGGER.info("Scorecard API page %s (%s rows so far)", page, len(rows))
             page += 1
+            if total is not None and len(rows) >= total:
+                break
         if not rows:
             return pd.DataFrame()
         frame = pd.json_normalize(rows)
@@ -101,6 +136,7 @@ def ingest_scorecard_api(settings: Settings) -> pd.DataFrame:
             columns={
                 "id": "unitid",
                 "ope6_id": "opeid6_raw",
+                "ope8_id": "opeid",
                 "school.name": "inst_name",
                 "school.operating": "scorecard_operating",
                 "school.ownership": "scorecard_ownership",
@@ -112,7 +148,7 @@ def ingest_scorecard_api(settings: Settings) -> pd.DataFrame:
         )
         return _finalize(frame, settings, source="api")
     except Exception as exc:  # noqa: BLE001
-        LOGGER.warning("Scorecard API fetch failed: %s", exc)
+        LOGGER.warning("Scorecard API fetch failed: %s", type(exc).__name__)
         return pd.DataFrame()
 
 
@@ -211,13 +247,21 @@ def _finalize(df: pd.DataFrame, settings: Settings, source: str) -> pd.DataFrame
     return slim
 
 
-def ingest_scorecard(settings: Settings) -> pd.DataFrame:
-    """API if a key is set; otherwise official no-key bulk ZIP. Never invent rows."""
-    api = ingest_scorecard_api(settings)
-    if not api.empty:
-        return api
-    if not (os.environ.get("DATA_GOV_API_KEY") or os.environ.get("SCORECARD_API_KEY")):
-        LOGGER.info("No DATA_GOV_API_KEY; trying official Scorecard bulk ZIP (no key)")
+def ingest_scorecard(settings: Settings, *, skip: bool = False, http_get=None) -> pd.DataFrame:
+    """API if ``DATA_GOV_API_KEY`` is set; otherwise official no-key bulk ZIP.
+
+    Never invent rows. ``skip=True`` (``--skip-scorecard``) writes nothing.
+    """
+    if skip:
+        LOGGER.info("Scorecard ingest skipped")
+        return pd.DataFrame()
+    if scorecard_api_key():
+        api = ingest_scorecard_api(settings, http_get=http_get)
+        if not api.empty:
+            return api
+        LOGGER.warning("Scorecard API returned no rows; falling back to official bulk ZIP")
+    else:
+        LOGGER.info("DATA_GOV_API_KEY unset; trying official Scorecard bulk ZIP (no key)")
     return ingest_scorecard_bulk(settings)
 
 

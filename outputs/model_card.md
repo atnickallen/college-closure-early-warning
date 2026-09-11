@@ -17,12 +17,15 @@ closures and mergers on trailing (no-leakage) features.
 - Urban Institute Education Data Portal IPEDS extracts (directory, enrollment, FTE,
   admissions, staffing, finance through 2017)
 - NCES IPEDS complete finance files (F1A / F2 / F3) for post-2017 backfill
-- FSA financial-responsibility composite scores via Urban FSA CSV (through 2016)
-  plus any official Data Center workbook that downloaded
+- Official FSA composite year workbooks from data.ed.gov (FY 2007–2018) plus
+  Urban Institute FSA CSV (2006–2016). Official scores win on overlap.
 - HCM and Closed School lists: ingested when a current Data Center file downloads;
   HCM is **current-only evidence** and is **not** a training feature
-- College Scorecard: only if `DATA_GOV_API_KEY` or `SCORECARD_API_KEY` is set
-- WICHE HS-grad trends: only if `data/external/wiche_hs_graduates.csv` is present
+- College Scorecard: `DATA_GOV_API_KEY` / `SCORECARD_API_KEY` **or** the official
+  no-key most-recent institution ZIP. API field `school.under_investigation` and
+  ZIP column `HCM2` map to the same evidence flag; `CURROPER` is operating status.
+- WICHE Knocking at the College Door 11th edition (state HS-graduate totals) when the workbook downloads
+- Top-50 enrichment (flags only): accreditor public-action pages, WARN files, ProPublica 990 by EIN
 
 ## Temporal split (no shuffle)
 
@@ -39,29 +42,29 @@ val n=7661; test n=4799.
 
 | Model | PR-AUC | ROC-AUC | Recall@25 | Recall@50 | Recall@100 | n | positives |
 |-------|--------|---------|-----------|-----------|------------|---|-----------|
-| xgboost | 0.190 | 0.745 | 0.063 | 0.099 | 0.143 | 4799 | 223 |
-| logistic | 0.115 | 0.780 | 0.009 | 0.013 | 0.013 | 4799 | 223 |
-| naive: composite < 1.0 | 0.055 | 0.539 | 0.000 | 0.009 | 0.022 | 4799 | 223 |
+| xgboost | 0.179 | 0.748 | 0.049 | 0.090 | 0.148 | 4799 | 223 |
+| logistic | 0.114 | 0.778 | 0.009 | 0.013 | 0.013 | 4799 | 223 |
+| naive: composite < 1.0 | 0.052 | 0.529 | 0.000 | 0.009 | 0.054 | 4799 | 223 |
 | naive: 5y enrollment decline > 30% | 0.123 | 0.737 | 0.009 | 0.045 | 0.090 | 4799 | 223 |
 
 On at least one held-out test year the main model beat a naive baseline on PR-AUC and/or recall@50. See `outputs/model_metrics.json` for year-level detail. Beating a baseline is not evidence the watch list is a reliable forecast for any named school.
 
-Configured feature columns not present in this run: `hs_grad_pct_chg_5y`.
+Configured feature columns not present in this run: none.
 
 ## Top global drivers
 
-- `unrestricted_na_to_exp` (mean |SHAP| 0.9845)
-- `composite_score` (mean |SHAP| 0.5242)
-- `log_fte` (mean |SHAP| 0.4749)
-- `endowment_per_fte` (mean |SHAP| 0.4196)
-- `operating_margin` (mean |SHAP| 0.2644)
-- `yield_rate` (mean |SHAP| 0.2535)
-- `tuition_dependence` (mean |SHAP| 0.2461)
-- `enr_pct_chg_1y` (mean |SHAP| 0.1949)
-- `student_staff_ratio` (mean |SHAP| 0.1647)
-- `miss_composite` (mean |SHAP| 0.1335)
-- `admit_rate` (mean |SHAP| 0.1318)
-- `enr_pct_chg_10y` (mean |SHAP| 0.1206)
+- `unrestricted_na_to_exp` (mean |SHAP| 0.8833)
+- `composite_score` (mean |SHAP| 0.5162)
+- `log_fte` (mean |SHAP| 0.4278)
+- `endowment_per_fte` (mean |SHAP| 0.4115)
+- `operating_margin` (mean |SHAP| 0.2667)
+- `yield_rate` (mean |SHAP| 0.2584)
+- `tuition_dependence` (mean |SHAP| 0.2384)
+- `enr_pct_chg_1y` (mean |SHAP| 0.2173)
+- `hs_grad_pct_chg_5y` (mean |SHAP| 0.1780)
+- `admit_rate` (mean |SHAP| 0.1598)
+- `student_staff_ratio` (mean |SHAP| 0.1516)
+- `sector` (mean |SHAP| 0.1441)
 
 ## Watch list
 
@@ -74,8 +77,8 @@ Configured feature columns not present in this run: `hs_grad_pct_chg_5y`.
 - IPEDS publications lag; recent finance and composite scores may be missing
   (`miss_finance` is an explicit feature, not silently filled with zeros that
   look like health).
-- Urban composite scores end in 2016 unless an official FSA workbook downloaded;
-  later years use the last observed score (lagged) plus `composite_is_lagged`.
+- Official FSA composites via data.ed.gov currently end in FY 2018; later years
+  use the last observed score (lagged) plus `composite_is_lagged`.
 - Parent/child finance: child campuses with $0/missing revenue inherit parent
   totals for ratio features and are flagged `finance_from_parent` so they are
   not scored as empty shells.
@@ -85,6 +88,6 @@ Configured feature columns not present in this run: `hs_grad_pct_chg_5y`.
 - Mergers are treated as positive labels by default (config toggle).
 - HCM1/HCM2 on the HTML cards are a **current snapshot** (if the list downloaded)
   and were excluded from model training to avoid temporal leakage.
-- Accreditor actions, WARN notices, and IRS 990s are not in this build
-  (documented TODO — do not treat the watch list as a complete diligence file).
+- Accreditor / WARN / 990 flags on the top 50 are best-effort name or EIN matches
+  and are **not** inputs to the model score.
 - Do not publish these ranks as “predicted closures.”

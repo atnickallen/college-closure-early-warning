@@ -35,6 +35,31 @@ def test_official_workbook_skips_title_rows(tmp_path: Path):
     assert int(six["year"]) == 2018
 
 
+def test_attach_composite_uses_opeid6_when_unitid_missing():
+    from college_closure.fsa import attach_composite
+
+    panel = pd.DataFrame(
+        {
+            "unitid": [10, 11],
+            "year": [2017, 2017],
+            "opeid6": ["001003", "009999"],
+            "opeid_is_main": [True, True],
+            "opeid6_n_unitids": [1, 1],
+        }
+    )
+    official = pd.DataFrame(
+        {
+            "unitid": [pd.NA, pd.NA],
+            "year": [2017.0, 2017.0],
+            "opeid6": ["001003", "001012"],
+            "composite_score": [2.4, 1.1],
+        }
+    )
+    out = attach_composite(panel, official)
+    assert float(out.loc[out["unitid"] == 10, "composite_score"].iloc[0]) == 2.4
+    assert pd.isna(out.loc[out["unitid"] == 11, "composite_score"].iloc[0])
+
+
 def test_opeid6_from_official_eight_digit_matches_ids():
     assert opeid6("00884300") == "008843"
     assert normalize_opeid8("00884300") == "00884300"

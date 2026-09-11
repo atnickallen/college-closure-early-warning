@@ -112,8 +112,13 @@ def build_panel(settings: Settings) -> pd.DataFrame:
         panel = panel.drop(columns=[c for c in extra_xw if c in panel.columns], errors="ignore")
         panel = panel.merge(xw[["unitid", "year", *extra_xw]], on=["unitid", "year"], how="left")
 
-    composite = _ensure_unitid_year(_read_optional(processed / "fsa_composite.parquet"))
+    composite = _read_optional(processed / "fsa_composite.parquet")
     if not composite.empty:
+        composite = composite.copy()
+        if "unitid" in composite.columns:
+            composite["unitid"] = pd.to_numeric(composite["unitid"], errors="coerce")
+        composite["year"] = pd.to_numeric(composite.get("year"), errors="coerce")
+        composite = composite.dropna(subset=["year"])
         if "composite_score" in panel.columns:
             panel = panel.drop(columns=["composite_score"])
         panel = attach_composite(panel, composite)
