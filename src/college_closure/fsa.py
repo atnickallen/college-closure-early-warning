@@ -152,8 +152,11 @@ def parse_official_composite_workbook(path: Path, fallback_year: int | None = No
             out.loc[still, "year"] = numeric_y.loc[still].to_numpy()
         else:
             out["year"] = fallback_year
+        out["opeid_raw"] = out["opeid_raw"].map(lambda v: "" if pd.isna(v) else str(v))
         out["opeid6"] = out["opeid_raw"].map(opeid6)
         out["opeid8"] = out["opeid_raw"].map(normalize_opeid8)
+        out["year"] = pd.to_numeric(out.get("year"), errors="coerce")
+        out["composite_score"] = pd.to_numeric(out["composite_score"], errors="coerce")
         out = out[out["opeid6"] != ""].dropna(subset=["composite_score"])
         if out["year"].isna().all() and fallback_year:
             out["year"] = fallback_year
@@ -207,6 +210,10 @@ def ingest_data_ed_composites(settings: Settings) -> pd.DataFrame:
         return pd.DataFrame()
     out = pd.concat(frames, ignore_index=True)
     out = out.dropna(subset=["composite_score"])
+    for c in ("opeid_raw", "opeid6", "opeid8", "composite_file_source"):
+        if c in out.columns:
+            out[c] = out[c].astype("string")
+    out["year"] = pd.to_numeric(out["year"], errors="coerce")
     dest = settings.processed_dir / "fsa_composite_official.parquet"
     out.to_parquet(dest, index=False)
     LOGGER.info(
