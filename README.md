@@ -286,6 +286,8 @@ Live Urban directory (fall 2004–2024), after filters: **5,886** unique UNITID,
 PYTHONPATH=src python3 -m pytest tests -q
 ```
 
+This revision: **31 passed**.
+
 Covers universe filters, OPEID 6/8 (never pad a 6-digit root to 8 with leading
 zeros), official composite attach without dropping missing UNITID, trailing-
 window (no-leak) features, parent/child rollup, label horizon / right-censor /
