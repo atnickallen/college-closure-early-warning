@@ -22,7 +22,7 @@ sizes are never invented.
 - Expenditures: $227,054
 - Librarian FTE: 0.0
 - ARL member: no / not listed
-- Note: Named holdings on a public library page: Pacific Northwest Artists Archive; Willamette University Archives. Willamette University Archives is thrilled to launch WUpedia, a dynamic online encyclopedia Source: https://library.willamette.edu/archives/
+- Note: Named holdings on a public library page: Pacific Northwest Artists Archive; Willamette University Archives. Source: https://library.willamette.edu/archives/
 
 ## Other shortlist schools
 

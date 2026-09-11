@@ -165,11 +165,17 @@ _BOILERPLATE_NAMES = {
     "sage digital library",
     "ebsco digital library",
     "proquest digital library",
+    "blog archive",
+    "view full blog archive",
+    "news archive",
+    "press archive",
 }
 _JUNK_NAME_RE = re.compile(
     r"\b(hours|contact us|policies|mission|staff|alumni and friends|"
     r"academic catalog|course catalog|resources alumni|menu|skip to|"
-    r"sage |ebsco|proquest|jstor|gale |credo )\b",
+    r"sage |ebsco|proquest|jstor|gale |credo |"
+    r"blog|newsletter|press release|view full|"
+    r"(?:news|press|photo|email|video|event)s?\s+archive)\b",
     re.I,
 )
 _GENERIC_NAME_WORDS = {
@@ -917,19 +923,20 @@ def scrape_library_notes(
             for cached in sorted(cache_dir.glob(f"{int(unitid)}_*.html")):
                 sidecar = cached.with_suffix(".url")
                 page_url = sidecar.read_text(encoding="utf-8").strip() if sidecar.exists() else None
+                if page_url and not _LIBRARY_HREF_RE.search(page_url) and found_any_page:
+                    continue
                 html_text = cached.read_text(encoding="utf-8", errors="replace")
                 extracted = extract_special_collections_note(html_text, page_url=page_url)
-                if not extracted["note"] or extracted["note"] == UNKNOWN_NOTE:
+                if not extracted["unique_flag"]:
                     continue
                 found_any_page = True
                 best = {
                     "unitid": unitid,
                     "lib_special_collections_note": extracted["note"],
-                    "lib_unique_flag": bool(extracted["unique_flag"]),
+                    "lib_unique_flag": True,
                     "lib_note_url": extracted.get("source_url") or page_url or pd.NA,
                 }
-                if extracted["unique_flag"]:
-                    break
+                break
         if not found_any_page:
             best["lib_special_collections_note"] = (
                 f"Unknown — public website did not yield a usable library page for {name}."

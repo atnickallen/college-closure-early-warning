@@ -255,6 +255,17 @@ def test_extract_drops_promotional_extra_sentence():
     assert "University Archives and Records" not in got["note"]
 
 
+def test_extract_rejects_blog_archive_as_special_collection():
+    html = """
+    <html><body>
+      <p>View Full Blog Archive of campus news and events.</p>
+    </body></html>
+    """
+    got = extract_special_collections_note(html, page_url="https://carrington.edu")
+    assert got["unique_flag"] is False
+    assert "Blog Archive" not in (got.get("names") or [])
+
+
 def test_extract_rejects_nav_and_vendor_catalog_junk():
     html = """
     <html><body>
