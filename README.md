@@ -30,7 +30,17 @@ From the Urban IPEDS directory (`inst_control` is the portal name for IPEDS CONT
 - Drop `sector == 0` (administrative / system offices)
 - Drop non-degree institutional categories and name patterns such as “System Office”
 
-Expected ballpark (varies by year; for-profit contraction after ~2012): on the order of **~6,000** degree-granting Title IV institutions in peak years, and **~1,600–1,700 private nonprofit 4-years**. See `outputs/qa_counts.md` after ingest.
+Live ingest (Urban IPEDS directory, fall 2004–2024), after the filters above:
+
+| | |
+| --- | --- |
+| Unique UNITID over the panel | **5,886** (~6,000 with for-profit entry/exit) |
+| Institution-years | **92,257** |
+| Peak year (2013) | **4,876** |
+| Latest year (2024) | **3,887** |
+| Private nonprofit 4-year | **1,542** (2024) to **1,651** (2015) |
+
+Certificate-only / less-than-2-year trade schools are out. Single-year totals are below 6,000 because that figure is the **longitudinal** Title IV college count, not the 2024 cross-section. Full sector×year tables: [`outputs/qa_counts.md`](outputs/qa_counts.md).
 
 ## Install
 
@@ -65,7 +75,7 @@ This downloads the all-years directory CSV and fall-enrollment **totals** (Urban
 - `directory.parquet` — filtered college universe
 - `fall_enrollment.parquet` — UNITID×year fall headcount (UG / graduate / total)
 
-QA: `outputs/qa_counts.md`.
+QA: [`outputs/qa_counts.md`](outputs/qa_counts.md) (committed; regenerate locally after ingest).
 
 Re-runs use the on-disk cache. Delete `data/raw/ipeds/...` to force a re-download.
 
@@ -86,7 +96,7 @@ Additional extracts (skipped with `--milestone1-only`):
 | Noninstructional staff | `ipeds/salaries-noninstructional-staff` | API totals (`staff_category=99`) |
 | FTE enrollment | `ipeds/enrollment-full-time-equivalent` | Bulk CSV `colleges_ipeds_enrollment-fte.csv` |
 
-`scripts/03_panel.py` left-joins these onto the filtered directory and writes `data/processed/panel.parquet` plus `outputs/qa_panel.md` (institution counts and missingness by year × sector).
+`scripts/03_panel.py` left-joins these onto the filtered directory and writes `data/processed/panel.parquet` (92,257 × 77) plus [`outputs/qa_panel.md`](outputs/qa_panel.md). Fall enrollment is ~99.8% complete; finance is populated through 2017 (~6% missing in 2016, 100% missing afterward — Urban gap); admissions is missing for open-admission schools (~50%); staffing is ~4–5% missing.
 
 Subset ingest:
 

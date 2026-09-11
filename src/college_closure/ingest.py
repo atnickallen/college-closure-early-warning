@@ -291,6 +291,20 @@ def ingest_staffing(settings: Settings, client: UrbanClient, key: str) -> pd.Dat
             params=spec.get("api_filters") or {},
             cache_name=f"{key}_{year}_totals",
         )
+        # Pre-2012 instructional-staff files use contract_length in {5,6,7,8}, not 99.
+        if frame.empty and key == "instructional_staff":
+            relaxed = {"academic_rank": 99, "sex": 99}
+            frame = client.fetch_api_pages(
+                path,
+                params=relaxed,
+                cache_name=f"{key}_{year}_totals_relaxed",
+            )
+            if not frame.empty:
+                LOGGER.info(
+                    "Instructional staff %s: used academic_rank=99&sex=99 "
+                    "(contract_length=99 not present in this year)",
+                    year,
+                )
         if frame.empty:
             LOGGER.warning("No %s rows for %s", key, year)
             continue

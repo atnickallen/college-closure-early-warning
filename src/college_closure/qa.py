@@ -24,6 +24,41 @@ def counts_by_year_sector(directory: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def counts_by_year(directory: pd.DataFrame) -> pd.DataFrame:
+    frame = directory.copy()
+    if "control_label" not in frame.columns:
+        control = frame["inst_control"] if "inst_control" in frame.columns else frame.get("control")
+        frame["control_label"] = control.map(CONTROL_LABELS)
+    wide = (
+        frame.groupby(["year", "control_label"], dropna=False)["unitid"]
+        .nunique()
+        .unstack("control_label", fill_value=0)
+        .reset_index()
+    )
+    nfp4 = (
+        frame.loc[frame.get("sector") == 2]
+        .groupby("year")["unitid"]
+        .nunique()
+        .rename("private_nonprofit_4yr")
+        .reset_index()
+    )
+    totals = frame.groupby("year")["unitid"].nunique().rename("total").reset_index()
+    out = wide.merge(nfp4, on="year", how="left").merge(totals, on="year", how="left")
+    preferred = [
+        c
+        for c in (
+            "year",
+            "total",
+            "public",
+            "private_nonprofit",
+            "for_profit",
+            "private_nonprofit_4yr",
+        )
+        if c in out.columns
+    ]
+    return out[preferred + [c for c in out.columns if c not in preferred]].sort_values("year")
+
+
 def latest_year_snapshot(directory: pd.DataFrame) -> pd.DataFrame:
     if directory.empty:
         return directory
@@ -90,6 +125,7 @@ def write_qa_counts(
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     counts = counts_by_year_sector(directory)
+    by_year = counts_by_year(directory)
     snapshot = latest_year_snapshot(directory)
     unique_ids = int(directory["unitid"].nunique()) if not directory.empty else 0
     year_min = int(directory["year"].min()) if not directory.empty else None
@@ -119,6 +155,10 @@ def write_qa_counts(
         "Sector codes: 1 public 4-year, 2 private nonprofit 4-year, 3 for-profit 4-year, "
         "4 public 2-year, 5 private nonprofit 2-year, 6 for-profit 2-year, "
         "7–9 less-than-2-year. Administrative units (sector 0) are dropped.",
+        "",
+        "## Institutions per year (control + private nonprofit 4-year)",
+        "",
+        write_markdown_table(by_year),
         "",
         "## Latest-year snapshot by control × sector",
         "",
