@@ -311,6 +311,7 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 | [`outputs/top50_report.html`](outputs/top50_report.html) | Evidence cards: FTE, discount, margins, composite, HCM/Scorecard, enrichment, libraries, SHAP drivers | Open in a browser. Read the yellow banner first. |
 | [`outputs/libraries_top50.md`](outputs/libraries_top50.md) | Unique / unknown library notes for the top-50 + nonprofit shortlist | Cultural/asset context, not a model feature. |
 | [`outputs/libraries_top50.csv`](outputs/libraries_top50.csv) | Same shortlist as a join table (`lib_*` columns) | Spreadsheet view of holdings + notes. |
+| [`outputs/libraries_oclc_crosswalk.csv`](outputs/libraries_oclc_crosswalk.csv) | UNITID → OCLC symbol / WorldCat Registry / libraries.org id | Accept only when NCES LIBID equals UNITID. |
 | [`outputs/model_card.md`](outputs/model_card.md) | Task, data, split, PR-AUC / recall@K, SHAP, caveats | The narrative companion to the metrics JSON. |
 | [`outputs/model_metrics.json`](outputs/model_metrics.json) | Machine-readable split metrics and year-level baseline comparison | Check `beats_naive` before claiming the model won. |
 | [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | Why 2023–24 are not ranked. |

@@ -1120,7 +1120,7 @@ def write_libraries_summary(shortlist: pd.DataFrame, dest: Path) -> Path:
             lines.append(f"- Expenditures: {_md_money(row.get('lib_expenditures'))}")
             lines.append(f"- Librarian FTE: {_md_num(row.get('lib_fte'), digits=1)}")
             lines.append(f"- ARL member: {'yes' if bool(row.get('lib_arl_member')) else 'no / not listed'}")
-            lines.append(f"- OCLC symbol: {row.get('lib_oclc_symbol') or 'unknown'}")
+            lines.append(f"- OCLC symbol: {_md_id(row.get('lib_oclc_symbol'))}")
             lines.append(f"- Note: {row.get('lib_special_collections_note')}")
             lines.append("")
 
@@ -1136,6 +1136,20 @@ def write_libraries_summary(shortlist: pd.DataFrame, dest: Path) -> Path:
     dest.write_text("\n".join(lines), encoding="utf-8")
     LOGGER.info("Wrote %s", dest)
     return dest
+
+
+def _md_id(v: Any) -> str:
+    if v is None:
+        return "unknown"
+    try:
+        if pd.isna(v):
+            return "unknown"
+    except (TypeError, ValueError):
+        pass
+    text = str(v).strip()
+    if text.lower() in {"", "nan", "none", "<na>"}:
+        return "unknown"
+    return text
 
 
 def _md_year(v: Any) -> str:
