@@ -41,9 +41,10 @@ BULK_COL_MAP = {
     "CONTROL": "scorecard_ownership",
     "OPERATING": "scorecard_operating",
     "UNDER_INVESTIGATION": "scorecard_under_investigation",
+    "HCM2": "scorecard_under_investigation",  # most-recent ZIP name for HCM2 flag
     "ACCREDAGENCY": "scorecard_accreditor",
     "CLOSEDAT": "scorecard_closedat",
-    "CURROPER": "scorecard_currently_operating",
+    "CURROPER": "scorecard_operating",
 }
 
 
@@ -130,7 +131,11 @@ def ingest_scorecard_bulk(settings: Settings) -> pd.DataFrame:
         return pd.DataFrame()
     try:
         with zipfile.ZipFile(path) as zf:
-            names = [n for n in zf.namelist() if n.lower().endswith(".csv")]
+            names = [
+                n
+                for n in zf.namelist()
+                if n.lower().endswith(".csv") and "__macosx" not in n.lower() and not Path(n).name.startswith("._")
+            ]
             if not names:
                 LOGGER.warning("Scorecard ZIP has no CSV: %s", zf.namelist()[:10])
                 return pd.DataFrame()
@@ -140,11 +145,12 @@ def ingest_scorecard_bulk(settings: Settings) -> pd.DataFrame:
                 key=lambda n: (
                     "field" in n.lower(),
                     "data_dictionary" in n.lower(),
+                    0 if "institution" in n.lower() else 1,
                     -len(n),
                 ),
             )
             raw = zf.read(names_sorted[0])
-        df = pd.read_csv(io.BytesIO(raw), low_memory=False)
+        df = pd.read_csv(io.BytesIO(raw), encoding="latin-1", low_memory=False)
     except Exception as exc:  # noqa: BLE001
         LOGGER.warning("Scorecard ZIP parse failed: %s", exc)
         return pd.DataFrame()
@@ -171,9 +177,9 @@ def _finalize(df: pd.DataFrame, settings: Settings, source: str) -> pd.DataFrame
     for c in ("scorecard_operating", "scorecard_under_investigation", "scorecard_ownership"):
         if c in out.columns:
             out[c] = pd.to_numeric(out[c], errors="coerce")
-    # HCM2-style flag from Scorecard (official ED field UNDER_INVESTIGATION)
+    # Official ED HCM2 / under-investigation flag (column HCM2 or UNDER_INVESTIGATION)
     if "scorecard_under_investigation" in out.columns:
-        out["hcm2_scorecard"] = out["scorecard_under_investigation"] == 1
+        out["hcm2_scorecard"] = pd.to_numeric(out["scorecard_under_investigation"], errors="coerce") == 1
     else:
         out["hcm2_scorecard"] = False
     out["scorecard_source"] = source

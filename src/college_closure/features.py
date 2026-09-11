@@ -169,11 +169,13 @@ def build_features(settings: Settings, panel: pd.DataFrame | None = None) -> pd.
     df["rural"] = locale.isin([41, 42, 43, 7, 8])
 
     wiche_path = settings.root / str((settings.raw.get("wiche") or {}).get("path") or "data/external/wiche_hs_graduates.csv")
-    if Path(wiche_path).exists():
+    if Path(wiche_path).exists() and "state_abbr" in df.columns:
         wiche = pd.read_csv(wiche_path)
-        year_col = next((c for c in wiche.columns if "year" in c.lower()), None)
-        state_col = next((c for c in wiche.columns if "state" in c.lower()), None)
-        val_col = next((c for c in wiche.columns if c not in {year_col, state_col}), None)
+        year_col = next((c for c in wiche.columns if c.lower() in {"year", "class_year"} or c.lower() == "year"), None)
+        if year_col is None:
+            year_col = next((c for c in wiche.columns if "year" in c.lower()), None)
+        state_col = next((c for c in wiche.columns if c.lower() in {"state_abbr", "stabbr", "state"}), None)
+        val_col = next((c for c in wiche.columns if c.lower() in {"hs_graduates", "students", "graduates"}), None)
         if year_col and state_col and val_col:
             wiche = wiche.rename(columns={year_col: "year", state_col: "state_abbr", val_col: "hs_graduates"})
             df = df.merge(wiche[["state_abbr", "year", "hs_graduates"]], on=["state_abbr", "year"], how="left")
@@ -181,7 +183,8 @@ def build_features(settings: Settings, panel: pd.DataFrame | None = None) -> pd.
         else:
             df["hs_grad_pct_chg_5y"] = pd.NA
     else:
-        LOGGER.info("No WICHE CSV at %s; skipping state HS-grad trend", wiche_path)
+        if not Path(wiche_path).exists():
+            LOGGER.info("No WICHE CSV at %s; skipping state HS-grad trend", wiche_path)
         df["hs_grad_pct_chg_5y"] = pd.NA
 
     for col in RATIO_COLS:
