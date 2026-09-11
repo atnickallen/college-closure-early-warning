@@ -32,16 +32,17 @@ the 2026-09-11 retrain.
 12. [College universe](#college-universe)
 13. [Identifiers (OPEID 6 vs 8)](#identifiers-opeid-6-vs-8)
 14. [Finance](#finance)
-15. [Labels](#labels)
-16. [Features](#features)
-17. [Model](#model)
-18. [How to read a watch-list row](#how-to-read-a-watch-list-row)
-19. [Tests](#tests)
-20. [Configure](#configure)
-21. [v1 → v2 changelog](#v1--v2-changelog)
-22. [Caveats / ethics](#caveats--ethics)
-23. [Roadmap](#roadmap-remaining-data-gaps)
-24. [Data policy](#data-policy)
+15. [Libraries & book collections (enrichment)](#libraries--book-collections-enrichment)
+16. [Labels](#labels)
+17. [Features](#features)
+18. [Model](#model)
+19. [How to read a watch-list row](#how-to-read-a-watch-list-row)
+20. [Tests](#tests)
+21. [Configure](#configure)
+22. [v1 → v2 changelog](#v1--v2-changelog)
+23. [Caveats / ethics](#caveats--ethics)
+24. [Roadmap](#roadmap-remaining-data-gaps)
+25. [Data policy](#data-policy)
 
 ---
 
@@ -54,7 +55,7 @@ trailing public numbers look like schools that later closed or merged.
 | --- | --- |
 | A screening list of elevated-risk *indicators* | A prediction that any named college will close |
 | Statistical resemblance to historical closures/mergers | An accreditation, Title IV, or financial-responsibility finding |
-| Built only from public files that actually downloaded | Invented enrollment, finance, or closure dates |
+| Built only from public files that actually downloaded | Invented enrollment, finance, closure dates, or rare-book claims |
 | Right-censored on years whose outcomes are not yet knowable | A live “failure forecast” for 2024–26 |
 
 If you only open one artifact after a run, open
@@ -125,7 +126,7 @@ tests/
 | `features.py` | Trailing windows; `MODEL_FEATURE_COLUMNS` |
 | `labels.py` | Event years, horizons, right-censor |
 | `model.py` | Temporal split, logistic + XGBoost, PR-AUC, recall@K, SHAP |
-| `report.py` / `enrichment.py` | Watchlist, HTML cards, accreditor/WARN/990 flags |
+| `report.py` / `enrichment.py` / `libraries.py` | Watchlist, HTML cards, accreditor/WARN/990 flags, IPEDS Academic Libraries |
 | `download.py` / `attempts.py` | HTTP with browser UA, cache, Wayback, attempt log |
 
 `scripts/*.py` add `src/` to `sys.path`; you do not have to `pip install -e .`.
@@ -143,15 +144,15 @@ tests/
 | Stage | Reads | Writes | Notes |
 | --- | --- | --- | --- |
 | `01_ingest.py` | Urban CSV / API (`config.yaml` `sources:`) | `data/processed/directory.parquet`, enrollment, FTE, finance, admissions, staffing | First machine only if cache is empty |
-| `02_crosswalk.py` | Directory + NCES zips + FSA / Scorecard / WICHE / trackers | `crosswalk.parquet`, `finance_nces.parquet`, `fsa_*.parquet`, `scorecard_operating.parquet` | Continues on 404; logs URLs in `outputs/fsa_ingest.md` |
+| `02_crosswalk.py` | Directory + NCES zips + FSA / Scorecard / WICHE / trackers + IPEDS Academic Libraries | `crosswalk.parquet`, `finance_nces.parquet`, `fsa_*.parquet`, `scorecard_operating.parquet`, `libraries.parquet` | Continues on 404; logs URLs in `outputs/fsa_ingest.md` |
 | `03_panel.py` | Processed extracts | `panel.parquet`, `outputs/qa_panel.md` | Official composites without UNITID join on OPEID6×year |
 | `04_features.py` | Panel (+ WICHE CSV) | `features.parquet` | Trailing windows only; winsorize 1st/99th |
 | `05_labels.py` | Features + `directory_raw` + optional FSA/Scorecard/trackers | `labels.parquet`, `closure_events.parquet` | Right-censor last *h* years |
 | `06_model.py` | Labels | `scored.parquet`, `outputs/model_metrics.json` | No shuffle; HCM not in the feature matrix |
-| `07_report.py` | Scored + Scorecard + shortlist enrichment | `watchlist.csv`, `watchlist_nonprofit.csv`, `top50_report.html`, `model_card.md` | Score year = latest right-censored year with published finance |
+| `07_report.py` | Scored + Scorecard + shortlist enrichment + Academic Libraries | `watchlist.csv`, `watchlist_nonprofit.csv`, `top50_report.html`, `libraries_top50.md`, `model_card.md` | Score year = latest right-censored year with published finance |
 
 Features never include future values, current HCM lists, Scorecard investigation
-flags, accreditor/WARN/990 hits, or the label columns themselves.
+flags, accreditor/WARN/990 hits, IPEDS library holdings, or the label columns themselves.
 
 ## Install
 
@@ -192,7 +193,7 @@ python3 scripts/06_model.py
 python3 scripts/07_report.py
 ```
 
-Optional flags (also accepted by `run_pipeline.py`):
+Optional flags (also accepted by `run_pipeline.py` unless noted):
 
 | Flag | Effect |
 | --- | --- |
@@ -203,6 +204,8 @@ Optional flags (also accepted by `run_pipeline.py`):
 | `--with-scorecard` | Explicit Scorecard on (this is the default). API if `DATA_GOV_API_KEY` is set, else official no-key ZIP |
 | `--skip-wiche` | Skip WICHE Knocking workbook |
 | `--skip-closures` | Skip Higher Ed Dive / BestColleges / curated CSV |
+| `--skip-libraries` | Skip IPEDS Academic Libraries CSV (`02_crosswalk.py` / `07_report.py`) |
+| `--skip-scrape` | `07_report.py` only: join AL counts without fetching public library pages |
 
 Tests:
 
@@ -284,6 +287,7 @@ Numbers below are from the v2 agent run on **2026-09-11**. Re-runs rewrite
 | Accreditor public-action pages | HLC 403; SACSCOC/NECHE/WSCUC/NWCCU 404 | Flags empty unless a page hits |
 | CA WARN xlsx | **Live** (EDD) | Name-match flags on the shortlist only |
 | ProPublica 990 | **Live** by EIN | Nonprofit shortlist only; no fuzzy name join |
+| IPEDS Academic Libraries (Urban endpoint 45, 2013–2023) | **Live** CSV `colleges_ipeds_academic_libraries.csv` | Watch-list enrichment only (`lib_*`). Not a training feature. |
 
 | Pipeline step | v2 result |
 | --- | --- |
@@ -301,9 +305,11 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 
 | File | What it is | How to use it |
 | --- | --- | --- |
-| [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit rows for the score year (up to 500) | Sort is already by `risk_score` descending. Not a closure list. |
+| [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit rows for the score year (up to 500), including `lib_*` columns | Sort is already by `risk_score` descending. Not a closure list. |
 | [`outputs/watchlist_nonprofit.csv`](outputs/watchlist_nonprofit.csv) | Same ranking restricted to `inst_control == 2` (up to 250) | Use when the question is nonprofit-only. |
-| [`outputs/top50_report.html`](outputs/top50_report.html) | Evidence cards: FTE, discount, margins, composite, HCM/Scorecard, enrichment, SHAP drivers | Open in a browser. Read the yellow banner first. |
+| [`outputs/top50_report.html`](outputs/top50_report.html) | Evidence cards: FTE, discount, margins, composite, HCM/Scorecard, enrichment, libraries, SHAP drivers | Open in a browser. Read the yellow banner first. |
+| [`outputs/libraries_top50.md`](outputs/libraries_top50.md) | Unique / unknown library notes for the top-50 + nonprofit shortlist | Cultural/asset context, not a model feature. |
+| [`outputs/libraries_top50.csv`](outputs/libraries_top50.csv) | Same shortlist as a join table (`lib_*` columns) | Spreadsheet view of holdings + notes. |
 | [`outputs/model_card.md`](outputs/model_card.md) | Task, data, split, PR-AUC / recall@K, SHAP, caveats | The narrative companion to the metrics JSON. |
 | [`outputs/model_metrics.json`](outputs/model_metrics.json) | Machine-readable split metrics and year-level baseline comparison | Check `beats_naive` before claiming the model won. |
 | [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | Why 2023–24 are not ranked. |
@@ -364,6 +370,46 @@ remain in the panel so you can see their features; they are not in
   zip as of this build.
 - Child campuses with $0 / missing revenue **inherit parent totals** and are
   flagged `finance_from_parent`. Parents are not dropped or double-summed.
+
+## Libraries & book collections (enrichment)
+
+Watch-list evidence cards include an IPEDS **Academic Libraries** block plus a
+best-effort public-web note. This is **cultural / asset-value context** for
+schools already on the elevated-risk list — not a closure verdict and **not a
+model training feature**. No lagged `lib_*` columns are in
+`MODEL_FEATURE_COLUMNS`.
+
+**Holdings (all watch-list rows that appear in AL):** Urban Institute Education
+Data Portal endpoint 45,
+`/api/v1/college-university/ipeds/academic-libraries/{year}/`, years
+**2013–2023**. Bulk CSV (preferred):
+`https://educationdata.urban.org/csv/ipeds/colleges_ipeds_academic_libraries.csv`
+(the hyphenated `academic-libraries` filename 404s). Join is UNITID × year; for
+score year 2022 we take the latest AL year **≤ 2022** when one exists, otherwise
+the latest available year, and record `lib_year`. Expenditure fields are only
+published for libraries with total expenditures above $100,000 (Urban/IPEDS
+rule). Sentinels `-1/-2/-3` become unknown — never filled with zeros that look
+like an empty collection.
+
+Mapped columns: `lib_physical_books`, `lib_digital_items` (Urban
+`total_electronic_collections`, or a sum of electronic books/media/serials when
+that total is absent), `lib_expenditures`, `lib_fte` (librarians), plus
+`lib_staff_fte`, `lib_source`, `lib_arl_member`.
+
+**Unique notes (top 50 + ~25 nonprofit):** `src/college_closure/libraries.py`
+fetches the directory `url_school`, then library / special-collections /
+archives paths. HTML is cached under `data/raw/libraries/` (gitignored). The
+extractor keeps **named** collections, archives, rare-book areas, or digital
+repositories. If a page only says “we have special collections” with no name,
+`lib_unique_flag` stays false. If nothing usable is found, the note is
+**unknown** — not “no library.” Holdings counts are never invented from prose.
+
+ARL membership is matched against the public Association of Research Libraries
+member list when that page downloads; otherwise a small built-in snapshot is
+used. Small watch-list campuses are almost never ARL members.
+
+Re-run: `python3 scripts/02_crosswalk.py` (downloads the AL CSV) then
+`python3 scripts/07_report.py`. Use `--skip-scrape` to refresh counts only.
 
 ## Labels
 
@@ -474,7 +520,9 @@ On an evidence card, read in this order:
 4. HCM / Scorecard investigation and operating flags — **current snapshots**.
 5. Enrichment (accreditor page mention, WARN name match, 990 EIN). These never
    change the score.
-6. SHAP drivers — which features pushed *this* row.
+6. Libraries & collections — IPEDS holdings if reported, plus any named
+   special-collection note. Missing ≠ no library; not a model feature.
+7. SHAP drivers — which features pushed *this* row.
 
 A school can rank high because it is small, tuition-dependent, and already in
 the composite zone — the same pattern as many historical closures — and still
@@ -486,14 +534,15 @@ remain open for years. False positives are expected.
 PYTHONPATH=src python3 -m pytest tests -q
 ```
 
-This revision: **36 passed**.
+This revision: **36 passed** plus Academic Libraries join/HTML-extraction tests.
 
 Covers universe filters, OPEID 6/8 (never pad a 6-digit root to 8 with leading
 zeros), official composite attach without dropping missing UNITID, trailing-
 window (no-leak) features, parent/child rollup, label horizon / right-censor /
 merger toggle / sentinel CLOSEDAT, Scorecard API mapping (mocked HTTP, no live
 key), HCM2 mapping, WICHE join, extra-closure unique-match rule, recall@K,
-no HCM/Scorecard/enrichment columns in `MODEL_FEATURE_COLUMNS`.
+no HCM/Scorecard/enrichment/`lib_*` columns in `MODEL_FEATURE_COLUMNS`,
+IPEDS Academic Libraries join/sentinels, and mocked HTML note extraction.
 
 ## Configure
 
@@ -553,6 +602,9 @@ FSA pages move; ingest tries several URLs and **continues** on failure.
   `UNDER_INVESTIGATION` / `OPERATING`. The API uses the latter names.
 - Accreditor / WARN / 990 flags are best-effort on the top-50 / nonprofit
   shortlist only (exact name or verified EIN). They never change the model score.
+- IPEDS Academic Libraries cells are often missing for small / for-profit
+  campuses; missing ≠ no library. Scraped special-collection notes are
+  best-effort and may be stale after a closure. Holdings counts are never invented.
 - For-profit chain collapses and public “closures” are different processes.
 
 ## Roadmap (remaining data gaps)
@@ -572,7 +624,7 @@ FSA pages move; ingest tries several URLs and **continues** on failure.
 
 ## Data policy
 
-- Do not invent enrollment, finance, or closure dates.
+- Do not invent enrollment, finance, closure dates, library holdings, or rare-book claims.
 - Do not invent institutions or metrics.
 - Do not commit `data/raw/` or processed Parquet (see `.gitignore`).
 - Do not commit API keys.

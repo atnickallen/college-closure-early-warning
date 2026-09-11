@@ -117,6 +117,26 @@ sources:
       staff_category: 99
     csv_file: colleges_ipeds_salaries_nis.csv
     csv_dir: ipeds
+  # IPEDS Academic Libraries — watch-list enrichment only (not a model feature).
+  # Verified 2026-09: endpoint_id 45, years 2013–2023. CSV uses an underscore
+  # (colleges_ipeds_academic-libraries.csv 404s).
+  academic_libraries:
+    required: false
+    endpoint: academic-libraries
+    endpoint_id: 45
+    method: csv
+    csv_file: colleges_ipeds_academic_libraries.csv
+    csv_dir: ipeds
+
+# Public-web enrichment for the top-50 + nonprofit shortlist. Cached under data/raw/libraries/.
+libraries:
+  scrape_top_n: 50
+  scrape_nonprofit_n: 25
+  request_timeout_seconds: 20
+  scrape_pause_seconds: 0.35
+  arl_urls:
+    - https://www.arl.org/list-of-arl-members/
+    - https://en.wikipedia.org/wiki/List_of_members_of_the_Association_of_Research_Libraries
 
 nces:
   # Complete data files: https://nces.ed.gov/ipeds/datacenter/data/F{yy}{yy+1}_F{1A|2|3}.zip

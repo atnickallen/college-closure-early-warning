@@ -379,6 +379,10 @@ def run_ingest(
         results["instructional_staff"] = ingest_staffing(settings, client, "instructional_staff")
     if "noninstructional_staff" in wanted:
         results["noninstructional_staff"] = ingest_staffing(settings, client, "noninstructional_staff")
+    if "academic_libraries" in wanted:
+        from college_closure.libraries import ingest_academic_libraries
+
+        results["academic_libraries"] = ingest_academic_libraries(settings, client=client)
 
     directory = results["directory"]
     write_qa_counts(
