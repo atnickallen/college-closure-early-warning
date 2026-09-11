@@ -1,0 +1,9 @@
+unitid,inst_name,oclc_symbol,worldcat_registry_id,libraries_org_id,related_oclc_symbol,related_note,source,source_url
+192925,Medaille University,YJT,,4132,,,libraries.org NCES LIBID match,https://librarytechnology.org/library/4132
+238430,Cardinal Stritch University,,,4269,,,libraries.org NCES LIBID match (no OCLC symbol published),https://librarytechnology.org/library/4269
+172440,Finlandia University,,,2443,,,libraries.org NCES LIBID match — Sulo and Aileen Maki Library (circulating; no OCLC symbol published),https://librarytechnology.org/library/2443
+115728,Holy Names University,,,11216,,,libraries.org NCES LIBID match — Paul J. Cushing Library (no OCLC symbol published),https://librarytechnology.org/library/11216
+201751,Chatfield College,,,26045,,,libraries.org NCES LIBID match; former SEO Library Consortium shared automation,https://librarytechnology.org/library/26045
+222938,The Art Institute of Houston,,,61744,,,libraries.org NCES LIBID match (no OCLC symbol published),https://librarytechnology.org/library/61744
+138813,The Art Institute of Atlanta,,,194468,,,libraries.org NCES LIBID match (no OCLC symbol published),https://librarytechnology.org/library/194468
+209603,Pacific Northwest College of Art,,,,"OWS","After the PNCA–Willamette combination, distinctive PNCA material is described under Willamette University Archives / Hatfield Library (OCLC OWS, WorldCat Registry 2445, NCES LIBID 210401 — Willamette UNITID, not PNCA).",libraries.org related parent,https://librarytechnology.org/library/410

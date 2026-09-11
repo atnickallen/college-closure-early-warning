@@ -405,6 +405,19 @@ repositories. If a page only says “we have special collections” with no name
 `lib_unique_flag` stays false. If nothing usable is found, the note is
 **unknown** — not “no library.” Holdings counts are never invented from prose.
 
+**WorldCat / public registries (deeper dig):** OCLC’s Library Profiles API and
+the old WorldCat Registry API need a WSKey (Registry developer access was
+retired 2025-11-30). The pipeline instead uses public **libraries.org**
+profiles, which publish `OCLC Symbol`, `WorldCat Registry ID`, and
+`NCES LIBID`. A profile is accepted only when `NCES LIBID == UNITID` — that
+is the documented UNITID→OCLC crosswalk (`data/external/oclc_unitid_crosswalk.csv`,
+regenerated as `outputs/libraries_oclc_crosswalk.csv`). libraries.org volume
+counts are **never** copied into `lib_physical_books`. ArchiveGrid is queried
+when reachable. Cited transfer notices (Finlandia FAHC → Finlandia Foundation
+National; Medaille archives → Niagara; Simmons KY archives returned from UofL)
+live in `data/external/library_authority_notes.csv`. If WorldCat/public sources
+show only generic circulating stock, the note says so plainly.
+
 ARL membership is matched against the public Association of Research Libraries
 member list when that page downloads; otherwise a small built-in snapshot is
 used. Small watch-list campuses are almost never ARL members.
@@ -412,7 +425,8 @@ used. Small watch-list campuses are almost never ARL members.
 Re-run: `python3 scripts/02_crosswalk.py` (downloads the AL CSV) then
 `python3 scripts/07_report.py`. Use `--skip-scrape` to refresh counts only, or
 `--cache-only` to re-extract unique notes from `data/raw/libraries/` without
-hitting the live web.
+hitting the live web. Authority notes and the committed OCLC crosswalk still
+apply on `--cache-only`.
 
 ## Labels
 
@@ -537,7 +551,8 @@ remain open for years. False positives are expected.
 PYTHONPATH=src python3 -m pytest tests -q
 ```
 
-This revision: **53 passed**, including Academic Libraries join/HTML-extraction tests.
+This revision: **60 passed**, including Academic Libraries join/HTML-extraction
+and WorldCat/libraries.org identifier tests.
 
 Covers universe filters, OPEID 6/8 (never pad a 6-digit root to 8 with leading
 zeros), official composite attach without dropping missing UNITID, trailing-

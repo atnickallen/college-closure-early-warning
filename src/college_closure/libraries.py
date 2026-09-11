@@ -31,6 +31,7 @@ from college_closure.config import Settings
 from college_closure.constants import SENTINEL_VALUES
 from college_closure.filters import replace_sentinels
 from college_closure.urban import UrbanClient, read_csv_filtered
+from college_closure.worldcat import enrich_worldcat_shortlist, write_oclc_crosswalk
 
 LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +82,9 @@ LIB_WATCHLIST_COLS = [
     "lib_special_collections_note",
     "lib_unique_flag",
     "lib_note_url",
+    "lib_oclc_symbol",
+    "lib_worldcat_registry_id",
+    "lib_libraries_org_id",
 ]
 
 UNKNOWN_NOTE = (
@@ -968,7 +972,19 @@ def attach_library_columns(
     out = out.merge(slim, on="unitid", how="left")
 
     if notes is not None and not notes.empty:
-        note_cols = [c for c in ("unitid", "lib_special_collections_note", "lib_unique_flag", "lib_note_url") if c in notes.columns]
+        note_cols = [
+            c
+            for c in (
+                "unitid",
+                "lib_special_collections_note",
+                "lib_unique_flag",
+                "lib_note_url",
+                "lib_oclc_symbol",
+                "lib_worldcat_registry_id",
+                "lib_libraries_org_id",
+            )
+            if c in notes.columns
+        ]
         out = out.merge(notes[note_cols].drop_duplicates("unitid"), on="unitid", how="left")
     if "lib_special_collections_note" not in out.columns:
         out["lib_special_collections_note"] = pd.NA
@@ -976,6 +992,9 @@ def attach_library_columns(
         out["lib_unique_flag"] = False
     if "lib_note_url" not in out.columns:
         out["lib_note_url"] = pd.NA
+    for col in ("lib_oclc_symbol", "lib_worldcat_registry_id", "lib_libraries_org_id"):
+        if col not in out.columns:
+            out[col] = pd.NA
 
     arl_names = list(arl_names or [])
     if "inst_name" in out.columns:
@@ -1009,18 +1028,30 @@ def enrich_watchlist_libraries(
     al = academic_libraries if academic_libraries is not None else ingest_academic_libraries(settings, client=client)
     snapshot = latest_library_snapshot(al, score_year)
     notes = pd.DataFrame()
-    if not skip_scrape and scrape_ids is not None:
+    schools = pd.DataFrame()
+    ids: list[int] = []
+    if scrape_ids is not None:
         ids = [int(u) for u in pd.to_numeric(pd.Series(list(scrape_ids)), errors="coerce").dropna()]
-        if ids:
-            year = int(score_year or watch["year"].max())
-            urls = fetch_directory_urls(settings, ids, year, client=client)
-            schools = watch.loc[watch["unitid"].isin(ids), ["unitid", "inst_name"]].drop_duplicates("unitid")
-            schools = schools.merge(urls, on="unitid", how="left")
-            if "inst_name_x" in schools.columns:
-                schools["inst_name"] = schools["inst_name_x"].fillna(schools.get("inst_name_y"))
-            notes = scrape_library_notes(
-                schools, settings, session=session, cache_only=cache_only
-            )
+        schools = watch.loc[watch["unitid"].isin(ids), ["unitid", "inst_name"]].drop_duplicates("unitid")
+    if not skip_scrape and ids:
+        year = int(score_year or watch["year"].max())
+        urls = fetch_directory_urls(settings, ids, year, client=client)
+        schools = schools.merge(urls, on="unitid", how="left")
+        if "inst_name_x" in schools.columns:
+            schools["inst_name"] = schools["inst_name_x"].fillna(schools.get("inst_name_y"))
+        notes = scrape_library_notes(
+            schools, settings, session=session, cache_only=cache_only
+        )
+    if ids:
+        notes, registry = enrich_worldcat_shortlist(
+            schools if not schools.empty else watch.loc[watch["unitid"].isin(ids), ["unitid", "inst_name"]],
+            settings,
+            html_notes=notes if not notes.empty else None,
+            session=session,
+            cache_only=cache_only,
+            skip_live=skip_scrape,
+        )
+        write_oclc_crosswalk(registry, settings.outputs_dir / "libraries_oclc_crosswalk.csv")
     arl = load_arl_members(settings, session=session) if not skip_scrape else set(_ARL_FALLBACK_NAMES)
     if skip_scrape:
         arl = set(_ARL_FALLBACK_NAMES)
@@ -1042,8 +1073,9 @@ def distinctive_notes_html(shortlist: pd.DataFrame) -> str:
     return (
         '<div class="banner lib-unique">'
         "<strong>Distinctive collections on the shortlist</strong> "
-        "(top 50 ∪ nonprofit). Named holdings only when a public page publishes them; "
-        "other cards say unknown or nothing distinctive."
+        "(top 50 ∪ nonprofit). Named holdings only when WorldCat/public sources "
+        "or a cited transfer notice support them; other cards say unknown or "
+        "nothing distinctive."
         f"<ul>{''.join(items)}</ul></div>"
     )
 
@@ -1061,10 +1093,11 @@ def write_libraries_summary(shortlist: pd.DataFrame, dest: Path) -> Path:
         "Enrichment context for the elevated-risk watch list (top 50 plus the",
         "nonprofit shortlist). **Not a closure verdict** and **not a model feature**.",
         "Holdings and expenditures are IPEDS Academic Libraries via the Urban",
-        "Institute Education Data Portal. Unique notes are best-effort extracts",
-        "from public library / special-collections pages. Missing AL or a failed",
-        "scrape means unknown — not that the school has no library. Collection",
-        "sizes are never invented.",
+        "Institute Education Data Portal. Unique notes come from campus pages,",
+        "libraries.org (UNITID = NCES LIBID → OCLC / WorldCat Registry), ArchiveGrid",
+        "when reachable, and cited transfer notices. Missing AL or a failed",
+        "lookup means unknown — not that the school has no library. Collection",
+        "sizes are never invented from WorldCat or libraries.org volume counts.",
         "",
         f"- Shortlist rows: **{n}**",
         f"- Rows with any IPEDS AL physical-book count: **{n_al}**",
@@ -1087,6 +1120,7 @@ def write_libraries_summary(shortlist: pd.DataFrame, dest: Path) -> Path:
             lines.append(f"- Expenditures: {_md_money(row.get('lib_expenditures'))}")
             lines.append(f"- Librarian FTE: {_md_num(row.get('lib_fte'), digits=1)}")
             lines.append(f"- ARL member: {'yes' if bool(row.get('lib_arl_member')) else 'no / not listed'}")
+            lines.append(f"- OCLC symbol: {row.get('lib_oclc_symbol') or 'unknown'}")
             lines.append(f"- Note: {row.get('lib_special_collections_note')}")
             lines.append("")
 
@@ -1210,7 +1244,8 @@ def library_section_html(row: pd.Series) -> str:
       <p class="lib-context">Enrichment context — cultural / asset value that may be at
       stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
       counts are unknown when the survey cell is missing; that is not evidence the
-      school has no library. Scraped notes are best-effort from public pages.</p>
+      school has no library. Notes use campus pages plus WorldCat/public
+      identifiers (libraries.org NCES LIBID) and cited transfer notices.</p>
       <table>
         <tr><th>Physical books</th><td>{_count(row.get("lib_physical_books"))}</td>
             <th>Digital items</th><td>{_count(row.get("lib_digital_items"))}</td></tr>
@@ -1218,7 +1253,8 @@ def library_section_html(row: pd.Series) -> str:
             <th>Librarian FTE</th><td>{_fte(row.get("lib_fte"))}</td></tr>
         <tr><th>AL year / source</th><td>{year_txt} / {_esc(row.get("lib_source"))}</td>
             <th>ARL member</th><td>{_esc(arl)}</td></tr>
-        <tr><th>Unique / notable</th><td colspan="3">{unique}</td></tr>
+        <tr><th>Unique / notable</th><td>{unique}</td>
+            <th>OCLC symbol</th><td>{_esc(row.get("lib_oclc_symbol"))}</td></tr>
       </table>
       <p class="lib-note">{note_html}</p>
     """
