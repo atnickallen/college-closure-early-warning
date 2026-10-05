@@ -2,7 +2,7 @@
 
 Run date: 2026-10-05
 Watch-list rows: 50
-Curated rows with a disagreement flag: 5
+Curated rows with a disagreement flag: 4
 Curated campus-sold rows: 7
 Curated campus-listed rows: 0
 
