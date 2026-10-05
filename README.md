@@ -367,13 +367,17 @@ A school is left off that main list when any of these is true:
 - curated `status` is `closed`, or `property_disposition` is `sold`
 - the note is a closed campus or location of a system that is still operating
   (DeVry University-Nevada and Strayer University-Mississippi are in this group)
+- curated `status` is `merged_acquired` and the row is not an `institutional_sale`
+  (the UNITID no longer stands as its own school, as with Pacific Northwest College
+  of Art and Presidio Graduate School)
 - IPEDS `inst_status` is closed (`4` or `7`) or merged (`3`), or `date_closed` is a real date
 - College Scorecard `school.operating` is `0` (only when the API key is set)
 
 `not_enrolling` schools (teach-out, not taking new students) are not in the
 top 50. They are in the **Teach-out / not enrolling** section. An acquisition
-that leaves the school operating (`merged_acquired`, such as an institutional
-sale) stays on the open list. An IPEDS merger code does not.
+that leaves the school operating (`merged_acquired` with `institutional_sale`)
+stays on the open list. A completed merger that ends the separate institution
+does not, even when a later IPEDS directory still shows `inst_status` 1.
 
 ```bash
 python3 scripts/check_status.py

@@ -1,10 +1,10 @@
 # Current-status refresh
 
 Run date: 2026-10-05
-Watch-list rows: 93
+Watch-list rows: 100
 Still-operating schools in the main list: 50
-Ranked rows walked to fill that list: 93
-Curated rows with a disagreement flag: 4
+Ranked rows walked to fill that list: 100
+Curated rows with a disagreement flag: 8
 Curated campus-sold rows: 7
 Curated campus-listed rows: 0
 
@@ -16,5 +16,5 @@ Curated campus-listed rows: 0
 
 Campus sales and listings are curated only. College Scorecard, the FSA closed-school list, and IPEDS do not report real-estate sales or listings.
 
-Appended 34 still-operating row(s) to `data/status/status_curated.csv`. Existing curated rows were not modified.
+The curated file `data/status/status_curated.csv` was not modified.
 Disagreement text is a flag. It does not replace the curated status, buyer, date, or price.

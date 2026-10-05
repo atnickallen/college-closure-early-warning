@@ -399,10 +399,11 @@ def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
     assert curated["source_url"].str.contains("http").all()
     extra = curated.iloc[50:]
     if not extra.empty:
-        assert set(extra["status"]) == {"operating"}
+        assert set(extra["status"]) <= {"operating", "not_enrolling", "closed", "merged_acquired"}
         assert extra["sale_price_published"].eq("").all()
         assert extra["checked_at"].str.match(r"\d{4}-\d{2}-\d{2}").all()
         assert extra["watchlist_rank"].astype(int).min() > 50
+        assert extra["source_url"].str.contains("educationdata.urban.org").sum() == 0
     assert set(curated["status"]) <= {"operating", "not_enrolling", "closed", "merged_acquired"}
     assert set(curated["property_disposition"]) <= {
         "not_applicable",
@@ -428,6 +429,15 @@ def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
     assert by_rank.loc[30, "property_disposition"] == "sold"
     assert by_rank.loc[30, "sale_price_published"] == "~$65 million"
     assert by_rank.loc[42, "status"] == "merged_acquired"
+    assert by_rank.loc[42, "property_disposition"] == "institutional_sale"
+    assert by_rank.loc[53, "status"] == "merged_acquired"
+    assert by_rank.loc[64, "status"] == "closed"
+    assert by_rank.loc[78, "status"] == "merged_acquired"
+    assert by_rank.loc[79, "status"] == "closed"
+    assert by_rank.loc[87, "status"] == "closed"
+    assert by_rank.loc[92, "status"] == "closed"
+    assert by_rank.loc[99, "status"] == "closed"
+    assert by_rank.loc[100, "status"] == "operating"
     assert by_rank.loc[42, "property_disposition"] == "institutional_sale"
     assert by_rank.loc[42, "sale_price_published"] == ""
     assert by_rank.loc[36, "sale_price_published"] == "combined $30,000"
@@ -661,6 +671,28 @@ def test_operating_partition_keeps_only_schools_still_operating():
             }
         )
         == "closed"
+    )
+    assert (
+        operating_bucket(
+            {
+                "status": "merged_acquired",
+                "property_disposition": "not_applicable",
+                "auto_ipeds_status": "1",
+                "auto_scorecard_operating": "1",
+            }
+        )
+        == "closed"
+    )
+    assert (
+        operating_bucket(
+            {
+                "status": "merged_acquired",
+                "property_disposition": "institutional_sale",
+                "auto_ipeds_status": "1",
+                "auto_scorecard_operating": "1",
+            }
+        )
+        == "open"
     )
     open_df, teach, closed, depth = partition_operating(table, 3)
     assert open_df["inst_name"].tolist() == ["Still Open", "Later Open", "Acquired Open"]
