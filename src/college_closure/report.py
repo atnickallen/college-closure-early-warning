@@ -16,12 +16,17 @@ import pandas as pd
 
 from college_closure.config import Settings
 from college_closure.features import MODEL_FEATURE_COLUMNS
+from college_closure.campus import (
+    exclusion_reason,
+    is_residential,
+    is_small_housing,
+    partition_acquisition,
+)
 from college_closure.status import (
     BANNER_SENTENCE,
     STATUS_CSS,
     _source_html,
     load_status_for_report,
-    partition_operating,
     status_badge,
     status_block_html,
 )
@@ -196,6 +201,9 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
 
     return f"""
     <article class="card">
+      <div class="card-head">
+        {_campus_photo_html(row)}
+        <div class="card-main">
       <h2>{rank}. {name}</h2>
       <p class="meta">{state} · {sector} · score year {year}{rank_bit} · UNITID {row.get("unitid")}</p>
       <p class="score">Watch-list score: <strong>{_fmt(row.get("risk_score"), 3)}</strong>
@@ -220,10 +228,20 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
       <h3>Top drivers (SHAP / global importance)</h3>
       <ul>{shap_rows}</ul>
       {library_section_html(row)}
+      <h3>Campus</h3>
+      <table>
+        <tr><th>Dorm capacity</th><td>{html.escape(_housing_text(row))}</td>
+            <th>Acreage</th><td>{html.escape(_acreage_text(row))}</td></tr>
+        <tr><th>Own campus</th><td>{html.escape(_own_campus_text(row))}</td>
+            <th>Land source</th><td>{_source_html(_text(row.get("campus_source_url"))) or "—"}</td></tr>
+      </table>
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
       Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
       Library holdings are enrichment context (what cultural/asset value might be at stake),
-      not a training feature.</p>
+      not a training feature. Dorm capacity is the latest IPEDS year that reports housing
+      as yes or no. Acreage is blank when the land source does not state a number.</p>
+        </div>
+      </div>
     </article>
     """
 
@@ -236,13 +254,14 @@ def _html_page(
     intro: str = "",
     teachout: str = "",
     closed: str = "",
+    excluded: str = "",
     depth: int | None = None,
 ) -> str:
     if depth:
         depth_note = (
             f'<p class="depth">The main list is {n} still-operating '
-            f"school{'s' if n != 1 else ''}, reached by walking the ranked watch list "
-            f"through rank {int(depth)}.</p>"
+            f"school{'s' if n != 1 else ''} with on-campus dorms and their own campus, "
+            f"reached by walking the ranked watch list through rank {int(depth)}.</p>"
         )
     else:
         depth_note = ""
@@ -252,11 +271,21 @@ def _html_page(
   <meta charset="utf-8"/>
   <title>College closure early-warning watch list (top {n} still operating)</title>
   <style>
-    body {{ font-family: Georgia, serif; max-width: 920px; margin: 2rem auto; padding: 0 1rem;
+    body {{ font-family: Georgia, serif; max-width: 980px; margin: 2rem auto; padding: 0 1rem;
            color: #222; line-height: 1.45; }}
     h1 {{ font-size: 1.6rem; }}
+    .cover-banner {{ margin: 0 0 1.2rem; }}
+    .cover-banner img {{ width: 100%; height: auto; display: block; }}
     .banner {{ background: #fff6e5; border: 1px solid #e0c48a; padding: 0.8rem 1rem; }}
     .card {{ border: 1px solid #ddd; padding: 1rem 1.2rem; margin: 1.2rem 0; }}
+    .card-head {{ display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }}
+    .card-main {{ flex: 1; min-width: 0; }}
+    .campus-photo {{ margin: 0; flex: 0 0 220px; max-width: 400px; }}
+    .campus-photo img {{ width: 100%; height: auto; display: block; }}
+    .photo-credit {{ color: #555; font-size: 0.8rem; margin-top: 0.35rem; }}
+    .placeholder {{ border: 1px dashed #bbb; min-height: 8rem; display: flex;
+                   align-items: center; justify-content: center; color: #666; background: #fafafa; }}
+    .placeholder p {{ margin: 0.6rem; text-align: center; }}
     .card h2 {{ margin-top: 0; font-size: 1.2rem; }}
     .meta, .caveat, .lib-context, .lib-note {{ color: #555; font-size: 0.95rem; }}
     .lib-note {{ margin-top: 0.4rem; }}
@@ -270,13 +299,17 @@ def _html_page(
   </style>
 </head>
 <body>
-  <h1>Watch list — top {n} still operating (score year {score_year})</h1>
+  <p class="cover-banner" align="center"><img src="../docs/cover.png" alt="College Closure Early Warning System" width="100%"></p>
+  <h1>Watch list — top {n} residential campuses (score year {score_year})</h1>
   <div class="banner">
     <strong>Not a verdict.</strong> Ranked elevated-risk indicators from a statistical model
     trained on historical institution-year features. A high score means the school resembles
     past closures/mergers on trailing observables — not that it will close. Scores come from
     {score_year} federal financial data. The list is elevated-risk indicators, not closure
-    predictions. The main list is the highest-ranked schools that are still operating.
+    predictions. The main list is the highest-ranked schools that are still operating,
+    have on-campus dorms, and have their own campus grounds. Online-only schools,
+    single-building branches, and hospital programs without a residential campus
+    are listed at the bottom instead.
     The score year is the latest <em>right-censored</em> year with published IPEDS finance
     (later directory years are omitted because unpublished finance looks like pre-closure
     missingness). Composite scores lag; HCM is a current snapshot and was not used as a
@@ -289,11 +322,69 @@ def _html_page(
   {cards}
   {teachout}
   {closed}
+  {excluded}
   <h2>Limitations</h2>
   <p>{html.escape(caveats)}</p>
 </body>
 </html>
 """
+
+
+def _campus_photo_html(row: pd.Series) -> str:
+    name = html.escape(str(row.get("inst_name") or "this school"))
+    url = _text(row.get("image_url"))
+    if not url:
+        return '<figure class="campus-photo placeholder"><p>No photo found</p></figure>'
+    credit = _text(row.get("image_credit_url"))
+    license_name = _text(row.get("image_license"))
+    author = _text(row.get("image_author"))
+    bits: list[str] = []
+    if author:
+        bits.append(html.escape(author))
+    if credit:
+        bits.append(f'<a href="{html.escape(credit, quote=True)}">Photo source</a>')
+    if license_name:
+        bits.append(html.escape(license_name))
+    caption = ". ".join(bits) if bits else "Photo credit unavailable"
+    return (
+        '<figure class="campus-photo">'
+        f'<img src="{html.escape(url, quote=True)}" alt="Campus of {name}" width="400" loading="lazy">'
+        f'<figcaption class="photo-credit">{caption}</figcaption>'
+        "</figure>"
+    )
+
+
+def _housing_text(row: pd.Series) -> str:
+    from college_closure.campus import _num
+
+    capacity = _num(row.get("dormitory_capacity"))
+    year = _text(row.get("housing_year"))
+    if not is_residential(row):
+        if capacity is None:
+            return "no on-campus dorms reported"
+        return "no on-campus dorms reported"
+    cap_txt = str(int(capacity)) if capacity == int(capacity) else str(capacity)
+    small = " (small housing)" if is_small_housing(row) else ""
+    year_bit = f", IPEDS IC {year}" if year else ""
+    return f"{cap_txt}{small}{year_bit}"
+
+
+def _acreage_text(row: pd.Series) -> str:
+    raw = _text(row.get("acreage"))
+    if not raw:
+        return "not stated"
+    return f"{raw} acres"
+
+
+def _own_campus_text(row: pd.Series) -> str:
+    own = _text(row.get("own_campus")).lower()
+    if own == "yes":
+        return "yes"
+    if own == "no":
+        return "no"
+    if own == "unknown":
+        return "unknown"
+    return "not confirmed"
 
 
 def _text(value) -> str:
@@ -397,6 +488,50 @@ def teachout_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
     )
 
 
+def excluded_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
+    """Schools walked for this list that are still operating but not a residential campus."""
+    if frame is None or frame.empty:
+        body = "<p>None in the rows walked for this list.</p>"
+    else:
+        rows = []
+        for _, row in frame.iterrows():
+            try:
+                rank = str(int(float(row.get("watchlist_rank"))))
+            except (TypeError, ValueError):
+                rank = "—"
+            reason = exclusion_reason(row) or "—"
+            note = _text(row.get("campus_notes"))
+            if note:
+                reason = f"{reason}. {note}"
+            rows.append(
+                "<tr>"
+                f"<td>{html.escape(rank)}</td>"
+                f"<td>{html.escape(_text(row.get('inst_name')) or '—')}</td>"
+                f"<td>{html.escape(_text(row.get('state_abbr')) or '—')}</td>"
+                f"<td>{_fmt(row.get('risk_score'), 3)}</td>"
+                f"<td>{html.escape(_housing_text(row))}</td>"
+                f"<td>{html.escape(_acreage_text(row))}</td>"
+                f"<td>{html.escape(reason)}</td>"
+                "</tr>"
+            )
+        body = (
+            "<table class=\"roster\">"
+            "<tr><th>Original rank</th><th>School</th><th>State</th>"
+            f"<th>{score_year} score</th><th>Dorm capacity</th><th>Acreage</th>"
+            "<th>Why excluded</th></tr>"
+            + "".join(rows)
+            + "</table>"
+        )
+    return (
+        "<h2>Excluded: no on-campus dorms or no standalone campus</h2>"
+        "<p>These schools were still operating in the rows walked to fill the main list, "
+        "but they are not a residential campus with its own grounds. A missing land row "
+        "means the campus was not confirmed. Dorm capacity comes from the latest IPEDS "
+        f"year that reports housing. The score is the {score_year} watch-list score.</p>"
+        + body
+    )
+
+
 def closed_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
     heading = (
         f"Closed or defunct since the {score_year} data"
@@ -435,6 +570,19 @@ _REPORT_STATUS_COLS = (
     "auto_ipeds_date_closed",
     "auto_checked_at",
     "list_bucket",
+    "housing_year",
+    "oncampus_housing",
+    "dormitory_capacity",
+    "acreage",
+    "own_campus",
+    "campus_source_url",
+    "campus_checked_at",
+    "campus_notes",
+    "image_url",
+    "image_credit_url",
+    "image_license",
+    "image_author",
+    "exclusion_reason",
 )
 
 
@@ -465,9 +613,9 @@ def write_operating_report(
     intro: str = "",
     shap_global: list | None = None,
 ) -> dict[str, int]:
-    """Write the still-operating top list plus teach-out and closed sections."""
+    """Write the residential-campus list plus teach-out, closed, and excluded sections."""
     merged = _with_status(ranked, status)
-    open_df, teach_df, closed_df, depth = partition_operating(merged, open_n)
+    open_df, excluded_df, teach_df, closed_df, depth = partition_acquisition(merged, open_n)
     if shap_global is None:
         metrics_path = path.parent / "model_metrics.json"
         shap_global = []
@@ -485,9 +633,13 @@ def write_operating_report(
             "elevated-risk indicators, not closure predictions. IPEDS lag; official FSA "
             "composites currently end FY 2018; HCM / Scorecard HCM2 are current-list "
             "evidence and were not training features. The main list keeps schools that "
-            "are still operating. Teach-out schools and closed, merged, or campus-sold "
-            "schools are listed below it. Library holdings are enrichment context, not "
-            "a training feature. Missing library data is not evidence of no library."
+            "are still operating, report on-campus housing with a real dorm capacity, "
+            "and have their own campus in the curated land file. Teach-out schools and "
+            "closed, merged, or campus-sold schools are listed below the main list. "
+            "Schools without dorms or without a confirmed standalone campus are listed "
+            "after those. Library holdings are enrichment context, not a training feature. "
+            "Missing library data is not evidence of no library. Unknown acreage is left "
+            "blank rather than estimated."
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -499,12 +651,14 @@ def write_operating_report(
             intro=intro,
             teachout=teachout_section_html(teach_df, score_year=score_year),
             closed=closed_section_html(closed_df, score_year=score_year),
+            excluded=excluded_section_html(excluded_df, score_year=score_year),
             depth=depth,
         ),
         encoding="utf-8",
     )
     return {
         "n_open": int(len(open_df)),
+        "n_excluded": int(len(excluded_df)),
         "n_teachout": int(len(teach_df)),
         "n_closed": int(len(closed_df)),
         "depth": int(depth),

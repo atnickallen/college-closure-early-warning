@@ -200,6 +200,8 @@ status:
   # are still operating. It may append those schools when they are missing.
   # It does not overwrite existing curated rows.
   curated_csv: data/status/status_curated.csv
+  campus_land_csv: data/campus/campus_land.csv
+  housing_csv: data/campus/housing_latest.csv
   top_n: 50
   open_n: 50
 

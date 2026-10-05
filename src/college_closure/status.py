@@ -1297,6 +1297,35 @@ def _scorecard_for_ids(
     return got, "", False
 
 
+def _acquisition_status_detail(row: pd.Series) -> str:
+    """Curated sentence for a school that enters the residential-campus list."""
+    from college_closure.campus import _num, is_small_housing
+
+    capacity = _num(row.get("dormitory_capacity"))
+    year = _blank(row.get("housing_year"))
+    if year:
+        try:
+            year = str(int(float(year)))
+        except (TypeError, ValueError):
+            pass
+    acres = _blank(row.get("acreage"))
+    bits = ["Still operating"]
+    if capacity is not None and capacity > 0:
+        cap_txt = str(int(capacity)) if capacity == int(capacity) else str(capacity)
+        small = " (small housing)" if is_small_housing(row) else ""
+        year_bit = f", IPEDS IC {year}" if year else ""
+        bits.append(f"on-campus dorm capacity {cap_txt}{small}{year_bit}")
+    if acres:
+        bits.append(f"own campus, {acres} acres")
+    else:
+        bits.append("own campus; acreage not stated in the land source")
+    note = _blank(row.get("campus_notes"))
+    sentence = "; ".join(bits) + "."
+    if note:
+        sentence = f"{sentence} {note}"
+    return sentence
+
+
 def _walk_until_open(
     settings: Settings,
     watch: pd.DataFrame,
@@ -1307,8 +1336,17 @@ def _walk_until_open(
     skip_network: bool,
     http_get=None,
     ipeds_get=None,
+    housing: pd.DataFrame | None = None,
+    land: pd.DataFrame | None = None,
 ) -> tuple[pd.DataFrame, dict[str, str]]:
-    """Classify watch-list rows in rank order until ``open_n`` are still operating."""
+    """Classify ranked rows until ``open_n`` are acquisition-ready residential campuses."""
+    from college_closure.campus import acquisition_ready, attach_campus, prefix_through_acquisition
+
+    def _ready_prefix(frame: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+        joined = attach_campus(frame, housing, land)
+        ready = int(sum(acquisition_ready(row) for _, row in joined.iterrows())) if not joined.empty else 0
+        return joined, ready
+
     if skip_network or watch.empty:
         scorecard, fsa, ipeds, notes = collect_automated(
             settings,
@@ -1325,7 +1363,8 @@ def _walk_until_open(
             ipeds=ipeds,
             auto_checked_at=checked_at,
         )
-        return prefix_through_open(table, open_n), notes
+        joined, _ready = _ready_prefix(table)
+        return prefix_through_acquisition(joined, open_n), notes
 
     fsa, fsa_note = fetch_fsa_closed_schools(settings)
     parts: list[pd.DataFrame] = []
@@ -1363,11 +1402,13 @@ def _walk_until_open(
         )
         parts.append(part)
         combined = pd.concat(parts, ignore_index=True)
-        if int(combined.apply(operating_bucket, axis=1).eq(OPEN_BUCKET).sum()) >= open_n:
-            table = prefix_through_open(combined, open_n)
+        joined, ready = _ready_prefix(combined)
+        if ready >= open_n:
+            table = prefix_through_acquisition(joined, open_n)
             break
     else:
-        table = pd.concat(parts, ignore_index=True) if parts else watch.iloc[0:0].copy()
+        raw = pd.concat(parts, ignore_index=True) if parts else watch.iloc[0:0].copy()
+        table, _ready = _ready_prefix(raw)
 
     if sc_final_note:
         scorecard_note = sc_final_note
@@ -1411,7 +1452,11 @@ def refresh_markdown(
         f"Watch-list rows: {top_n if table.empty else len(table)}",
     ]
     if open_count is not None:
-        lines.append(f"Still-operating schools in the main list: {open_count}")
+        lines.append(f"Residential own-campus schools in the main list: {open_count}")
+        lines.append(
+            "The main list keeps schools that are still operating, have on-campus dorms, "
+            "and have their own campus. Scores remain 2022 federal financial data."
+        )
     if depth:
         lines.append(f"Ranked rows walked to fill that list: {depth}")
     lines.extend(
@@ -1521,16 +1566,43 @@ def run_status_check(
     fsa_closed: pd.DataFrame | None = None,
     ipeds: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Walk the ranked watch list and keep ``open_n`` schools that are still operating.
+    """Walk the ranked list until ``open_n`` schools are residential own-campus and still operating.
 
-    ``top_n`` limits how many ranked rows are scanned. ``0`` scans the whole file.
-    Caller-supplied Scorecard, FSA, or IPEDS frames skip the network and classify
-    only the scanned slice. Existing curated rows are not overwritten. Schools
-    that enter the open list and are missing from the curated file are appended.
+    ``top_n`` limits how many ranked rows are scanned. ``0`` scans the whole
+    watch list and, when ``data/processed/scored.parquet`` exists, rows past
+    that list. Caller-supplied Scorecard, FSA, or IPEDS frames skip the network
+    and classify only the scanned slice. Existing curated rows are not
+    overwritten. Acquisition-ready schools missing from the curated file are
+    appended, using the campus land source rather than an IPEDS directory URL.
     """
+    from college_closure.campus import (
+        acquisition_ready,
+        attach_campus,
+        campus_land_path,
+        exclusion_reason,
+        extend_ranked_universe,
+        housing_snapshot_path,
+        load_campus_land,
+        load_housing_snapshot,
+        partition_acquisition,
+        prefix_through_acquisition,
+    )
+
     checked = auto_checked_at or date.today().isoformat()
     watch_path = watchlist or (settings.outputs_dir / "watchlist.csv")
     watch = load_watchlist(watch_path, top_n)
+    if top_n <= 0:
+        scored_path = settings.processed_dir / "scored.parquet"
+        scored = None
+        if scored_path.exists():
+            try:
+                scored = pd.read_parquet(scored_path)
+            except Exception as exc:  # noqa: BLE001
+                LOGGER.info("scored.parquet unreadable: %s", exc)
+                scored = None
+        watch = extend_ranked_universe(watch, scored)
+    housing = load_housing_snapshot(housing_snapshot_path(settings))
+    land = load_campus_land(campus_land_path(settings))
     curated_file = curated_path(settings)
     curated = load_curated(curated_file)
     injected = scorecard is not None or fsa_closed is not None or ipeds is not None
@@ -1551,7 +1623,7 @@ def run_status_check(
             ipeds=ipeds,
             auto_checked_at=checked,
         )
-        table = prefix_through_open(table, open_n)
+        table = prefix_through_acquisition(attach_campus(table, housing, land), open_n)
     else:
         table, notes = _walk_until_open(
             settings,
@@ -1562,8 +1634,10 @@ def run_status_check(
             skip_network=skip_network,
             http_get=http_get,
             ipeds_get=ipeds_get,
+            housing=housing,
+            land=land,
         )
-    open_df, _teach, _closed, depth = partition_operating(table, open_n)
+    open_df, _excluded, _teach, _closed, depth = partition_acquisition(table, open_n)
     opeids = _opeid_lookup(watch)
     new_rows: list[dict[str, str]] = []
     for _, row in open_df.iterrows():
@@ -1574,7 +1648,15 @@ def run_status_check(
             payload.setdefault("opeid6", extra.get("opeid6", ""))
             payload["opeid6"] = payload.get("opeid6") or extra.get("opeid6", "")
             payload["opeid8"] = payload.get("opeid8") or extra.get("opeid8", "")
-        new_rows.append(federal_operating_curated_fields(payload, checked))
+        fields = federal_operating_curated_fields(payload, checked)
+        campus_source = _blank(row.get("campus_source_url"))
+        if not campus_source or "educationdata.urban.org" in campus_source:
+            continue
+        fields["source_url"] = campus_source
+        fields["status_detail"] = _acquisition_status_detail(row)
+        fields["property_disposition"] = PROP_NA
+        fields["sale_price_published"] = ""
+        new_rows.append(fields)
     appended = append_curated_rows(curated_file, new_rows) if curated_file.exists() else []
     if appended:
         table = apply_operating_notes(
@@ -1582,7 +1664,7 @@ def run_status_check(
             {_unitid_int(row["unitid"]): row for row in appended if _unitid_int(row["unitid"]) is not None},
         )
         curated_note = (
-            f"Appended {len(appended)} still-operating row(s) to "
+            f"Appended {len(appended)} residential own-campus row(s) to "
             "`data/status/status_curated.csv`. Existing curated rows were not modified."
         )
     else:
@@ -1592,7 +1674,8 @@ def run_status_check(
     else:
         table = table.copy()
         table["list_bucket"] = [operating_bucket(row) for _, row in table.iterrows()]
-    open_df, _teach, _closed, depth = partition_operating(table, open_n)
+        table["exclusion_reason"] = [exclusion_reason(row) for _, row in table.iterrows()]
+    open_df, _excluded, _teach, _closed, depth = partition_acquisition(table, open_n)
     write_status_outputs(
         settings,
         table,
@@ -1670,7 +1753,9 @@ def main(argv: list[str] | None = None) -> int:
         watchlist=args.watchlist,
     )
     flagged = int(table["disagreement"].map(_blank).ne("").sum()) if not table.empty else 0
-    n_open = int(table["list_bucket"].eq(OPEN_BUCKET).sum()) if "list_bucket" in table.columns else 0
+    from college_closure.campus import acquisition_ready
+
+    n_open = int(sum(acquisition_ready(row) for _, row in table.iterrows())) if not table.empty else 0
     depth = 0
     if not table.empty and "watchlist_rank" in table.columns:
         try:

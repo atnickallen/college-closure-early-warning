@@ -749,27 +749,64 @@ def test_operating_report_sections_list_rank_score_and_sources(tmp_path):
     from college_closure.report import write_operating_report
 
     table = _ranked_status_rows()
+    table["oncampus_housing"] = 0
+    table["dormitory_capacity"] = 0
+    table["housing_year"] = 2023
+    table["own_campus"] = ""
+    table["acreage"] = ""
+    table["campus_source_url"] = ""
+    table["image_url"] = ""
+    table["image_credit_url"] = ""
+    table["image_license"] = ""
+    table["image_author"] = ""
+    residential = {
+        "Still Open": (100, "12", "https://example.edu/campus", "https://commons.wikimedia.org/wiki/Special:FilePath/Example.jpg?width=400"),
+        "Acquired Open": (40, "", "https://example.edu/acquired-campus", ""),
+        "Too Far": (80, "5", "https://example.edu/far-campus", ""),
+    }
+    for name, (cap, acres, source, image) in residential.items():
+        mask = table["inst_name"] == name
+        table.loc[mask, "oncampus_housing"] = 1
+        table.loc[mask, "dormitory_capacity"] = cap
+        table.loc[mask, "own_campus"] = "yes"
+        table.loc[mask, "acreage"] = acres
+        table.loc[mask, "campus_source_url"] = source
+        table.loc[mask, "image_url"] = image
+        table.loc[mask, "image_credit_url"] = "https://commons.wikimedia.org/wiki/File:Example.jpg" if image else ""
+        table.loc[mask, "image_license"] = "CC BY 4.0" if image else ""
+        table.loc[mask, "image_author"] = "Example Photographer" if image else ""
     path = tmp_path / "top50_report.html"
     stats = write_operating_report(path, table, table, open_n=3, score_year=2022)
     page = path.read_text(encoding="utf-8")
     assert stats["n_open"] == 3
-    assert stats["depth"] == 9
+    assert stats["depth"] == 10
     assert "Teach-out / not enrolling" in page
     assert "Closed or defunct since the 2022 data" in page
+    assert "Excluded: no on-campus dorms or no standalone campus" in page
     assert "2022 federal financial data" in page
     assert "not closure predictions" in page
-    assert "through rank 9" in page
-    assert "watch-list rank 8" in page
+    assert "through rank 10" in page
+    assert "watch-list rank 10" in page
+    assert 'src="../docs/cover.png"' in page
+    assert "No photo found" in page
+    assert "Example Photographer" in page
+    assert "CC BY 4.0" in page
+    assert "12 acres" in page
+    assert "small housing" in page
     main, _, after_teach = page.partition("Teach-out / not enrolling")
     assert "<h2>1. Still Open</h2>" in main
     assert "Teach Out" not in main
     assert "DeVry-like" not in main
+    assert "Later Open" not in main
     teach_body, _, closed_body = after_teach.partition("Closed or defunct since the 2022 data")
     assert "Teach Out" in teach_body
     assert "DeVry-like" in closed_body
     assert "Original rank" in closed_body
     assert "0.900" in closed_body
     assert "https://example.edu/devry" in closed_body
+    _closed, _, excluded_body = closed_body.partition("Excluded: no on-campus dorms or no standalone campus")
+    assert "Later Open" in excluded_body
+    assert "no on-campus dorms" in excluded_body
 
 
 def test_status_refresh_workflow_survives_pr_creation_refusal():

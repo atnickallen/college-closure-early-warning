@@ -1,5 +1,6 @@
 # Weekly current-status refresh.
-# Walks the ranked watch list, keeps the still-operating top 50, and writes
+# Walks the ranked watch list until 50 schools are still operating, have
+# on-campus dorms, and have their own campus. Writes
 # outputs/status_current.csv, outputs/status_refresh.md, and outputs/top50_report.html.
 # It may append still-operating schools that are missing from data/status/status_curated.csv.
 # It does not overwrite existing curated sale, listing, buyer, date, or price fields.
