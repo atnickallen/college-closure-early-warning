@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/cover.png" alt="College Closure Early Warning System" width="100%"></p>
+
 # College closure early-warning watch list
 
 Reproducible Python pipeline that ranks U.S. **degree-granting** colleges by
