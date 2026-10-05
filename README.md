@@ -211,15 +211,14 @@ Optional flags (also accepted by `run_pipeline.py` unless noted):
 | `--skip-scrape` | `07_report.py` only: join AL counts without fetching public library pages |
 | `--cache-only` | `07_report.py` only: re-extract notes from cached HTML (no live library fetches) |
 
-Current status for the top of the watch list (does not retrain the model):
+Current status for the still-operating top of the watch list (does not retrain the model):
 
 ```bash
 python3 scripts/check_status.py
-PYTHONPATH=src python3 -m college_closure.status --top 50
+PYTHONPATH=src python3 -m college_closure.status --open 50
 ```
 
-`--skip-network` rebuilds `outputs/status_current.csv` from the curated file only.
-Scorecard is skipped when `DATA_GOV_API_KEY` is unset. See [Current status checker](#current-status-checker).
+The command walks `outputs/watchlist.csv` in rank order until 50 schools are still operating. `--top 80` stops the scan at rank 80. `--skip-network` uses the curated file only. Scorecard is skipped when `DATA_GOV_API_KEY` is unset. See [Current status checker](#current-status-checker).
 
 Tests:
 
@@ -321,7 +320,7 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 | --- | --- | --- |
 | [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit rows for the score year (up to 500), including `lib_*` columns | Sort is already by `risk_score` descending. Not a closure list. |
 | [`outputs/watchlist_nonprofit.csv`](outputs/watchlist_nonprofit.csv) | Same ranking restricted to `inst_control == 2` (up to 250) | Use when the question is nonprofit-only. |
-| [`outputs/top50_report.html`](outputs/top50_report.html) | Evidence cards: FTE, discount, margins, composite, HCM/Scorecard, enrichment, libraries, SHAP drivers | Open in a browser. Read the yellow banner first. |
+| [`outputs/top50_report.html`](outputs/top50_report.html) | Still-operating top 50, then teach-out and closed/defunct sections. Cards include FTE, discount, margins, composite, HCM/Scorecard, enrichment, libraries, SHAP drivers | Open in a browser. Read the yellow banner first. Scores are the 2022 watch-list scores. |
 | [`outputs/libraries_top50.md`](outputs/libraries_top50.md) | Unique / unknown library notes for the top-50 + nonprofit shortlist | Cultural/asset context, not a model feature. |
 | [`outputs/libraries_top50.csv`](outputs/libraries_top50.csv) | Same shortlist as a join table (`lib_*` columns) | Spreadsheet view of holdings + notes. |
 | [`outputs/libraries_oclc_crosswalk.csv`](outputs/libraries_oclc_crosswalk.csv) | UNITID → OCLC symbol / WorldCat Registry / libraries.org id | Accept only when NCES LIBID equals UNITID. |
@@ -330,7 +329,7 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 | [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | Why 2023–24 are not ranked. |
 | [`outputs/fsa_ingest.md`](outputs/fsa_ingest.md) / [`outputs/fsa_attempts.json`](outputs/fsa_attempts.json) | HTTP table: URL, status, bytes | Verified live vs still impossible. |
 | [`outputs/qa_counts.md`](outputs/qa_counts.md) / [`outputs/qa_panel.md`](outputs/qa_panel.md) | Universe counts and missingness by year | Catch a broken ingest before you trust ranks. |
-| [`outputs/status_current.csv`](outputs/status_current.csv) | Top watch-list rows with curated status plus federal flags | Join on `unitid`. Read `disagreement` before treating a federal flag as the story. |
+| [`outputs/status_current.csv`](outputs/status_current.csv) | Ranked rows walked to fill the still-operating top 50, with curated status plus federal flags | Join on `unitid`. `list_bucket` is `open`, `not_enrolling`, `closed`, or `unknown`. |
 | [`outputs/status_refresh.md`](outputs/status_refresh.md) | Which automated sources responded on the last status run | Sale/listing columns are not filled from those sources. |
 
 `data/raw/` and `data/processed/` are gitignored (regenerate with the scripts).
@@ -352,20 +351,41 @@ as training labels.
 
 The score year is a lagged federal snapshot. It does not say whether a school
 on the watch list is still teaching, has closed, or has sold its campus.
-`data/status/status_curated.csv` is the hand-checked record for that question.
-The seed is the 2026-10-05 review of the top 50 (one row per school, with
-UNITID, name, state, `checked_at`, and a source URL). Edit that file when you
-learn something new. The checker does not rewrite it.
+`data/status/status_curated.csv` holds that record. The seed is the 2026-10-05
+review of the original top 50 (one row per school, with UNITID, name, state,
+`checked_at`, and a source URL). Schools that later enter the still-operating
+top 50 are appended, with the federal source and `checked_at`. Existing rows
+are not overwritten. Edit a row in place when you learn something new.
+
+`outputs/top50_report.html` is not the first 50 rows of the 2022 ranking. The
+main list is the first 50 schools on that ranking that are still operating.
+Scores on the page are the 2022 watch-list scores. The page says so in the
+header: elevated-risk indicators, not closure predictions.
+
+A school is left off that main list when any of these is true:
+
+- curated `status` is `closed`, or `property_disposition` is `sold`
+- the note is a closed campus or location of a system that is still operating
+  (DeVry University-Nevada and Strayer University-Mississippi are in this group)
+- IPEDS `inst_status` is closed (`4` or `7`) or merged (`3`), or `date_closed` is a real date
+- College Scorecard `school.operating` is `0` (only when the API key is set)
+
+`not_enrolling` schools (teach-out, not taking new students) are not in the
+top 50. They are in the **Teach-out / not enrolling** section. An acquisition
+that leaves the school operating (`merged_acquired`, such as an institutional
+sale) stays on the open list. An IPEDS merger code does not.
 
 ```bash
 python3 scripts/check_status.py
-python3 scripts/check_status.py --top 50 --skip-network
+python3 scripts/check_status.py --open 50 --skip-network
 ```
 
-`--top` defaults to 50 (`status.top_n` in `config.yaml`). The command reads
-`outputs/watchlist.csv`, joins the curated file on UNITID (name + state if
-UNITID is missing), and writes `outputs/status_current.csv`. It also adds a
-status badge to `outputs/top50_report.html`.
+`--open` defaults to 50 (`status.open_n` in `config.yaml`). `--top` limits how
+far down `outputs/watchlist.csv` the scan may go; omit it to scan the whole
+file. The command writes `outputs/status_current.csv` for the rows it walked
+and rebuilds `outputs/top50_report.html` with three parts: the still-operating
+top 50, the teach-out section, and **Closed or defunct since the 2022 data**
+(original rank, 2022 score, status or sale details, and sources).
 
 ### What each source can say
 
@@ -398,12 +418,16 @@ prediction that a school will close.
 ### Weekly refresh
 
 `.github/workflows/status-refresh.yml` runs on Mondays and can be started
-by hand. It runs `python3 scripts/check_status.py --top 50`. If
-`DATA_GOV_API_KEY` is set as a repository secret, Scorecard is included.
-If the secret is absent, Scorecard is skipped. The workflow opens a pull
-request when `outputs/status_current.csv`, `outputs/status_refresh.md`, or
-`outputs/top50_report.html` change. It does not commit secret values and
-does not edit the curated CSV.
+by hand. It runs `python3 scripts/check_status.py` (the full walk, not only
+the original top 50). If `DATA_GOV_API_KEY` is set as a repository secret,
+Scorecard is included. If the secret is absent, Scorecard is skipped. When
+outputs change, the job pushes branch `status-refresh` and writes a job
+summary with the diff and a compare link to `main`. Opening a pull request
+is attempted and is not required: if Actions is not allowed to create pull
+requests, the job still succeeds and the compare link is the review path.
+The job does not commit secret values. It does not overwrite existing
+curated rows. It may append still-operating schools that newly enter the
+open list.
 
 Column definitions for manual edits: [`data/status/README.md`](data/status/README.md).
 

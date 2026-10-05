@@ -8,7 +8,8 @@ Curated rows in ``data/status/status_curated.csv`` are the record for campus
 sales and listings. College Scorecard, the FSA closed-school list, and IPEDS
 directory status do not report real-estate transactions. The automated refresh
 may flag a disagreement. It does not overwrite curated sale, listing, buyer,
-date, or price fields.
+date, or price fields. It may append a still-operating row for a school that
+newly enters the open top 50, with the federal source and ``checked_at``.
 
 Nothing here is a closure prediction. A badge is a sourced note about what
 has already happened, or a blank when there is no source.
@@ -17,7 +18,9 @@ has already happened, or a blank when there is no source.
 from __future__ import annotations
 
 import argparse
+import csv
 import html
+import io
 import logging
 import re
 from datetime import date
@@ -48,6 +51,25 @@ PROP_LISTED = "listed"
 PROP_NONE = "no_sale_found"
 PROP_NA = "not_applicable"
 PROP_INSTITUTIONAL = "institutional_sale"
+
+CURATED_COLUMNS = (
+    "unitid",
+    "opeid6",
+    "opeid8",
+    "watchlist_rank",
+    "inst_name",
+    "state_abbr",
+    "status",
+    "status_detail",
+    "property_disposition",
+    "buyer_or_broker",
+    "event_date",
+    "sale_price_published",
+    "sold_listed_details",
+    "source_url",
+    "checked_at",
+    "library_notes",
+)
 
 CURATED_LOCK_COLUMNS = (
     "status",
@@ -962,6 +984,11 @@ BANNER_SENTENCE = (
     "listings come only from the curated file; College Scorecard, FSA, and IPEDS do not report them."
 )
 
+OPEN_BUCKET = "open"
+TEACHOUT_BUCKET = "not_enrolling"
+CLOSED_BUCKET = "closed"
+UNKNOWN_BUCKET = "unknown"
+
 
 def stamp_report_html(html_text: str, status: pd.DataFrame) -> str:
     """Insert or replace a status block on each evidence card, matched by UNITID."""
@@ -998,7 +1025,373 @@ def stamp_report_html(html_text: str, status: pd.DataFrame) -> str:
     return updated
 
 
-def refresh_markdown(notes: dict[str, str], table: pd.DataFrame, *, checked_at: str, top_n: int) -> str:
+def operating_bucket(row: pd.Series | dict[str, Any]) -> str:
+    """Place one ranked row: open, teach-out, closed, or unknown.
+
+    A curated ``closed`` row or a recorded campus sale stays closed even when
+    IPEDS or Scorecard still shows the parent system as operating (a closed
+    DeVry or Strayer location, for example). IPEDS ``inst_status`` closed or
+    merged, or a real close date, also counts as closed. ``not_enrolling``
+    stays in the teach-out bucket unless IPEDS itself records a closure.
+    """
+    status = _blank(row.get("status"))
+    prop = _blank(row.get("property_disposition"))
+    ipeds = _ipeds_bucket(
+        _blank(row.get("auto_ipeds_status")),
+        _blank(row.get("auto_ipeds_date_closed")),
+    )
+    scorecard = _blank(row.get("auto_scorecard_operating"))
+    federal_closed = ipeds in {"closed", "merged"} or scorecard == "0"
+    if status == STATUS_CLOSED or prop == PROP_SOLD:
+        return CLOSED_BUCKET
+    if status == STATUS_NOT_ENROLLING:
+        if ipeds in {"closed", "merged"}:
+            return CLOSED_BUCKET
+        return TEACHOUT_BUCKET
+    if federal_closed:
+        return CLOSED_BUCKET
+    if status in {STATUS_OPEN, STATUS_MERGED}:
+        return OPEN_BUCKET
+    if ipeds == "operating":
+        return OPEN_BUCKET
+    if scorecard == "1":
+        return OPEN_BUCKET
+    return UNKNOWN_BUCKET
+
+
+def prefix_through_open(table: pd.DataFrame, open_n: int) -> pd.DataFrame:
+    """Rows from rank 1 through the row that fills ``open_n`` still-operating schools."""
+    if table.empty:
+        return table.copy()
+    if open_n <= 0:
+        return table.iloc[0:0].copy()
+    seen = 0
+    cutoff = len(table)
+    for i, (_, row) in enumerate(table.iterrows()):
+        if operating_bucket(row) == OPEN_BUCKET:
+            seen += 1
+            if seen >= open_n:
+                cutoff = i + 1
+                break
+    return table.iloc[:cutoff].copy()
+
+
+def partition_operating(
+    table: pd.DataFrame, open_n: int
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, int]:
+    """Split the walked prefix into open, teach-out, and closed frames.
+
+    The depth is the watch-list rank of the last row walked (the rank of the
+    last still-operating school when the open list fills).
+    """
+    prefix = prefix_through_open(table, open_n)
+    grouped: dict[str, list[pd.Series]] = {
+        OPEN_BUCKET: [],
+        TEACHOUT_BUCKET: [],
+        CLOSED_BUCKET: [],
+    }
+    for _, row in prefix.iterrows():
+        bucket = operating_bucket(row)
+        if bucket in grouped:
+            grouped[bucket].append(row)
+
+    def _frame(rows: list[pd.Series]) -> pd.DataFrame:
+        if not rows:
+            return prefix.iloc[0:0].copy()
+        return pd.DataFrame(rows)
+
+    depth = 0
+    if not prefix.empty and "watchlist_rank" in prefix.columns:
+        try:
+            depth = int(float(prefix.iloc[-1]["watchlist_rank"]))
+        except (TypeError, ValueError):
+            depth = int(len(prefix))
+    return (
+        _frame(grouped[OPEN_BUCKET]),
+        _frame(grouped[TEACHOUT_BUCKET]),
+        _frame(grouped[CLOSED_BUCKET]),
+        depth,
+    )
+
+
+def _unitid_int(value: Any) -> int | None:
+    try:
+        if value is None or pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        return None
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def federal_operating_curated_fields(row: pd.Series | dict[str, Any], checked_at: str) -> dict[str, str]:
+    """Curated-shaped note for a school IPEDS (and Scorecard, when used) shows as operating."""
+    uid = _unitid_int(row.get("unitid"))
+    uid_txt = "" if uid is None else str(uid)
+    year = _blank(row.get("auto_ipeds_year"))
+    if year:
+        try:
+            year = str(int(float(year)))
+        except (TypeError, ValueError):
+            pass
+    code = _blank(row.get("auto_ipeds_status"))
+    if code:
+        try:
+            code = str(int(float(code)))
+        except (TypeError, ValueError):
+            pass
+    scorecard = _blank(row.get("auto_scorecard_operating"))
+    bits: list[str] = []
+    sources: list[str] = []
+    if year:
+        bits.append(f"IPEDS directory {year} inst_status {code or 'unknown'}")
+        sources.append(
+            "https://educationdata.urban.org/api/v1/college-university/ipeds/directory/"
+            f"{year}/?unitid={uid_txt}"
+        )
+    if scorecard == "1":
+        bits.append("College Scorecard school.operating is 1")
+        sources.append(f"https://collegescorecard.ed.gov/school/?{uid_txt}")
+    if not bits:
+        bits.append("no newer closure flag in the federal operating check")
+    rank = _blank(row.get("watchlist_rank"))
+    try:
+        rank = str(int(float(rank))) if rank else ""
+    except (TypeError, ValueError):
+        pass
+    return {
+        "unitid": uid_txt,
+        "opeid6": _blank(row.get("opeid6")),
+        "opeid8": _blank(row.get("opeid8")),
+        "watchlist_rank": rank,
+        "inst_name": _blank(row.get("inst_name")),
+        "state_abbr": _blank(row.get("state_abbr")),
+        "status": STATUS_OPEN,
+        "status_detail": "Still operating (" + "; ".join(bits) + ").",
+        "property_disposition": PROP_NA,
+        "buyer_or_broker": "",
+        "event_date": "",
+        "sale_price_published": "",
+        "sold_listed_details": "",
+        "source_url": "; ".join(sources),
+        "checked_at": checked_at,
+        "library_notes": "",
+    }
+
+
+def append_curated_rows(path: Path, rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Append still-operating rows. Existing curated lines are left byte-for-byte."""
+    if not rows or not path.exists():
+        return []
+    existing = load_curated(path)
+    have: set[int] = set()
+    if not existing.empty and "unitid" in existing.columns:
+        have = {
+            uid
+            for uid in (_unitid_int(v) for v in existing["unitid"].tolist())
+            if uid is not None
+        }
+    fresh: list[dict[str, str]] = []
+    for row in rows:
+        uid = _unitid_int(row.get("unitid"))
+        if uid is None or uid in have:
+            continue
+        have.add(uid)
+        fresh.append({col: _blank(row.get(col)) for col in CURATED_COLUMNS})
+    if not fresh:
+        return []
+    text = path.read_text(encoding="utf-8")
+    if text and not text.endswith("\n"):
+        text += "\n"
+    buf = io.StringIO()
+    writer = csv.DictWriter(
+        buf,
+        fieldnames=list(CURATED_COLUMNS),
+        lineterminator="\n",
+        extrasaction="ignore",
+    )
+    for row in fresh:
+        writer.writerow(row)
+    path.write_text(text + buf.getvalue(), encoding="utf-8")
+    return fresh
+
+
+def apply_operating_notes(table: pd.DataFrame, notes_by_uid: dict[int, dict[str, str]]) -> pd.DataFrame:
+    """Copy newly appended curated fields onto the status table. Other rows stay put."""
+    if table.empty or not notes_by_uid:
+        return table
+    out = table.copy()
+    fields = (
+        "status",
+        "status_detail",
+        "property_disposition",
+        "buyer_or_broker",
+        "event_date",
+        "sale_price_published",
+        "sold_listed_details",
+        "source_url",
+        "checked_at",
+    )
+    for idx, row in out.iterrows():
+        uid = _unitid_int(row.get("unitid"))
+        note = notes_by_uid.get(uid) if uid is not None else None
+        if not note:
+            continue
+        for col in fields:
+            out.at[idx, col] = note.get(col, "")
+        out.at[idx, "property_source"] = "curated"
+        updated = out.loc[idx]
+        out.at[idx, "disagreement"] = _disagreement(
+            status=_blank(updated.get("status")),
+            scorecard_operating=_blank(updated.get("auto_scorecard_operating")),
+            fsa_match=_blank(updated.get("auto_fsa_match")),
+            ipeds_bucket=_ipeds_bucket(
+                _blank(updated.get("auto_ipeds_status")),
+                _blank(updated.get("auto_ipeds_date_closed")),
+            ),
+            ipeds_status=_blank(updated.get("auto_ipeds_status")),
+            ipeds_year=_blank(updated.get("auto_ipeds_year")),
+            ipeds_absent_after=_blank(updated.get("auto_ipeds_absent_after")),
+        )
+        out.at[idx, "status_badge"] = status_badge(out.loc[idx])
+    return out
+
+
+def _scorecard_for_ids(
+    settings: Settings,
+    unitids: list[int],
+    *,
+    http_get=None,
+) -> tuple[pd.DataFrame, str, bool]:
+    """Scorecard operating flags for one slice.
+
+    The third value is True when the API key is missing and the note is final
+    (callers should not keep retrying).
+    """
+    if not scorecard_api_key(settings):
+        local = _load_local_scorecard(settings)
+        if local.empty:
+            return (
+                pd.DataFrame(),
+                (
+                    "Scorecard skipped: DATA_GOV_API_KEY / SCORECARD_API_KEY is unset, "
+                    "and data/processed/scorecard_operating.parquet is not present."
+                ),
+                True,
+            )
+        return (
+            local,
+            (
+                "Scorecard API skipped (no API key). Used local scorecard_operating.parquet "
+                f"({len(local)} rows)."
+            ),
+            True,
+        )
+    got = fetch_operating_by_unitids(settings, unitids, http_get=http_get)
+    return got, "", False
+
+
+def _walk_until_open(
+    settings: Settings,
+    watch: pd.DataFrame,
+    curated: pd.DataFrame,
+    *,
+    open_n: int,
+    checked_at: str,
+    skip_network: bool,
+    http_get=None,
+    ipeds_get=None,
+) -> tuple[pd.DataFrame, dict[str, str]]:
+    """Classify watch-list rows in rank order until ``open_n`` are still operating."""
+    if skip_network or watch.empty:
+        scorecard, fsa, ipeds, notes = collect_automated(
+            settings,
+            watch,
+            skip_network=True,
+            http_get=http_get,
+            ipeds_get=ipeds_get,
+        )
+        table = build_status_table(
+            watch,
+            curated,
+            scorecard=scorecard,
+            fsa_closed=fsa,
+            ipeds=ipeds,
+            auto_checked_at=checked_at,
+        )
+        return prefix_through_open(table, open_n), notes
+
+    fsa, fsa_note = fetch_fsa_closed_schools(settings)
+    parts: list[pd.DataFrame] = []
+    sc_hits = 0
+    sc_final_note = ""
+    ip_hits = 0
+    ip_tried = 0
+    batch = 25
+    cache_path = None if ipeds_get else _ipeds_cache_path(settings)
+    for start in range(0, len(watch), batch):
+        chunk = watch.iloc[start : start + batch]
+        ids = [uid for uid in (_unitid_int(v) for v in chunk["unitid"].tolist()) if uid is not None]
+        if sc_final_note:
+            scorecard = pd.DataFrame()
+            if "local scorecard_operating.parquet" in sc_final_note:
+                scorecard, sc_final_note, _ = _scorecard_for_ids(settings, ids, http_get=http_get)
+        else:
+            scorecard, note, finished = _scorecard_for_ids(settings, ids, http_get=http_get)
+            if finished:
+                sc_final_note = note
+            else:
+                sc_hits += len(scorecard)
+        ipeds, ip_note = fetch_ipeds_directory(ids, get_json=ipeds_get, cache_path=cache_path)
+        if not ipeds.empty and "unitid" in ipeds.columns:
+            ip_hits += int(pd.to_numeric(ipeds["unitid"], errors="coerce").nunique())
+        ip_tried += len(ids)
+        LOGGER.info("IPEDS walk batch rank %s–%s: %s", start + 1, start + len(chunk), ip_note)
+        part = build_status_table(
+            chunk,
+            curated,
+            scorecard=scorecard,
+            fsa_closed=fsa,
+            ipeds=ipeds,
+            auto_checked_at=checked_at,
+        )
+        parts.append(part)
+        combined = pd.concat(parts, ignore_index=True)
+        if int(combined.apply(operating_bucket, axis=1).eq(OPEN_BUCKET).sum()) >= open_n:
+            table = prefix_through_open(combined, open_n)
+            break
+    else:
+        table = pd.concat(parts, ignore_index=True) if parts else watch.iloc[0:0].copy()
+
+    if sc_final_note:
+        scorecard_note = sc_final_note
+    elif sc_hits:
+        scorecard_note = f"College Scorecard school.operating returned {sc_hits} UNITID(s)."
+    else:
+        scorecard_note = "Scorecard API key is set, but the operating lookup returned no rows."
+    notes = {
+        "scorecard": scorecard_note,
+        "fsa": fsa_note,
+        "ipeds": (
+            "IPEDS directory via Urban API, years 2025–2021 newest first: "
+            f"{ip_hits} of {ip_tried} UNITIDs returned a row."
+        ),
+    }
+    return table, notes
+
+
+def refresh_markdown(
+    notes: dict[str, str],
+    table: pd.DataFrame,
+    *,
+    checked_at: str,
+    top_n: int,
+    open_count: int | None = None,
+    depth: int | None = None,
+    curated_note: str | None = None,
+) -> str:
     disagree = 0
     if not table.empty and "disagreement" in table.columns:
         disagree = int(table["disagreement"].map(_blank).ne("").sum())
@@ -1012,22 +1405,31 @@ def refresh_markdown(notes: dict[str, str], table: pd.DataFrame, *, checked_at: 
         "",
         f"Run date: {checked_at}",
         f"Watch-list rows: {top_n if table.empty else len(table)}",
-        f"Curated rows with a disagreement flag: {disagree}",
-        f"Curated campus-sold rows: {sold}",
-        f"Curated campus-listed rows: {listed}",
-        "",
-        "## Sources this run",
-        "",
-        f"- Scorecard: {notes.get('scorecard', 'not run')}",
-        f"- FSA closed-school list: {notes.get('fsa', 'not run')}",
-        f"- IPEDS directory: {notes.get('ipeds', 'not run')}",
-        "",
-        SALE_LISTING_NOTE,
-        "",
-        "The curated file `data/status/status_curated.csv` was not modified.",
-        "Disagreement text is a flag. It does not replace the curated status, buyer, date, or price.",
-        "",
     ]
+    if open_count is not None:
+        lines.append(f"Still-operating schools in the main list: {open_count}")
+    if depth:
+        lines.append(f"Ranked rows walked to fill that list: {depth}")
+    lines.extend(
+        [
+            f"Curated rows with a disagreement flag: {disagree}",
+            f"Curated campus-sold rows: {sold}",
+            f"Curated campus-listed rows: {listed}",
+            "",
+            "## Sources this run",
+            "",
+            f"- Scorecard: {notes.get('scorecard', 'not run')}",
+            f"- FSA closed-school list: {notes.get('fsa', 'not run')}",
+            f"- IPEDS directory: {notes.get('ipeds', 'not run')}",
+            "",
+            SALE_LISTING_NOTE,
+            "",
+            curated_note
+            or "The curated file `data/status/status_curated.csv` was not modified.",
+            "Disagreement text is a flag. It does not replace the curated status, buyer, date, or price.",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -1039,6 +1441,11 @@ def write_status_outputs(
     checked_at: str,
     top_n: int,
     write_html: bool = True,
+    open_count: int | None = None,
+    depth: int | None = None,
+    curated_note: str | None = None,
+    watch: pd.DataFrame | None = None,
+    open_n: int = 50,
 ) -> dict[str, str]:
     out_dir = settings.outputs_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1046,20 +1453,60 @@ def write_status_outputs(
     table.to_csv(csv_path, index=False)
     md_path = out_dir / "status_refresh.md"
     md_path.write_text(
-        refresh_markdown(notes, table, checked_at=checked_at, top_n=top_n),
+        refresh_markdown(
+            notes,
+            table,
+            checked_at=checked_at,
+            top_n=top_n,
+            open_count=open_count,
+            depth=depth,
+            curated_note=curated_note,
+        ),
         encoding="utf-8",
     )
     html_path = out_dir / "top50_report.html"
-    if write_html and html_path.exists():
-        original = html_path.read_text(encoding="utf-8")
-        html_path.write_text(stamp_report_html(original, table), encoding="utf-8")
+    if write_html and watch is not None:
+        from college_closure.report import write_operating_report
+
+        write_operating_report(
+            html_path,
+            watch,
+            table,
+            open_n=open_n,
+            score_year=_score_year(watch),
+        )
     return {"csv": str(csv_path), "markdown": str(md_path), "html": str(html_path)}
+
+
+def _score_year(watch: pd.DataFrame) -> int:
+    if watch is None or watch.empty or "year" not in watch.columns:
+        return 2022
+    try:
+        return int(float(watch.iloc[0]["year"]))
+    except (TypeError, ValueError):
+        return 2022
+
+
+def _opeid_lookup(watch: pd.DataFrame) -> dict[int, dict[str, str]]:
+    out: dict[int, dict[str, str]] = {}
+    if watch.empty or "unitid" not in watch.columns:
+        return out
+    for _, row in watch.iterrows():
+        uid = _unitid_int(row.get("unitid"))
+        if uid is None:
+            continue
+        out[uid] = {
+            "opeid6": _blank(row.get("opeid6")),
+            "opeid8": _blank(row.get("opeid8")),
+        }
+    return out
 
 
 def run_status_check(
     settings: Settings,
     *,
-    top_n: int = 50,
+    top_n: int = 0,
+    open_n: int = 50,
     skip_network: bool = False,
     write_html: bool = True,
     watchlist: Path | None = None,
@@ -1070,20 +1517,20 @@ def run_status_check(
     fsa_closed: pd.DataFrame | None = None,
     ipeds: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
+    """Walk the ranked watch list and keep ``open_n`` schools that are still operating.
+
+    ``top_n`` limits how many ranked rows are scanned. ``0`` scans the whole file.
+    Caller-supplied Scorecard, FSA, or IPEDS frames skip the network and classify
+    only the scanned slice. Existing curated rows are not overwritten. Schools
+    that enter the open list and are missing from the curated file are appended.
+    """
     checked = auto_checked_at or date.today().isoformat()
     watch_path = watchlist or (settings.outputs_dir / "watchlist.csv")
     watch = load_watchlist(watch_path, top_n)
-    curated = load_curated(curated_path(settings))
-    notes: dict[str, str]
-    if scorecard is None and fsa_closed is None and ipeds is None:
-        scorecard, fsa_closed, ipeds, notes = collect_automated(
-            settings,
-            watch,
-            skip_network=skip_network,
-            http_get=http_get,
-            ipeds_get=ipeds_get,
-        )
-    else:
+    curated_file = curated_path(settings)
+    curated = load_curated(curated_file)
+    injected = scorecard is not None or fsa_closed is not None or ipeds is not None
+    if injected:
         notes = {
             "scorecard": "provided by caller" if scorecard is not None else "not provided",
             "fsa": "provided by caller" if fsa_closed is not None else "not provided",
@@ -1092,21 +1539,68 @@ def run_status_check(
         scorecard = scorecard if scorecard is not None else pd.DataFrame()
         fsa_closed = fsa_closed if fsa_closed is not None else pd.DataFrame()
         ipeds = ipeds if ipeds is not None else pd.DataFrame()
-    table = build_status_table(
-        watch,
-        curated,
-        scorecard=scorecard,
-        fsa_closed=fsa_closed,
-        ipeds=ipeds,
-        auto_checked_at=checked,
-    )
+        table = build_status_table(
+            watch,
+            curated,
+            scorecard=scorecard,
+            fsa_closed=fsa_closed,
+            ipeds=ipeds,
+            auto_checked_at=checked,
+        )
+        table = prefix_through_open(table, open_n)
+    else:
+        table, notes = _walk_until_open(
+            settings,
+            watch,
+            curated,
+            open_n=open_n,
+            checked_at=checked,
+            skip_network=skip_network,
+            http_get=http_get,
+            ipeds_get=ipeds_get,
+        )
+    open_df, _teach, _closed, depth = partition_operating(table, open_n)
+    opeids = _opeid_lookup(watch)
+    new_rows: list[dict[str, str]] = []
+    for _, row in open_df.iterrows():
+        payload = row.to_dict()
+        uid = _unitid_int(row.get("unitid"))
+        extra = opeids.get(uid) if uid is not None else None
+        if extra:
+            payload.setdefault("opeid6", extra.get("opeid6", ""))
+            payload["opeid6"] = payload.get("opeid6") or extra.get("opeid6", "")
+            payload["opeid8"] = payload.get("opeid8") or extra.get("opeid8", "")
+        new_rows.append(federal_operating_curated_fields(payload, checked))
+    appended = append_curated_rows(curated_file, new_rows) if curated_file.exists() else []
+    if appended:
+        table = apply_operating_notes(
+            table,
+            {_unitid_int(row["unitid"]): row for row in appended if _unitid_int(row["unitid"]) is not None},
+        )
+        curated_note = (
+            f"Appended {len(appended)} still-operating row(s) to "
+            "`data/status/status_curated.csv`. Existing curated rows were not modified."
+        )
+    else:
+        curated_note = "The curated file `data/status/status_curated.csv` was not modified."
+    if table.empty:
+        table["list_bucket"] = pd.Series(dtype=str)
+    else:
+        table = table.copy()
+        table["list_bucket"] = [operating_bucket(row) for _, row in table.iterrows()]
+    open_df, _teach, _closed, depth = partition_operating(table, open_n)
     write_status_outputs(
         settings,
         table,
         notes,
         checked_at=checked,
-        top_n=len(watch),
+        top_n=len(table),
         write_html=write_html,
+        open_count=int(len(open_df)),
+        depth=depth,
+        curated_note=curated_note,
+        watch=watch,
+        open_n=open_n,
     )
     return table
 
@@ -1136,12 +1630,24 @@ def load_status_for_report(settings: Settings) -> pd.DataFrame:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Refresh current status for the top watch-list rows. "
-            "Curated sale and listing facts are kept; federal sources only flag disagreements."
+            "Walk the ranked watch list and refresh status for the still-operating top list. "
+            "Curated sale and listing facts are kept; federal sources only flag disagreements. "
+            "Schools that newly enter the open list are appended to the curated file."
         )
     )
     parser.add_argument("--config", type=Path, default=None)
-    parser.add_argument("--top", type=int, default=None, help="Watch-list rows to check (default 50)")
+    parser.add_argument(
+        "--top",
+        type=int,
+        default=None,
+        help="Maximum ranked rows to scan (default: the whole watch list)",
+    )
+    parser.add_argument(
+        "--open",
+        type=int,
+        default=None,
+        help="How many still-operating schools to keep (default 50)",
+    )
     parser.add_argument("--watchlist", type=Path, default=None)
     parser.add_argument("--skip-network", action="store_true", help="Use the curated file only")
     parser.add_argument("--no-html", action="store_true", help="Do not update outputs/top50_report.html")
@@ -1149,17 +1655,26 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     settings = load_settings(args.config)
     cfg = settings.raw.get("status") or {}
-    top_n = args.top if args.top is not None else int(cfg.get("top_n", 50))
+    scan_n = args.top if args.top is not None else 0
+    open_n = args.open if args.open is not None else int(cfg.get("open_n", cfg.get("top_n", 50)))
     table = run_status_check(
         settings,
-        top_n=top_n,
+        top_n=scan_n,
+        open_n=open_n,
         skip_network=args.skip_network,
         write_html=not args.no_html,
         watchlist=args.watchlist,
     )
     flagged = int(table["disagreement"].map(_blank).ne("").sum()) if not table.empty else 0
+    n_open = int(table["list_bucket"].eq(OPEN_BUCKET).sum()) if "list_bucket" in table.columns else 0
+    depth = 0
+    if not table.empty and "watchlist_rank" in table.columns:
+        try:
+            depth = int(float(table.iloc[-1]["watchlist_rank"]))
+        except (TypeError, ValueError):
+            depth = len(table)
     print(
-        f"status rows={len(table)} disagreements={flagged} "
+        f"status rows={len(table)} open={n_open} depth={depth} disagreements={flagged} "
         f"-> {settings.outputs_dir / 'status_current.csv'}"
     )
     return 0

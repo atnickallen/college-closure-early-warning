@@ -1192,7 +1192,7 @@ def library_section_html(row: pd.Series) -> str:
     """Evidence-card block. Framing: enrichment context, not a verdict."""
 
     def _esc(s: Any) -> str:
-        if s is None or (isinstance(s, float) and pd.isna(s)):
+        if s is None or (isinstance(s, float) and pd.isna(s)) or str(s).strip() == "":
             return "—"
         try:
             if pd.isna(s):
@@ -1234,13 +1234,21 @@ def library_section_html(row: pd.Series) -> str:
     year = row.get("lib_year")
     year_txt = "—"
     try:
-        if year is not None and not pd.isna(year):
-            year_txt = str(int(year))
+        if year is not None and not pd.isna(year) and str(year).strip() != "":
+            year_txt = str(int(float(year)))
     except (TypeError, ValueError):
         year_txt = _esc(year)
     def _truthy(v: Any) -> bool:
+        if isinstance(v, str):
+            token = v.strip().lower()
+            if token in {"", "0", "false", "no", "nan", "none"}:
+                return False
+            if token in {"1", "true", "yes"}:
+                return True
         try:
             if v is None or pd.isna(v):
+                return False
+            if isinstance(v, (int, float)) and float(v) == 0:
                 return False
         except (TypeError, ValueError):
             return False
