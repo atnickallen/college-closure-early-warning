@@ -15,6 +15,7 @@ import pandas as pd
 
 from college_closure.config import Settings
 from college_closure.features import MODEL_FEATURE_COLUMNS
+from college_closure.status import BANNER_SENTENCE, STATUS_CSS, load_status_for_report, status_block_html
 from college_closure.libraries import (
     LIB_WATCHLIST_COLS,
     distinctive_notes_html,
@@ -153,6 +154,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
       <p class="meta">{state} · {sector} · score year {year} · UNITID {row.get("unitid")}</p>
       <p class="score">Watch-list score: <strong>{_fmt(row.get("risk_score"), 3)}</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      {status_block_html(row)}
       <table>
         <tr><th>FTE</th><td>{_fmt(row.get("fte"), 0)}</td>
             <th>FTE 5y %Δ</th><td>{_fmt(row.get("enr_pct_chg_5y"), 1, pct=True)}</td></tr>
@@ -199,6 +201,7 @@ def _html_page(cards: str, n: int, score_year: int, caveats: str, intro: str = "
     th {{ text-align: left; width: 28%; color: #444; font-weight: 600; padding: 0.2rem 0.4rem; }}
     td {{ padding: 0.2rem 0.4rem; }}
     code {{ font-size: 0.9rem; }}
+    {STATUS_CSS}
   </style>
 </head>
 <body>
@@ -211,7 +214,7 @@ def _html_page(cards: str, n: int, score_year: int, caveats: str, intro: str = "
     years are omitted because unpublished finance looks like pre-closure missingness).
     Composite scores lag; HCM is a current snapshot and was not used as a training feature.
     Library holdings and special-collection notes are <em>enrichment context</em> (IPEDS
-    Academic Libraries + public library pages), not a model input.
+    Academic Libraries + public library pages), not a model input.{BANNER_SENTENCE}
   </div>
   {intro}
   {cards}
@@ -482,6 +485,32 @@ def run_report(
     ]
     shortlist[shortlist_cols].to_csv(out_dir / "libraries_top50.csv", index=False)
 
+    status_frame = load_status_for_report(settings)
+    status_cols = [
+        c
+        for c in (
+            "unitid",
+            "status",
+            "status_badge",
+            "status_detail",
+            "property_disposition",
+            "buyer_or_broker",
+            "event_date",
+            "sale_price_published",
+            "sold_listed_details",
+            "source_url",
+            "checked_at",
+            "disagreement",
+        )
+        if c in status_frame.columns
+    ]
+    if status_cols and "unitid" in status_cols and "unitid" in current.columns:
+        current = current.drop(columns=[c for c in status_cols if c != "unitid" and c in current.columns])
+        status_frame = status_frame.copy()
+        status_frame["unitid"] = pd.to_numeric(status_frame["unitid"], errors="coerce")
+        current["unitid"] = pd.to_numeric(current["unitid"], errors="coerce")
+        current = current.merge(status_frame[status_cols].drop_duplicates("unitid"), on="unitid", how="left")
+
     shap_global = metrics.get("shap_global") or []
     top = current.head(top_n)
     cards = []
@@ -510,7 +539,9 @@ def run_report(
         "are current-list evidence and were not training features; mergers count as "
         "positives by default; publics excluded from the primary ranking. Library "
         "holdings are IPEDS Academic Libraries enrichment (Urban 2013–2023); scraped "
-        "special-collection notes are best-effort. Missing library data ≠ no library."
+        "special-collection notes are best-effort. Missing library data ≠ no library. "
+        "Current-status badges are a later curated check plus federal operating flags, "
+        "not a model output. Campus sales and listings are curated only."
     )
     (out_dir / "top50_report.html").write_text(
         _html_page(

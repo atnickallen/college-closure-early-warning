@@ -1,0 +1,36 @@
+# Current status (curated)
+
+`status_curated.csv` is the hand-maintained record of what happened to each
+watch-list school after the score year. Edit it in place. Git history is the
+version history. `scripts/check_status.py` reads this file and does not
+rewrite it.
+
+## Columns
+
+| Column | What to put |
+| --- | --- |
+| `unitid` | IPEDS UNITID. This is the join key to `outputs/watchlist.csv`. |
+| `opeid6`, `opeid8` | Copied from the watch list so a row can be checked against FSA. |
+| `watchlist_rank` | Rank when the row was added. The checker re-ranks from the current watch list. |
+| `inst_name`, `state_abbr` | Keep these even when `unitid` is filled in. |
+| `status` | `operating`, `not_enrolling`, `closed`, or `merged_acquired`. |
+| `status_detail` | Short sourced description. |
+| `property_disposition` | `not_applicable`, `no_sale_found`, `sold`, `listed`, or `institutional_sale`. |
+| `buyer_or_broker` | Who bought, listed, or auctioned. Blank if unknown. |
+| `event_date` | Date or season as published. Do not invent a day. |
+| `sale_price_published` | Only a price that appears in the source. Otherwise blank. |
+| `sold_listed_details` | What was sold or listed, or that no sale/listing was found. |
+| `source_url` | One or more URLs, separated by `; `. |
+| `checked_at` | ISO date of the manual check (`YYYY-MM-DD`). |
+| `library_notes` | Optional collection note from the same review. Not used in the badge. |
+
+## What the checker will not fill in
+
+Campus sales, listings, buyers, dates, and prices are not in College Scorecard,
+the FSA closed-school list, or IPEDS. Leave `sale_price_published` blank when
+the source does not state a price. The automated refresh flags a row when a
+federal operating flag disagrees with `status`. It does not replace these columns.
+
+`institutional_sale` is an ownership change of a school that is still operating
+(a stock sale or merger). It is not a closed-campus real-estate sale. Use
+`sold` only for the campus property.

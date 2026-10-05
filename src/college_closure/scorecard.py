@@ -302,6 +302,71 @@ def ingest_scorecard(settings: Settings, *, skip: bool = False, http_get=None) -
     return ingest_scorecard_bulk(settings)
 
 
+def fetch_operating_by_unitids(
+    settings: Settings,
+    unitids: list,
+    *,
+    http_get=None,
+) -> pd.DataFrame:
+    """Look up ``school.operating`` for specific UNITIDs.
+
+    Uses ``DATA_GOV_API_KEY`` / ``SCORECARD_API_KEY`` the same way as the full
+    ingest. Returns an empty frame when the key is missing or the API returns
+    nothing — callers should skip, not invent an operating flag. Does not write
+    ``scorecard_operating.parquet`` (a partial id list must not replace a full snapshot).
+    """
+    key = scorecard_api_key(settings)
+    if not key:
+        LOGGER.info("DATA_GOV_API_KEY unset; Scorecard operating lookup skipped")
+        return pd.DataFrame()
+    cfg = settings.raw.get("scorecard") or {}
+    base = str(cfg.get("api_base", "https://api.data.gov/ed/collegescorecard/v1/schools"))
+    getter = http_get or _http_get
+    fields = "id,ope6_id,ope8_id,school.name,school.operating,school.state"
+    rows: list[dict] = []
+    for unitid in unitids:
+        try:
+            uid = int(unitid)
+        except (TypeError, ValueError):
+            continue
+        try:
+            resp = getter(
+                base,
+                {"api_key": key, "id": uid, "fields": fields, "per_page": 1},
+                30,
+            )
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("Scorecard operating lookup failed for %s: %s", uid, type(exc).__name__)
+            continue
+        status = getattr(resp, "status_code", 0)
+        if status >= 400:
+            body = _redact(getattr(resp, "text", "")[:160], key)
+            LOGGER.warning("Scorecard API HTTP %s for UNITID %s: %s", status, uid, body)
+            continue
+        try:
+            payload = resp.json() if hasattr(resp, "json") else {}
+        except Exception:  # noqa: BLE001
+            LOGGER.warning("Scorecard API returned non-JSON for UNITID %s", uid)
+            continue
+        for item in payload.get("results") or []:
+            if isinstance(item, dict):
+                rows.append(item)
+    if not rows:
+        return pd.DataFrame()
+    frame = pd.json_normalize(rows)
+    frame = frame.rename(columns=_API_RENAME)
+    if "unitid" in frame.columns:
+        frame["unitid"] = pd.to_numeric(frame["unitid"], errors="coerce")
+    if "scorecard_operating" in frame.columns:
+        frame["scorecard_operating"] = pd.to_numeric(frame["scorecard_operating"], errors="coerce")
+    keep = [
+        c
+        for c in ("unitid", "inst_name", "state_abbr", "scorecard_operating", "opeid6_raw", "opeid")
+        if c in frame.columns
+    ]
+    return frame[keep].drop_duplicates(subset=["unitid"] if "unitid" in keep else None)
+
+
 def scorecard_closure_events(scorecard: pd.DataFrame) -> pd.DataFrame:
     """UNITID events from a valid Scorecard CLOSEDAT only — never sentinel years."""
     if scorecard is None or scorecard.empty or "unitid" not in scorecard.columns:

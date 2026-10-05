@@ -29,20 +29,21 @@ the 2026-09-11 retrain.
 9. [v2 runbook](#v2-runbook)
 10. [Data sources](#data-sources-verified-live-vs-still-limited)
 11. [Outputs](#outputs)
-12. [College universe](#college-universe)
-13. [Identifiers (OPEID 6 vs 8)](#identifiers-opeid-6-vs-8)
-14. [Finance](#finance)
-15. [Libraries & book collections (enrichment)](#libraries--book-collections-enrichment)
-16. [Labels](#labels)
-17. [Features](#features)
-18. [Model](#model)
-19. [How to read a watch-list row](#how-to-read-a-watch-list-row)
-20. [Tests](#tests)
-21. [Configure](#configure)
-22. [v1 → v2 changelog](#v1--v2-changelog)
-23. [Caveats / ethics](#caveats--ethics)
-24. [Roadmap](#roadmap-remaining-data-gaps)
-25. [Data policy](#data-policy)
+12. [Current status checker](#current-status-checker)
+13. [College universe](#college-universe)
+14. [Identifiers (OPEID 6 vs 8)](#identifiers-opeid-6-vs-8)
+15. [Finance](#finance)
+16. [Libraries & book collections (enrichment)](#libraries--book-collections-enrichment)
+17. [Labels](#labels)
+18. [Features](#features)
+19. [Model](#model)
+20. [How to read a watch-list row](#how-to-read-a-watch-list-row)
+21. [Tests](#tests)
+22. [Configure](#configure)
+23. [v1 → v2 changelog](#v1--v2-changelog)
+24. [Caveats / ethics](#caveats--ethics)
+25. [Roadmap](#roadmap-remaining-data-gaps)
+26. [Data policy](#data-policy)
 
 ---
 
@@ -109,7 +110,8 @@ src/college_closure/        # library (ids, ingest, features, model, report, …
 data/raw/                   # cached downloads (gitignored)
 data/processed/             # Parquet extracts (gitignored)
 data/external/              # WICHE derived CSV + curated-closure placeholder
-outputs/                    # committed QA, watchlist, model card
+data/status/                # hand-maintained current-status file (not rewritten by the checker)
+outputs/                    # committed QA, watchlist, model card, status snapshot
 tests/
 ```
 
@@ -127,6 +129,7 @@ tests/
 | `labels.py` | Event years, horizons, right-censor |
 | `model.py` | Temporal split, logistic + XGBoost, PR-AUC, recall@K, SHAP |
 | `report.py` / `enrichment.py` / `libraries.py` | Watchlist, HTML cards, accreditor/WARN/990 flags, IPEDS Academic Libraries |
+| `status.py` | Current-status snapshot: curated file + Scorecard / FSA / IPEDS flags |
 | `download.py` / `attempts.py` | HTTP with browser UA, cache, Wayback, attempt log |
 
 `scripts/*.py` add `src/` to `sys.path`; you do not have to `pip install -e .`.
@@ -208,6 +211,16 @@ Optional flags (also accepted by `run_pipeline.py` unless noted):
 | `--skip-scrape` | `07_report.py` only: join AL counts without fetching public library pages |
 | `--cache-only` | `07_report.py` only: re-extract notes from cached HTML (no live library fetches) |
 
+Current status for the top of the watch list (does not retrain the model):
+
+```bash
+python3 scripts/check_status.py
+PYTHONPATH=src python3 -m college_closure.status --top 50
+```
+
+`--skip-network` rebuilds `outputs/status_current.csv` from the curated file only.
+Scorecard is skipped when `DATA_GOV_API_KEY` is unset. See [Current status checker](#current-status-checker).
+
 Tests:
 
 ```bash
@@ -218,7 +231,7 @@ PYTHONPATH=src python3 -m pytest tests -q
 
 | Variable | Effect |
 | --- | --- |
-| `DATA_GOV_API_KEY` | College Scorecard API (`api.data.gov`). Preferred when set. |
+| `DATA_GOV_API_KEY` | College Scorecard API (`api.data.gov`). Preferred when set. Also used by `scripts/check_status.py` for `school.operating`. If unset, that lookup is skipped. |
 | `SCORECARD_API_KEY` | Alias for the same key. |
 
 If neither is set, ingest uses the official no-key most-recent institution ZIP
@@ -317,6 +330,8 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 | [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | Why 2023–24 are not ranked. |
 | [`outputs/fsa_ingest.md`](outputs/fsa_ingest.md) / [`outputs/fsa_attempts.json`](outputs/fsa_attempts.json) | HTTP table: URL, status, bytes | Verified live vs still impossible. |
 | [`outputs/qa_counts.md`](outputs/qa_counts.md) / [`outputs/qa_panel.md`](outputs/qa_panel.md) | Universe counts and missingness by year | Catch a broken ingest before you trust ranks. |
+| [`outputs/status_current.csv`](outputs/status_current.csv) | Top watch-list rows with curated status plus federal flags | Join on `unitid`. Read `disagreement` before treating a federal flag as the story. |
+| [`outputs/status_refresh.md`](outputs/status_refresh.md) | Which automated sources responded on the last status run | Sale/listing columns are not filled from those sources. |
 
 `data/raw/` and `data/processed/` are gitignored (regenerate with the scripts).
 
@@ -332,6 +347,65 @@ Right-censor means: if the label horizon is 3 years and the last complete
 directory year is 2024, then 2022–2024 rows cannot yet be confirmed *negative*
 (a 2022 school could still close in 2024–25). Those rows are scored, not used
 as training labels.
+
+## Current status checker
+
+The score year is a lagged federal snapshot. It does not say whether a school
+on the watch list is still teaching, has closed, or has sold its campus.
+`data/status/status_curated.csv` is the hand-checked record for that question.
+The seed is the 2026-10-05 review of the top 50 (one row per school, with
+UNITID, name, state, `checked_at`, and a source URL). Edit that file when you
+learn something new. The checker does not rewrite it.
+
+```bash
+python3 scripts/check_status.py
+python3 scripts/check_status.py --top 50 --skip-network
+```
+
+`--top` defaults to 50 (`status.top_n` in `config.yaml`). The command reads
+`outputs/watchlist.csv`, joins the curated file on UNITID (name + state if
+UNITID is missing), and writes `outputs/status_current.csv`. It also adds a
+status badge to `outputs/top50_report.html`.
+
+### What each source can say
+
+| Source | What it is used for | What it cannot say |
+| --- | --- | --- |
+| Curated CSV | Operating, not enrolling, closed, merged/acquired, campus sold, campus listed. Buyer, date, and published price. | Nothing that is not already in the row. Blank price means the source did not state one. |
+| College Scorecard `school.operating` | Currently-operating flag for those UNITIDs, via the Scorecard client. | A sale, a listing, a buyer, or a price. Requires `DATA_GOV_API_KEY` or `SCORECARD_API_KEY`. If the key is missing, the column stays blank. A local `data/processed/scorecard_operating.parquet` from a prior ingest is used when the API is skipped or empty. The status command does not download the bulk ZIP. |
+| FSA closed-school search file | A campus match (UNITID, OPEID8, or OPEID6 plus the campus name) as a closed flag. | A real-estate sale. A shared OPEID6 with no campus-name match is recorded as `opeid6_only` and is not treated as this campus closing. The Partner Connect page is often a script shell; if no spreadsheet downloads, the FSA columns stay blank. |
+| IPEDS directory (`inst_status`, `date_closed`) via the Urban API | Newest directory year that still has the UNITID. Status `4` / `7` or a real `date_closed` means closed. Status `3` means merged. Status `1` means active in that year. | A sale or a listing. A school missing from a later year is not marked closed just because the row is absent. If that last row is still active, the disagreement line names the later years with no row. |
+
+When a federal flag disagrees with the curated `status`, `disagreement` is
+filled in and the curated buyer, date, price, and narrative stay as written.
+Example: Scorecard still says `school.operating = 1` for a campus the curated
+file marks closed. That is a lag or a parent-campus mismatch, not a reason to
+erase the curated note.
+
+Campus sales and for-sale listings are curated only. Federal files do not
+report them.
+
+### How to read the badge
+
+On `outputs/top50_report.html` the badge is a later check, not part of the
+watch-list score. `Open`, `Open, not enrolling`, `Closed`, `Acquired by …`,
+`Campus sold 2023 to …`, and `Campus listed for sale` all come from the
+curated columns. The source links under the badge are the curated URLs.
+A yellow disagreement line means the automated flag and the curated note
+do not match. The watch list remains elevated-risk indicators, not a
+prediction that a school will close.
+
+### Weekly refresh
+
+`.github/workflows/status-refresh.yml` runs on Mondays and can be started
+by hand. It runs `python3 scripts/check_status.py --top 50`. If
+`DATA_GOV_API_KEY` is set as a repository secret, Scorecard is included.
+If the secret is absent, Scorecard is skipped. The workflow opens a pull
+request when `outputs/status_current.csv`, `outputs/status_refresh.md`, or
+`outputs/top50_report.html` change. It does not commit secret values and
+does not edit the curated CSV.
+
+Column definitions for manual edits: [`data/status/README.md`](data/status/README.md).
 
 ## College universe
 
@@ -552,8 +626,9 @@ remain open for years. False positives are expected.
 PYTHONPATH=src python3 -m pytest tests -q
 ```
 
-This revision: **60 passed**, including Academic Libraries join/HTML-extraction
-and WorldCat/libraries.org identifier tests.
+This revision: **76 passed**, including Academic Libraries join/HTML-extraction,
+WorldCat/libraries.org identifier tests, and current-status merge tests
+(curated sale facts stay put when a federal flag disagrees).
 
 Covers universe filters, OPEID 6/8 (never pad a 6-digit root to 8 with leading
 zeros), official composite attach without dropping missing UNITID, trailing-
@@ -577,6 +652,7 @@ IPEDS Academic Libraries join/sentinels, and mocked HTML note extraction.
 | `nces.year_start` / `year_end` | Which F-year zips to try (including unpublished) |
 | `fsa.*_urls` | Official workbook URLs (tried in order) |
 | `scorecard.api_base` / `api_key_env` / `bulk_urls` | API vs ZIP |
+| `status.curated_csv` / `status.top_n` | Hand-maintained status file and default watch-list slice |
 | `wiche.path` / `wiche.url` | Knocking workbook |
 | `closure_trackers.curated_csv` | Optional cited closure list |
 
@@ -625,6 +701,9 @@ FSA pages move; ingest tries several URLs and **continues** on failure.
   campuses; missing ≠ no library. Scraped special-collection notes are
   best-effort and may be stale after a closure. Holdings counts are never invented.
 - For-profit chain collapses and public “closures” are different processes.
+- Current-status badges are a later check of the top of the watch list.
+  They are not model scores and not predictions. Campus sale prices are
+  recorded only when a cited source states them.
 
 ## Roadmap (remaining data gaps)
 
@@ -643,7 +722,7 @@ FSA pages move; ingest tries several URLs and **continues** on failure.
 
 ## Data policy
 
-- Do not invent enrollment, finance, closure dates, library holdings, or rare-book claims.
+- Do not invent enrollment, finance, closure dates, sale prices, library holdings, or rare-book claims.
 - Do not invent institutions or metrics.
 - Do not commit `data/raw/` or processed Parquet (see `.gitignore`).
 - Do not commit API keys.

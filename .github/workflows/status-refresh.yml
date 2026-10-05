@@ -1,0 +1,61 @@
+# Weekly current-status refresh.
+# Updates outputs/status_current.csv (and the report badge) from federal sources.
+# Does not edit data/status/status_curated.csv.
+# Scorecard runs only when the DATA_GOV_API_KEY repository secret is set.
+# An empty secret is fine: the checker skips Scorecard and still tries IPEDS and FSA.
+
+name: Current status refresh
+
+on:
+  schedule:
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install checker dependencies
+        run: pip install "pandas>=2.1" "requests>=2.31" "pyyaml>=6.0" "openpyxl>=3.1" "xlrd>=2.0"
+
+      - name: Refresh status
+        env:
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+        run: python3 scripts/check_status.py --top 50
+
+      - name: Open a pull request if outputs changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- outputs/status_current.csv outputs/status_refresh.md outputs/top50_report.html; then
+            echo "No status output changes"
+            exit 0
+          fi
+          branch="status-refresh"
+          git checkout -B "$branch"
+          git add outputs/status_current.csv outputs/status_refresh.md outputs/top50_report.html
+          git commit -m "Refresh current-status snapshot"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git push --force-with-lease origin "$branch"
+          else
+            git push -u origin "$branch"
+          fi
+          body="Automated refresh of outputs/status_current.csv for the top 50 watch-list rows. College Scorecard school.operating runs only when the DATA_GOV_API_KEY repository secret is set. IPEDS directory status and the FSA closed-school file are tried either way. Campus sales and listings stay in data/status/status_curated.csv; this job does not edit that file. Disagreements are flagged, not overwritten. The watch list is elevated-risk indicators, not a closure prediction."
+          if gh pr view "$branch" --json url >/dev/null 2>&1; then
+            echo "Updated existing pull request for $branch"
+          else
+            gh pr create --base main --head "$branch" --title "Weekly current-status refresh" --body "$body"
+          fi
