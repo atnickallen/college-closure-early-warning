@@ -2,13 +2,13 @@
 
 Run date: 2026-10-05
 Watch-list rows: 50
-Curated rows with a disagreement flag: 4
+Curated rows with a disagreement flag: 5
 Curated campus-sold rows: 7
 Curated campus-listed rows: 0
 
 ## Sources this run
 
-- Scorecard: Scorecard skipped: DATA_GOV_API_KEY / SCORECARD_API_KEY is unset, and data/processed/scorecard_operating.parquet is not present.
+- Scorecard: Scorecard API school.operating for 20 UNITIDs.
 - FSA closed-school list: FSA closed-school file not downloaded. Tried the Partner Connect page and the configured ClosedSchoolSearchFile URLs; none returned a spreadsheet.
 - IPEDS directory: IPEDS directory via Urban API, years 2025–2021 newest first: 50 of 50 UNITIDs returned a row.
 
