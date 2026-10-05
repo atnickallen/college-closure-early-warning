@@ -16,6 +16,23 @@
     th { text-align: left; width: 28%; color: #444; font-weight: 600; padding: 0.2rem 0.4rem; }
     td { padding: 0.2rem 0.4rem; }
     code { font-size: 0.9rem; }
+  
+    .badge { display: inline-block; font-family: sans-serif; font-size: 0.82rem;
+             letter-spacing: 0.01em; padding: 0.12rem 0.55rem; border-radius: 3px;
+             border: 1px solid transparent; }
+    .badge-open { background: #e7f6ec; border-color: #b7d7c2; }
+    .badge-enroll { background: #eef3ff; border-color: #c5d2f2; }
+    .badge-closed { background: #fde8e8; border-color: #e4b4b4; }
+    .badge-sold { background: #fff3d6; border-color: #e0c48a; }
+    .badge-listed { background: #fde8e8; border-color: #c45c5c; }
+    .badge-merged { background: #f3e8ff; border-color: #d2b8ef; }
+    .badge-unknown { background: #f4f4f4; border-color: #ddd; }
+    .status-block { margin: 0.6rem 0 0.2rem; }
+    .status-detail, .status-sale, .status-src { margin: 0.25rem 0; }
+    .status-src { color: #555; font-size: 0.92rem; word-break: break-word; }
+    .status-disagree { background: #fff6e5; border: 1px solid #e0c48a; padding: 0.35rem 0.55rem;
+                       font-size: 0.92rem; }
+
   </style>
 </head>
 <body>
@@ -28,7 +45,7 @@
     years are omitted because unpublished finance looks like pre-closure missingness).
     Composite scores lag; HCM is a current snapshot and was not used as a training feature.
     Library holdings and special-collection notes are <em>enrichment context</em> (IPEDS
-    Academic Libraries + public library pages), not a model input.
+    Academic Libraries + public library pages), not a model input. Current-status badges are a later check (curated notes plus federal operating flags). They are not part of the score and not closure predictions. Campus sales and for-sale listings come only from the curated file; College Scorecard, FSA, and IPEDS do not report them.
   </div>
   <div class="banner lib-unique"><strong>Distinctive collections on the shortlist</strong> (top 50 ∪ nonprofit). Named holdings only when WorldCat/public sources or a cited transfer notice support them; other cards say unknown or nothing distinctive.<ul><li><strong>Finlandia University</strong> — Finnish American Historical Archive at the Finnish American Heritage Center (FAHC), historically part of Finlandia / Suomi College (archive est. 1932). After the 2023 closure, Finlandia Foundation National became caretaker (offer accepted 15 Jun 2023) and purchased the FAHC building and North Wind Books (announced Jan 2024). Surviving public destination: FAHC, 435 Quincy St., Hancock, MI — FAHC describes the largest Finnish-North American collection, including Finnish-American artwork and two 1642 Christina Bibles. Distinct from the closed Sulo and Aileen Maki circulating library (libraries.org 2443). IPEDS book counts are the university library survey, not FAHC item counts.</li><li><strong>Chatfield College</strong> — College-history archive compiled in the Chatfield library (Ursuline Sr. Patricia Homan). After closure the school became The Chatfield Edge; Ursuline Sisters of Brown County Archives (Fayetteville, OH) preserve the Chatfield/Ursuline educational legacy. Former SEO Library Consortium shared-automation member (ILL/catalog context, not a rare-book claim). libraries.org 26045 (NCES LIBID 201751).</li><li><strong>Pacific Northwest College of Art</strong> — Named holdings: Pacific Northwest Artists Archive at Willamette University Archives (PNCA is now part of Willamette). Related WorldCat identity is Willamette Hatfield Library OCLC OWS / Registry 2445 (Willamette UNITID 210401), not a PNCA-owned OCLC symbol.</li><li><strong>Simmons College of Kentucky</strong> — Named HBCU holdings: Simmons Digital Archive / Special Collections (academic catalogs, Simmonola yearbooks, historical photographs, publications on Simmons and African American life in Louisville). Institutional archives held at the University of Louisville since 1974 were returned to Simmons in April 2025 (Simmonola, General Association of Baptists in Kentucky records, photos, papers, artifacts). Do not confuse with Simmons University (Boston) OCLC SCL.</li><li><strong>Medaille University</strong> — Institutional/historical archives including library special archival materials transferred to Niagara University (legacy institution), effective 1 Sep 2023. Niagara publishes a Medaille Archives inventory; dissertations through summer 2023 are at Niagara Library. OCLC symbol YJT on libraries.org (NCES LIBID 192925). This is an archive-transfer claim, not a count of circulating volumes.</li></ul></div>
   
@@ -37,6 +54,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 467368</p>
       <p class="score">Watch-list score: <strong>0.987</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (campus permanently closed Jan 8, 2024; parent Carrington/SJVC still operates elsewhere)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://carrington.edu/">https://carrington.edu/</a>; VA Education Service closed-campus bulletin (Ontario effective Jan 8, 2024) as cited in prior dossier.</p></div>
       <table>
         <tr><th>FTE</th><td>40</td>
             <th>FTE 5y %Δ</th><td>-77.5%</td></tr>
@@ -86,6 +104,7 @@
       <p class="meta">OH · for-profit · score year 2022 · UNITID 206394</p>
       <p class="score">Watch-list score: <strong>0.986</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-sold">Closed · Campus sold 2024 to Educational Empowerment Group / Lake Erie International High School</span></p><p class="status-detail">Closed (Aug 30, 2024)</p><p class="status-detail">Campus building acquired / reused by Lake Erie International High School (Educational Empowerment Group); LEIHS now at 11728 Detroit Ave, Lakewood. Purchase price not published</p><p class="status-sale">Buyer / broker: Educational Empowerment Group / Lake Erie International High School · Date: 2024-04 (acquisition announced; college closed 2024-08-30)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.edempowerment.com/june-eeg-news-and-updates-2/">https://www.edempowerment.com/june-eeg-news-and-updates-2/</a>; <a href="https://www.lakeeriehigh.org/home-2/">https://www.lakeeriehigh.org/home-2/</a>; <a href="https://www.highereddive.com/news/for-profit-north-coast-college-closing/714501/">https://www.highereddive.com/news/for-profit-north-coast-college-closing/714501/</a>.</p><p class="status-disagree">Automated check differs from the curated note: IPEDS shows operating (inst_status 1 2023; no directory row in 2024, 2025)</p></div>
       <table>
         <tr><th>FTE</th><td>38</td>
             <th>FTE 5y %Δ</th><td>-65.8%</td></tr>
@@ -135,6 +154,7 @@
       <p class="meta">MA · for-profit · score year 2022 · UNITID 164641</p>
       <p class="score">Watch-list score: <strong>0.985</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (ceased degree-granting by Aug 31, 2023 after NECHE withdrawal)</p><p class="status-detail">no sale/listing found for college-owned campus real estate (school leased Back Bay space; building at 31 St. James Ave is third-party office property, not a Bay State asset sale)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://en.wikipedia.org/wiki/Bay_State_College">https://en.wikipedia.org/wiki/Bay_State_College</a>; <a href="https://www.mass.gov/info-details/closed-school-transcripts">https://www.mass.gov/info-details/closed-school-transcripts</a> (MA DHE closed-school pathways).</p></div>
       <table>
         <tr><th>FTE</th><td>224</td>
             <th>FTE 5y %Δ</th><td>-70.0%</td></tr>
@@ -184,6 +204,7 @@
       <p class="meta">TN · for-profit · score year 2022 · UNITID 444255</p>
       <p class="score">Watch-list score: <strong>0.983</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Hussian/Daymar TN campuses wound down ~May–Jul 2023)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.tn.gov/thec/">https://www.tn.gov/thec/</a> (THEC Hussian College Closure Resources); ACCSC notices.</p></div>
       <table>
         <tr><th>FTE</th><td>57</td>
             <th>FTE 5y %Δ</th><td>-72.2%</td></tr>
@@ -233,6 +254,7 @@
       <p class="meta">VA · for-profit · score year 2022 · UNITID 458496</p>
       <p class="score">Watch-list score: <strong>0.983</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Art Institutes system closed Sep 30, 2023)</p><p class="status-detail">no campus real-estate sale/listing found (leased space; vacated). Personal-property/library auctioned</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ainextstep.com/">https://ainextstep.com/</a>; <a href="https://auction757.com/auction_listings/art-institute-of-virginia-beach-auction/">https://auction757.com/auction_listings/art-institute-of-virginia-beach-auction/</a>; <a href="https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets">https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>88</td>
             <th>FTE 5y %Δ</th><td>-76.9%</td></tr>
@@ -282,6 +304,7 @@
       <p class="meta">TX · for-profit · score year 2022 · UNITID 451820</p>
       <p class="score">Watch-list score: <strong>0.983</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Sep 30, 2023; final Bastrop address 1204 Chestnut St)</p><p class="status-detail">no campus real-estate sale/listing found (leased). Likely library sold by the shelf via Waddle Auctioneers spring 2024</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ainextstep.com/">https://ainextstep.com/</a>; <a href="https://www.waddleauctioneers.com/">https://www.waddleauctioneers.com/</a>; THECB AI-TX closure notices.</p></div>
       <table>
         <tr><th>FTE</th><td>78</td>
             <th>FTE 5y %Δ</th><td>-83.8%</td></tr>
@@ -331,6 +354,7 @@
       <p class="meta">TX · for-profit · score year 2022 · UNITID 458982</p>
       <p class="score">Watch-list score: <strong>0.982</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Sep 30, 2023)</p><p class="status-detail">no sale/listing found (leased at Colonial Center / Hanover)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ainextstep.com/">https://ainextstep.com/</a>; <a href="https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets">https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>180</td>
             <th>FTE 5y %Δ</th><td>-76.2%</td></tr>
@@ -380,6 +404,7 @@
       <p class="meta">OH · for-profit · score year 2022 · UNITID 205559</p>
       <p class="score">Watch-list score: <strong>0.980</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (ACCSC withdrawal/closure effective Jul 17, 2023)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://scr.ohio.gov/information-for-students/student-transcripts/student-transcripts">https://scr.ohio.gov/information-for-students/student-transcripts/student-transcripts</a>; ACCSC public notices.</p></div>
       <table>
         <tr><th>FTE</th><td>26</td>
             <th>FTE 5y %Δ</th><td>-81.8%</td></tr>
@@ -429,6 +454,7 @@
       <p class="meta">TX · for-profit · score year 2022 · UNITID 224776</p>
       <p class="score">Watch-list score: <strong>0.979</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Sep 30, 2023)</p><p class="status-detail">no sale/listing found (leased ~20k sf; Northwood Investors building owner per CoStar)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ainextstep.com/">https://ainextstep.com/</a>; Dallas Morning News / Community Impact; THECB.</p></div>
       <table>
         <tr><th>FTE</th><td>265</td>
             <th>FTE 5y %Δ</th><td>-68.8%</td></tr>
@@ -478,6 +504,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 121275</p>
       <p class="score">Watch-list score: <strong>0.979</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (voluntarily closed Jul 1, 2023)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://platt.edu/">https://platt.edu/</a> (school closure statement); <a href="https://en.wikipedia.org/wiki/Platt_College_(San_Diego">https://en.wikipedia.org/wiki/Platt_College_(San_Diego</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>69</td>
             <th>FTE 5y %Δ</th><td>-56.6%</td></tr>
@@ -527,6 +554,7 @@
       <p class="meta">TX · private nonprofit · score year 2022 · UNITID 437732</p>
       <p class="score">Watch-list score: <strong>0.978</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating (parent The Chicago School; Dallas campus relocated to Plano 2025; nursing UNITID still listed Richardson in IPEDS directories — no permanent-closure notice found for College of Nursing)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.thechicagoschool.edu/in-the-community/locations/dallas/">https://www.thechicagoschool.edu/in-the-community/locations/dallas/</a>; <a href="https://nces.ed.gov/ipeds/dfr/2024/ReportHTML.aspx?unitId=437732">https://nces.ed.gov/ipeds/dfr/2024/ReportHTML.aspx?unitId=437732</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>81</td>
             <th>FTE 5y %Δ</th><td>-69.7%</td></tr>
@@ -576,6 +604,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 450702</p>
       <p class="score">Watch-list score: <strong>0.977</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (campus permanently closed effective Jan 8, 2024 per VA Education Service)</p><p class="status-detail">no sale/listing found for former campus at 7310 A Greenback Lane</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://carrington.edu/">https://carrington.edu/</a>; VA Education Service bulletin citing Citrus Heights closure effective Jan 8, 2024.</p></div>
       <table>
         <tr><th>FTE</th><td>34</td>
             <th>FTE 5y %Δ</th><td>-83.8%</td></tr>
@@ -625,6 +654,7 @@
       <p class="meta">CO · for-profit · score year 2022 · UNITID 436261</p>
       <p class="score">Watch-list score: <strong>0.976</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (permanently closed Aug 31, 2023)</p><p class="status-detail">no sale/listing found (suite/leased campus)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://southwestacupuncturecollege.com/">https://southwestacupuncturecollege.com/</a> (closure site); Colorado HED / Verif-y transcripts.</p></div>
       <table>
         <tr><th>FTE</th><td>25</td>
             <th>FTE 5y %Δ</th><td>-49.0%</td></tr>
@@ -674,6 +704,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 422020</p>
       <p class="score">Watch-list score: <strong>0.972</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally (Fresno TEC; programs active in 2026–27 catalog)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>; <a href="https://www.sjvc.edu/location/">https://www.sjvc.edu/location/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>300</td>
             <th>FTE 5y %Δ</th><td>91.1%</td></tr>
@@ -723,6 +754,7 @@
       <p class="meta">TX · private nonprofit · score year 2022 · UNITID 445461</p>
       <p class="score">Watch-list score: <strong>0.972</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (permanently closed Apr 2, 2023; all Altierus campuses closed)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.altierus.edu/">https://www.altierus.edu/</a>; ED Closed School Monthly Report Jul 2023; THECB / DiplomaSender.</p></div>
       <table>
         <tr><th>FTE</th><td>260</td>
             <th>FTE 5y %Δ</th><td>-44.3%</td></tr>
@@ -772,6 +804,7 @@
       <p class="meta">TX · for-profit · score year 2022 · UNITID 222938</p>
       <p class="score">Watch-list score: <strong>0.971</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Sep 30, 2023)</p><p class="status-detail">no sale/listing found (leased ~78k sf; Medistar building owner per CoStar)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ainextstep.com/">https://ainextstep.com/</a>; <a href="https://www.houstonchronicle.com/news/houston-texas/education/article/art-institute-houston-permanently-closed-18384375.php">https://www.houstonchronicle.com/news/houston-texas/education/article/art-institute-houston-permanently-closed-18384375.php</a>; <a href="https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets">https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>317</td>
             <th>FTE 5y %Δ</th><td>-71.5%</td></tr>
@@ -821,6 +854,7 @@
       <p class="meta">PA · for-profit · score year 2022 · UNITID 212993</p>
       <p class="score">Watch-list score: <strong>0.971</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (last day of instruction May 26, 2023)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.pa.gov/content/dam/copapwp-pagov/en/education/documents/instruction/postsecondary-adult/college-and-career-education/fact%20sheet%20hussian%20college%20philadelphia%20pa%20july%202023.pdf">https://www.pa.gov/content/dam/copapwp-pagov/en/education/documents/instruction/postsecondary-adult/college-and-career-education/fact%20sheet%20hussian%20college%20philadelphia%20pa%20july%202023.pdf</a>; ED fact sheet / ACCSC; PA DOE higher-education closed-school pathways.</p></div>
       <table>
         <tr><th>FTE</th><td>80</td>
             <th>FTE 5y %Δ</th><td>29.0%</td></tr>
@@ -870,6 +904,7 @@
       <p class="meta">GA · for-profit · score year 2022 · UNITID 138813</p>
       <p class="score">Watch-list score: <strong>0.969</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Sep 30, 2023)</p><p class="status-detail">no sale/listing found (Embassy Row space marketed for lease after vacancy; Bridge Commercial RE owner per CoStar)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ainextstep.com/">https://ainextstep.com/</a>; GNPEC news 28 Sep 2023; <a href="https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets">https://www.costar.com/article/1661422515/art-institutes-to-close-vacate-space-in-atlanta-houston-miami-other-markets</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>457</td>
             <th>FTE 5y %Δ</th><td>-69.9%</td></tr>
@@ -919,6 +954,7 @@
       <p class="meta">NM · for-profit · score year 2022 · UNITID 366605</p>
       <p class="score">Watch-list score: <strong>0.969</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (permanently closed Aug 31, 2023)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://southwestacupuncturecollege.com/">https://southwestacupuncturecollege.com/</a>; NMHED closed-schools list 2023.</p></div>
       <table>
         <tr><th>FTE</th><td>7</td>
             <th>FTE 5y %Δ</th><td>-83.7%</td></tr>
@@ -968,6 +1004,7 @@
       <p class="meta">FL · for-profit · score year 2022 · UNITID 490559</p>
       <p class="score">Watch-list score: <strong>0.967</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally as Meridian College Orlando branch (Gwinnett branding retained)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.meridian.edu/locations/career-training-in-orlando-florida/">https://www.meridian.edu/locations/career-training-in-orlando-florida/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>392</td>
             <th>FTE 5y %Δ</th><td>-30.7%</td></tr>
@@ -1017,6 +1054,7 @@
       <p class="meta">TN · for-profit · score year 2022 · UNITID 220002</p>
       <p class="score">Watch-list score: <strong>0.967</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (2023; Hussian system shutdown ~Jun–Jul 2023)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: THEC / ACCSC; <a href="https://www.tn.gov/thec/">https://www.tn.gov/thec/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>33</td>
             <th>FTE 5y %Δ</th><td>-83.6%</td></tr>
@@ -1066,6 +1104,7 @@
       <p class="meta">FL · for-profit · score year 2022 · UNITID 456977</p>
       <p class="score">Watch-list score: <strong>0.967</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally (CIE annual license; live campus programs)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.cbt.edu/locations/cutler-bay-campus/">https://www.cbt.edu/locations/cutler-bay-campus/</a>; Florida CIE listing.</p></div>
       <table>
         <tr><th>FTE</th><td>130</td>
             <th>FTE 5y %Δ</th><td>-20.7%</td></tr>
@@ -1115,6 +1154,7 @@
       <p class="meta">GA · private nonprofit · score year 2022 · UNITID 481155</p>
       <p class="score">Watch-list score: <strong>0.967</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally (Macon &amp; Augusta; ACCET accredited through ~2030)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.helms.edu/">https://www.helms.edu/</a>; <a href="https://www.helms.edu/helms-college-granted-full-five-year-accreditation-by-accet-affirming-quality-outcomes-and-community-impact/">https://www.helms.edu/helms-college-granted-full-five-year-accreditation-by-accet-affirming-quality-outcomes-and-community-impact/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>195</td>
             <th>FTE 5y %Δ</th><td>-40.4%</td></tr>
@@ -1164,6 +1204,7 @@
       <p class="meta">MI · private nonprofit · score year 2022 · UNITID 459417</p>
       <p class="score">Watch-list score: <strong>0.966</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-sold">Closed · Campus sold 2023 to Calvin University</span></p><p class="status-detail">Closed as college (end of Summer 2023); facility/students transitioned to Calvin University</p><p class="status-detail">Building at 41 Sheldon Ave SE assumed by Calvin University (announced Jul 2023; LOI to take students and assume ownership of ~29,000 sq ft facility). Purchase price not published</p><p class="status-sale">Buyer / broker: Calvin University · Date: 2023 (announced Jul 2023; Compass closed before Fall 2023)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://calvin.edu/stories/calvin-university-and-compass-college-film-and-media-announce-pathway-enhance-educational">https://calvin.edu/stories/calvin-university-and-compass-college-film-and-media-announce-pathway-enhance-educational</a>; <a href="https://www.mlive.com/news/grand-rapids/2023/07/calvin-university-will-absorb-students-facilities-from-closing-grand-rapids-film-school.html">https://www.mlive.com/news/grand-rapids/2023/07/calvin-university-will-absorb-students-facilities-from-closing-grand-rapids-film-school.html</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>50</td>
             <th>FTE 5y %Δ</th><td>-68.6%</td></tr>
@@ -1213,6 +1254,7 @@
       <p class="meta">PA · for-profit · score year 2022 · UNITID 494755</p>
       <p class="score">Watch-list score: <strong>0.965</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally (UCI Irwin campus)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://unitedcareer.edu/">https://unitedcareer.edu/</a>; <a href="https://unitedcareer.edu/your-questions-answered/">https://unitedcareer.edu/your-questions-answered/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>71</td>
             <th>FTE 5y %Δ</th><td>—</td></tr>
@@ -1262,6 +1304,7 @@
       <p class="meta">WV · for-profit · score year 2022 · UNITID 237598</p>
       <p class="score">Watch-list score: <strong>0.965</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-sold">Closed · Campus sold 2024</span></p><p class="status-detail">Closed (last student day Mar 14, 2024; Ch.7 bankruptcy May 2024)</p><p class="status-detail">Campus buildings auctioned and marked SOLD (Joe R. Pyle, Sep 19, 2024) — 1508 Spring Ave, 509 &amp; 501 16th St, parking lots. Buyer identity and sale prices not published on auction page</p><p class="status-sale">Buyer / broker: Joe R. Pyle Auction &amp; Realty (broker/auctioneer Tia Wolski); buyer unpublished · Date: 2024-09-19 (auction/sold)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.joerpyleauctions.com/auctions/detail/bw125947">https://www.joerpyleauctions.com/auctions/detail/bw125947</a>; <a href="https://www.newsandsentinel.com/news/business/2024/04/struggling-mountain-state-college-closes-its-doors/">https://www.newsandsentinel.com/news/business/2024/04/struggling-mountain-state-college-closes-its-doors/</a>; <a href="https://www.pacermonitor.com/public/case/53656015/Mountain_State_College,_Inc">https://www.pacermonitor.com/public/case/53656015/Mountain_State_College,_Inc</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>30</td>
             <th>FTE 5y %Δ</th><td>-72.7%</td></tr>
@@ -1311,6 +1354,7 @@
       <p class="meta">NV · for-profit · score year 2022 · UNITID 181941</p>
       <p class="score">Watch-list score: <strong>0.963</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Feb 9, 2024; Ch.7 same day)</p><p class="status-detail">Equipment/FF&amp;E/library auctioned via Rabin Worldwide Apr 10–11, 2024 (auction completed). No published buyer or price for real estate at 1421 Pullman Drive; no current listing found for the building</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://rabin.com/Overview/Auction/entire-trade-school-learning-campus/">https://rabin.com/Overview/Auction/entire-trade-school-learning-campus/</a>; <a href="https://www.rgj.com/story/news/2024/02/13/career-college-of-northern-nevada-in-sparks-abruptly-shuts-down-friday/72583895007/">https://www.rgj.com/story/news/2024/02/13/career-college-of-northern-nevada-in-sparks-abruptly-shuts-down-friday/72583895007/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>459</td>
             <th>FTE 5y %Δ</th><td>-26.4%</td></tr>
@@ -1360,6 +1404,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 448372</p>
       <p class="score">Watch-list score: <strong>0.963</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-enroll">Open, not enrolling</span></p><p class="status-detail">Open but not currently enrolling new students (still listed in SJVC 2026–27 catalog; Carrington/SJVC realignment)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>300</td>
             <th>FTE 5y %Δ</th><td>38.9%</td></tr>
@@ -1409,6 +1454,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 262457</p>
       <p class="score">Watch-list score: <strong>0.962</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-enroll">Open, not enrolling</span></p><p class="status-detail">Open but not currently enrolling new students (explicit in SJVC 2026–27 catalog)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>529</td>
             <th>FTE 5y %Δ</th><td>-37.6%</td></tr>
@@ -1458,6 +1504,7 @@
       <p class="meta">CA · private nonprofit · score year 2022 · UNITID 115728</p>
       <p class="score">Watch-list score: <strong>0.962</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-sold">Closed · Campus sold 2023 to BH Properties (buyer); Tidewater Capital (redevelopment partner); originally brokered by CBRE</span></p><p class="status-detail">Closed (final semester Spring 2023). Campus sold and under redevelopment planning</p><p class="status-detail">Sold to BH Properties Jun 2023 for ~$65 million (60 acres). BH + Tidewater Capital filed 2026 housing plans (~165 single-family homes); not currently listed for resale</p><p class="status-sale">Buyer / broker: BH Properties (buyer); Tidewater Capital (redevelopment partner); originally brokered by CBRE · Date: 2023-06 (sale) · Published price: ~$65 million</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.bhproperties.com/bh-properties-purchases-60-acre-oakland-hills-campus-of-holy-names-university">https://www.bhproperties.com/bh-properties-purchases-60-acre-oakland-hills-campus-of-holy-names-university</a>; <a href="https://www.sfchronicle.com/realestate/article/home-housing-oakland-holy-names-21316822.php">https://www.sfchronicle.com/realestate/article/home-housing-oakland-holy-names-21316822.php</a>; <a href="https://sfyimby.com/2026/08/new-zoning-permits-filed-for-holy-names-campus-redevelopment-in-oakland.html">https://sfyimby.com/2026/08/new-zoning-permits-filed-for-holy-names-campus-redevelopment-in-oakland.html</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>959</td>
             <th>FTE 5y %Δ</th><td>24.7%</td></tr>
@@ -1507,6 +1554,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 495952</p>
       <p class="score">Watch-list score: <strong>0.962</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally (Electrical / HVAC certificates in 2026–27 catalog)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>195</td>
             <th>FTE 5y %Δ</th><td>—</td></tr>
@@ -1556,6 +1604,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 475176</p>
       <p class="score">Watch-list score: <strong>0.961</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>852</td>
             <th>FTE 5y %Δ</th><td>100.0%</td></tr>
@@ -1605,6 +1654,7 @@
       <p class="meta">GA · private nonprofit · score year 2022 · UNITID 443748</p>
       <p class="score">Watch-list score: <strong>0.959</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (commonly cited closed date 2023-04-02; all Altierus closed)</p><p class="status-detail">no sale/listing found</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.altierus.edu/">https://www.altierus.edu/</a>; <a href="https://gnpec.georgia.gov/student-resources/where-request-your-closed-school-transcriptverification-request">https://gnpec.georgia.gov/student-resources/where-request-your-closed-school-transcriptverification-request</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>319</td>
             <th>FTE 5y %Δ</th><td>-32.1%</td></tr>
@@ -1654,6 +1704,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 442444</p>
       <p class="score">Watch-list score: <strong>0.959</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>1229</td>
             <th>FTE 5y %Δ</th><td>21.9%</td></tr>
@@ -1703,6 +1754,7 @@
       <p class="meta">MO · private nonprofit · score year 2022 · UNITID 477233</p>
       <p class="score">Watch-list score: <strong>0.959</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating as Evangel University additional location (James River College, Ozark area)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.evangel.edu/">https://www.evangel.edu/</a>; James River additional location (Ozark, MO) listed in Evangel materials.</p></div>
       <table>
         <tr><th>FTE</th><td>98</td>
             <th>FTE 5y %Δ</th><td>—</td></tr>
@@ -1752,6 +1804,7 @@
       <p class="meta">MI · private nonprofit · score year 2022 · UNITID 172440</p>
       <p class="score">Watch-list score: <strong>0.958</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-sold">Closed · Campus sold 2023–2024 to City of Hancock; Finlandia Foundation National; Moyle; Naturally Michigan Properties; Right Start UP; others via receiver auction</span></p><p class="status-detail">University closed (ceased enrollment after Mar 2023 announcement). Campus buildings sold in pieces; city reports every building has a new owner by mid-2025</p><p class="status-detail">Multiple sales: City of Hancock bought Mannerheim, Nikander, Wargelin for combined $30,000 (2023); Finlandia Foundation National bought FAHC + North Wind Books buildings; Moyle/Hancock Offices bought Jutila Center &amp; Finn Hall; Naturally Michigan Properties bought Old Main &amp; Chapel of St. Matthew; Right Start UP bought Hirvonen Hall. Absolute auction via Keen-Summit / Liquid Asset Partners for other parcels. No active for-sale listing found as of Oct 2026</p><p class="status-sale">Buyer / broker: City of Hancock; Finlandia Foundation National; Moyle; Naturally Michigan Properties; Right Start UP; others via receiver auction · Date: 2023–2024 (phased) · Published price: combined $30,000</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.uppermichiganssource.com/2023/10/18/hancock-city-council-approves-30000-purchase-agreement-three-former-finlandia-university-properties/">https://www.uppermichiganssource.com/2023/10/18/hancock-city-council-approves-30000-purchase-agreement-three-former-finlandia-university-properties/</a>; <a href="https://www.sooeveningnews.com/story/news/education/2024/01/06/foundation-announces-purchase-of-two-finlandiauniversity-buildings/72118794007/">https://www.sooeveningnews.com/story/news/education/2024/01/06/foundation-announces-purchase-of-two-finlandiauniversity-buildings/72118794007/</a>; <a href="https://keweenawreport.com/2025/07/30/149189/">https://keweenawreport.com/2025/07/30/149189/</a>; <a href="https://upwordmichigan.com/new-life-in-old-halls-transforming-finlandia-universitys-former-buildings-for-a-vibrant-future/">https://upwordmichigan.com/new-life-in-old-halls-transforming-finlandia-universitys-former-buildings-for-a-vibrant-future/</a>; <a href="https://www.keen-summit.com/receiver-orders-absolute-auction-of-finlandia-university-real-estate/">https://www.keen-summit.com/receiver-orders-absolute-auction-of-finlandia-university-real-estate/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>450</td>
             <th>FTE 5y %Δ</th><td>25.3%</td></tr>
@@ -1801,6 +1854,7 @@
       <p class="meta">WI · private nonprofit · score year 2022 · UNITID 238430</p>
       <p class="score">Watch-list score: <strong>0.957</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-sold">Closed · Campus sold 2023 to Ramirez Family Foundation (buyer); Transwestern (broker)</span></p><p class="status-detail">Closed (Spring 2023 final semester). Campus sold and redeveloped as Aug Prep North (opening Aug 2026)</p><p class="status-detail">Sold to Ramirez Family Foundation Jul 2023 for $24 million (43.5 acres / 607k sf). Not listed for resale; under $100M Aug Prep North conversion</p><p class="status-sale">Buyer / broker: Ramirez Family Foundation (buyer); Transwestern (broker) · Date: 2023-07 · Published price: $24 million</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ramirezfamilyfoundation.org/news/ramirez-family-foundation-acquires-cardinal-stritch-campus/">https://ramirezfamilyfoundation.org/news/ramirez-family-foundation-acquires-cardinal-stritch-campus/</a>; <a href="https://transwestern.com/news-detail/cardinal-stritch-university-sells-607-000-square-foot-campus">https://transwestern.com/news-detail/cardinal-stritch-university-sells-607-000-square-foot-campus</a>; <a href="https://www.jsonline.com/story/news/education/2025/09/05/progress-made-on-school-being-built-at-former-cardinal-stritch/85911959007/">https://www.jsonline.com/story/news/education/2025/09/05/progress-made-on-school-being-built-at-former-cardinal-stritch/85911959007/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>1332</td>
             <th>FTE 5y %Δ</th><td>-21.3%</td></tr>
@@ -1850,6 +1904,7 @@
       <p class="meta">AR · for-profit · score year 2022 · UNITID 458885</p>
       <p class="score">Watch-list score: <strong>0.957</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating (Little Rock campus listed in Strayer 2025–26 catalog)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://strayer.smartcatalogiq.com/en/2025-2026/catalog/campuses-and-locations">https://strayer.smartcatalogiq.com/en/2025-2026/catalog/campuses-and-locations</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>261</td>
             <th>FTE 5y %Δ</th><td>22.5%</td></tr>
@@ -1899,6 +1954,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 495961</p>
       <p class="score">Watch-list score: <strong>0.957</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-enroll">Open, not enrolling</span></p><p class="status-detail">Open but not currently enrolling new students (explicit in SJVC 2026–27 catalog)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>168</td>
             <th>FTE 5y %Δ</th><td>—</td></tr>
@@ -1948,6 +2004,7 @@
       <p class="meta">TN · for-profit · score year 2022 · UNITID 488068</p>
       <p class="score">Watch-list score: <strong>0.956</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Aug 25, 2023; DEAC closed-institutions list). Distance-education nutrition/health school</p><p class="status-detail">no sale/listing found (office/distance footprint, not a research campus)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.deac.org/public-notices/closed-institutions/">https://www.deac.org/public-notices/closed-institutions/</a>; <a href="https://achs.edu/teach-out-information/">https://achs.edu/teach-out-information/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>71</td>
             <th>FTE 5y %Δ</th><td>-1.4%</td></tr>
@@ -1997,6 +2054,7 @@
       <p class="meta">FL · for-profit · score year 2022 · UNITID 134811</p>
       <p class="score">Watch-list score: <strong>0.956</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Sep 30, 2023 with Art Institutes)</p><p class="status-detail">no campus sale found (1501 Biscayne / Omni offices — space marketed for office lease by Colliers for Resorts World Omni; not an AI-owned campus sale)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://ainextstep.com/">https://ainextstep.com/</a>; <a href="https://www.miamiherald.com/news/local/education/article279831174.html">https://www.miamiherald.com/news/local/education/article279831174.html</a>; <a href="https://www.citybiz.co/article/615509/colliers-tapped-to-lease-1501-biscayne-formerly-the-omni-offices/">https://www.citybiz.co/article/615509/colliers-tapped-to-lease-1501-biscayne-formerly-the-omni-offices/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>909</td>
             <th>FTE 5y %Δ</th><td>-36.8%</td></tr>
@@ -2046,6 +2104,7 @@
       <p class="meta">MO · for-profit · score year 2022 · UNITID 442426</p>
       <p class="score">Watch-list score: <strong>0.956</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-merged">Acquired by Stepful, Inc.</span></p><p class="status-detail">Still operating; institution sold to Stepful, Inc. and rebranded Stepful College (ownership transfer Dec 1, 2025; rebrand effective Aug 25, 2026). Fenton campus continues</p><p class="status-detail">Institutional stock-purchase sale to Stepful (not a closed-campus real-estate liquidation). Campus remains in educational use</p><p class="status-sale">Buyer / broker: Stepful, Inc. · Date: 2025-12-01 (ownership transfer)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.faegredrinker.com/en/services/experience/2026/1/st-louis-college-of-health-careers-completes-sale-to-stepful-inc">https://www.faegredrinker.com/en/services/experience/2026/1/st-louis-college-of-health-careers-completes-sale-to-stepful-inc</a>; <a href="https://stepfulcollege.edu/">https://stepfulcollege.edu/</a>; <a href="https://www.einpresswire.com/article/942265986/stepful-acquires-45-year-old-nursing-school-to-scale-healthcare-talent-development-through-accredited-degrees-programs">https://www.einpresswire.com/article/942265986/stepful-acquires-45-year-old-nursing-school-to-scale-healthcare-talent-development-through-accredited-degrees-programs</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>424</td>
             <th>FTE 5y %Δ</th><td>-4.9%</td></tr>
@@ -2095,6 +2154,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 443571</p>
       <p class="score">Watch-list score: <strong>0.956</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally (main campus)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.intercoast.edu/campuses/west-covina/">https://www.intercoast.edu/campuses/west-covina/</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>506</td>
             <th>FTE 5y %Δ</th><td>232.9%</td></tr>
@@ -2144,6 +2204,7 @@
       <p class="meta">MS · for-profit · score year 2022 · UNITID 458955</p>
       <p class="score">Watch-list score: <strong>0.955</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">System still operating; Jackson MS campus absent from Strayer 2025–26 campuses list (was listed in 2023–24). Treat MS ground footprint as closed/removed; online/system continues</p><p class="status-detail">no sale/listing found for former Jackson suite campus</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://strayer.smartcatalogiq.com/en/2025-2026/catalog/campuses-and-locations">https://strayer.smartcatalogiq.com/en/2025-2026/catalog/campuses-and-locations</a>; <a href="https://strayer.smartcatalogiq.com/en/2023-2024/catalog/campuses-and-locations">https://strayer.smartcatalogiq.com/en/2023-2024/catalog/campuses-and-locations</a>.</p><p class="status-disagree">Automated check differs from the curated note: IPEDS shows operating (inst_status 1 2025)</p></div>
       <table>
         <tr><th>FTE</th><td>239</td>
             <th>FTE 5y %Δ</th><td>-12.8%</td></tr>
@@ -2193,6 +2254,7 @@
       <p class="meta">CA · for-profit · score year 2022 · UNITID 122694</p>
       <p class="score">Watch-list score: <strong>0.955</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating normally</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf">https://static.sjvc.edu/_downloads/consumerinfo/SJVC-2026-2027-College-Catalog-04132026.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>1015</td>
             <th>FTE 5y %Δ</th><td>-15.8%</td></tr>
@@ -2242,6 +2304,7 @@
       <p class="meta">PA · for-profit · score year 2022 · UNITID 408729</p>
       <p class="score">Watch-list score: <strong>0.953</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (IPEDS directory date_closed 2022-11-30; inst_status 4 in the 2023 directory; no directory row in 2024 or 2025)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://educationdata.urban.org/api/v1/college-university/ipeds/directory/2023/?unitid=408729">https://educationdata.urban.org/api/v1/college-university/ipeds/directory/2023/?unitid=408729</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>21</td>
             <th>FTE 5y %Δ</th><td>-83.8%</td></tr>
@@ -2291,6 +2354,7 @@
       <p class="meta">DE · for-profit · score year 2022 · UNITID 450298</p>
       <p class="score">Watch-list score: <strong>0.952</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating (Wilmington campus listed in Strayer 2025–26 catalog)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://strayer.smartcatalogiq.com/en/2025-2026/catalog/campuses-and-locations">https://strayer.smartcatalogiq.com/en/2025-2026/catalog/campuses-and-locations</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>205</td>
             <th>FTE 5y %Δ</th><td>-14.9%</td></tr>
@@ -2340,6 +2404,7 @@
       <p class="meta">OH · private nonprofit · score year 2022 · UNITID 201751</p>
       <p class="score">Watch-list score: <strong>0.952</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-sold">Closed · Campus sold 2024 to Future Plans, Inc. (buyer; GRIT Project / Appalachian Ohio nonprofit)</span></p><p class="status-detail">Closed as degree-granting college (2022); successor nonprofit The Chatfield Edge continues student-support services on site</p><p class="status-detail">99-acre St. Martin property sold Oct 2024 to Future Plans, Inc. for ~$3.5 million. Chatfield Edge remains a tenant/organization on the property. Not currently listed for resale</p><p class="status-sale">Buyer / broker: Future Plans, Inc. (buyer; GRIT Project / Appalachian Ohio nonprofit) · Date: 2024-10 · Published price: ~$3.5 million</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.chatfieldedge.org/the-chatfield-edge-sells-st-martin-ohio-property-to-future-plans-inc/">https://www.chatfieldedge.org/the-chatfield-edge-sells-st-martin-ohio-property-to-future-plans-inc/</a>; <a href="https://www.bizjournals.com/cincinnati/news/2024/11/06/chatfield-edge-sells-campus-st-mary-future-plans.html">https://www.bizjournals.com/cincinnati/news/2024/11/06/chatfield-edge-sells-campus-st-mary-future-plans.html</a>; <a href="https://local12.com/news/local/former-cincinnati-area-college-sells-campus-millions-ohio-nonprofit-chatfield-edge-st-mary-future-plans-acres">https://local12.com/news/local/former-cincinnati-area-college-sells-campus-millions-ohio-nonprofit-chatfield-edge-st-mary-future-plans-acres</a>.</p><p class="status-disagree">Automated check differs from the curated note: IPEDS shows operating (inst_status 1 2023; no directory row in 2024, 2025)</p></div>
       <table>
         <tr><th>FTE</th><td>129</td>
             <th>FTE 5y %Δ</th><td>-36.8%</td></tr>
@@ -2389,6 +2454,7 @@
       <p class="meta">AZ · for-profit · score year 2022 · UNITID 482422</p>
       <p class="score">Watch-list score: <strong>0.951</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-open">Open</span></p><p class="status-detail">Still operating (Phoenix hybrid campus listed)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.devry.edu/about/campus-locations/arizona/phoenix.html">https://www.devry.edu/about/campus-locations/arizona/phoenix.html</a>; <a href="https://www.devry.edu/d/devry-catalog.pdf">https://www.devry.edu/d/devry-catalog.pdf</a>.</p></div>
       <table>
         <tr><th>FTE</th><td>62</td>
             <th>FTE 5y %Δ</th><td>-83.8%</td></tr>
@@ -2438,6 +2504,7 @@
       <p class="meta">NV · for-profit · score year 2022 · UNITID 482547</p>
       <p class="score">Watch-list score: <strong>0.951</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      <div class="status-block"><p><span class="badge badge-closed">Closed</span></p><p class="status-detail">Closed (Henderson campus CLOSED May 2026 per DeVry Clery/annual disclosure dated Sep 30, 2026)</p><p class="status-detail">no sale/listing found (suite campus at 2490 Paseo Verde Pkwy Ste 150 — leased footprint)</p><p class="status-src">Curated check 2026-10-05 · Sources: <a href="https://www.devry.edu/d/annual-disclosure-Henderson.pdf">https://www.devry.edu/d/annual-disclosure-Henderson.pdf</a>.</p><p class="status-disagree">Automated check differs from the curated note: IPEDS shows operating (inst_status 1 2025)</p></div>
       <table>
         <tr><th>FTE</th><td>11</td>
             <th>FTE 5y %Δ</th><td>-83.8%</td></tr>

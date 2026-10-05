@@ -194,6 +194,12 @@ wiche:
   urls:
     - https://www.wiche.edu/wp-content/uploads/2024/12/Knocking-at-the-College-Door-11th-Edition-Projections-Dataset-12-11-2024.xlsx
 
+status:
+  # Hand-maintained current status for the watch list (UNITID + name/state).
+  # scripts/check_status.py reads this file and does not rewrite it.
+  curated_csv: data/status/status_curated.csv
+  top_n: 50
+
 closure_trackers:
   higher_ed_dive_url: https://www.highereddive.com/news/tracker-college-closings-and-mergers/546692/
   bestcolleges_url: https://www.bestcolleges.com/research/closed-colleges-list-statistics-major-closures/
