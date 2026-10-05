@@ -1030,7 +1030,9 @@ def operating_bucket(row: pd.Series | dict[str, Any]) -> str:
 
     A curated ``closed`` row or a recorded campus sale stays closed even when
     IPEDS or Scorecard still shows the parent system as operating (a closed
-    DeVry or Strayer location, for example). IPEDS ``inst_status`` closed or
+    DeVry or Strayer location, for example). A curated ``merged_acquired``
+    row stays off the open list unless it is an ``institutional_sale`` that
+    leaves the same school operating. IPEDS ``inst_status`` closed or
     merged, or a real close date, also counts as closed. ``not_enrolling``
     stays in the teach-out bucket unless IPEDS itself records a closure.
     """
@@ -1043,6 +1045,8 @@ def operating_bucket(row: pd.Series | dict[str, Any]) -> str:
     scorecard = _blank(row.get("auto_scorecard_operating"))
     federal_closed = ipeds in {"closed", "merged"} or scorecard == "0"
     if status == STATUS_CLOSED or prop == PROP_SOLD:
+        return CLOSED_BUCKET
+    if status == STATUS_MERGED and prop != PROP_INSTITUTIONAL:
         return CLOSED_BUCKET
     if status == STATUS_NOT_ENROLLING:
         if ipeds in {"closed", "merged"}:

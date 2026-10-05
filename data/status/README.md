@@ -35,5 +35,9 @@ the source does not state a price. The automated refresh flags a row when a
 federal operating flag disagrees with `status`. It does not replace these columns.
 
 `institutional_sale` is an ownership change of a school that is still operating
-(a stock sale or merger). It is not a closed-campus real-estate sale. Use
-`sold` only for the campus property.
+(a stock sale). It is not a closed-campus real-estate sale. Use
+`sold` only for the campus property. Use `merged_acquired` without
+`institutional_sale` when a merger ends the UNITID as its own school. That
+row is left off the still-operating list. Web checks of schools that entered
+the open list from a lagging IPEDS row belong in `source_url` and `checked_at`;
+edit those rows in place.
