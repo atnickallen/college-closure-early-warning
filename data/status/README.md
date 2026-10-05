@@ -1,9 +1,12 @@
 # Current status (curated)
 
-`status_curated.csv` is the hand-maintained record of what happened to each
-watch-list school after the score year. Edit it in place. Git history is the
-version history. `scripts/check_status.py` reads this file and does not
-rewrite it.
+`status_curated.csv` is the record of what happened to each watch-list school
+after the score year. Edit rows in place. Git history is the version history.
+`scripts/check_status.py` does not overwrite existing rows. When a school
+further down the ranked watch list enters the still-operating top 50 and is
+not already in this file, the checker appends a row with `status=operating`,
+the IPEDS directory URL (and the College Scorecard school page when
+`school.operating` was 1), and `checked_at`. It does not invent a sale price.
 
 ## Columns
 

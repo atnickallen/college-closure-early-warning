@@ -196,9 +196,12 @@ wiche:
 
 status:
   # Hand-maintained current status for the watch list (UNITID + name/state).
-  # scripts/check_status.py reads this file and does not rewrite it.
+  # scripts/check_status.py walks the ranked watch list until open_n schools
+  # are still operating. It may append those schools when they are missing.
+  # It does not overwrite existing curated rows.
   curated_csv: data/status/status_curated.csv
   top_n: 50
+  open_n: 50
 
 closure_trackers:
   higher_ed_dive_url: https://www.highereddive.com/news/tracker-college-closings-and-mergers/546692/

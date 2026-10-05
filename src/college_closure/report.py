@@ -9,13 +9,22 @@ from __future__ import annotations
 import html
 import json
 import logging
+import re
 
 import numpy as np
 import pandas as pd
 
 from college_closure.config import Settings
 from college_closure.features import MODEL_FEATURE_COLUMNS
-from college_closure.status import BANNER_SENTENCE, STATUS_CSS, load_status_for_report, status_block_html
+from college_closure.status import (
+    BANNER_SENTENCE,
+    STATUS_CSS,
+    _source_html,
+    load_status_for_report,
+    partition_operating,
+    status_badge,
+    status_block_html,
+)
 from college_closure.libraries import (
     LIB_WATCHLIST_COLS,
     distinctive_notes_html,
@@ -67,7 +76,7 @@ WATCHLIST_COLS = [
 
 def _control_label(v) -> str:
     try:
-        i = int(v)
+        i = int(float(v))
     except (TypeError, ValueError):
         return "unknown"
     return {1: "public", 2: "private nonprofit", 3: "for-profit"}.get(i, str(i))
@@ -76,6 +85,14 @@ def _control_label(v) -> str:
 def _fmt(v, digits: int = 2, pct: bool = False) -> str:
     if v is None or (isinstance(v, float) and (np.isnan(v) or np.isinf(v))):
         return "—"
+    if isinstance(v, str):
+        token = v.strip().lower()
+        if token in {"", "nan", "none", "<na>"}:
+            return "—"
+        if token == "true":
+            v = 1
+        elif token == "false":
+            v = 0
     try:
         if pd.isna(v):
             return "—"
@@ -92,10 +109,15 @@ def _fmt(v, digits: int = 2, pct: bool = False) -> str:
 
 def _row_shap_fallback(row: pd.Series, shap_global: list[dict], n: int = 6) -> list[dict]:
     out = []
+    index = row.index if hasattr(row, "index") else []
     for item in shap_global[:n]:
         feat = item.get("feature")
-        if feat and feat in row.index:
-            out.append({"feature": feat, "value": row.get(feat), "mean_abs_shap": item.get("mean_abs_shap")})
+        if not feat:
+            continue
+        entry = {"feature": feat, "mean_abs_shap": item.get("mean_abs_shap")}
+        if feat in index and _text(row.get(feat)):
+            entry["value"] = row.get(feat)
+        out.append(entry)
     return out
 
 
@@ -103,18 +125,40 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
     name = html.escape(str(row.get("inst_name") or f"UNITID {row.get('unitid')}"))
     state = html.escape(str(row.get("state_abbr") or "—"))
     sector = html.escape(_control_label(row.get("inst_control")))
-    year = row.get("year")
+    try:
+        year = str(int(float(row.get("year"))))
+    except (TypeError, ValueError):
+        year = row.get("year") or "—"
+    try:
+        original_rank = str(int(float(row.get("watchlist_rank"))))
+    except (TypeError, ValueError):
+        original_rank = ""
+    rank_bit = f" · watch-list rank {original_rank}" if original_rank else ""
     shap_rows = ""
     for s in shap_items:
         feat = html.escape(str(s.get("feature")))
-        extra = s.get("shap", s.get("value", s.get("mean_abs_shap")))
-        shap_rows += f"<li><code>{feat}</code> ({_fmt(extra, 3)})</li>"
+        if _text(s.get("value")):
+            shap_rows += f"<li><code>{feat}</code> ({_fmt(s.get('value'), 3)})</li>"
+        else:
+            shap_rows += f"<li><code>{feat}</code> (mean |SHAP| {_fmt(s.get('mean_abs_shap'), 3)})</li>"
     if not shap_rows:
         shap_rows = "<li>SHAP unavailable for this row</li>"
 
     def _flag(v) -> bool:
+        if isinstance(v, str):
+            token = v.strip().lower()
+            if token in {"", "false", "no", "nan", "none"}:
+                return False
+            if token in {"true", "yes"}:
+                return True
+            try:
+                return float(token) != 0
+            except ValueError:
+                return False
         try:
             if v is None or pd.isna(v):
+                return False
+            if isinstance(v, (int, float)) and float(v) == 0:
                 return False
         except (TypeError, ValueError):
             return False
@@ -128,7 +172,9 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
     if _flag(row.get("hcm2_scorecard")) or _flag(row.get("scorecard_under_investigation")):
         hcm.append("Scorecard under_investigation / HCM2 (current snapshot)")
     hcm_txt = ", ".join(hcm) if hcm else "not on current HCM / Scorecard investigation flags (or lists unavailable)"
-    op = row.get("scorecard_operating")
+    op = row.get("auto_scorecard_operating")
+    if op is None or (isinstance(op, str) and not op.strip()) or (isinstance(op, float) and pd.isna(op)):
+        op = row.get("scorecard_operating")
     try:
         op_n = int(op) if op is not None and not pd.isna(op) else None
     except (TypeError, ValueError):
@@ -151,7 +197,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
     return f"""
     <article class="card">
       <h2>{rank}. {name}</h2>
-      <p class="meta">{state} · {sector} · score year {year} · UNITID {row.get("unitid")}</p>
+      <p class="meta">{state} · {sector} · score year {year}{rank_bit} · UNITID {row.get("unitid")}</p>
       <p class="score">Watch-list score: <strong>{_fmt(row.get("risk_score"), 3)}</strong>
       — elevated-risk indicator, not a closure verdict.</p>
       {status_block_html(row)}
@@ -182,12 +228,29 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
     """
 
 
-def _html_page(cards: str, n: int, score_year: int, caveats: str, intro: str = "") -> str:
+def _html_page(
+    cards: str,
+    n: int,
+    score_year: int,
+    caveats: str,
+    intro: str = "",
+    teachout: str = "",
+    closed: str = "",
+    depth: int | None = None,
+) -> str:
+    if depth:
+        depth_note = (
+            f'<p class="depth">The main list is {n} still-operating '
+            f"school{'s' if n != 1 else ''}, reached by walking the ranked watch list "
+            f"through rank {int(depth)}.</p>"
+        )
+    else:
+        depth_note = ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>College closure early-warning watch list (top {n})</title>
+  <title>College closure early-warning watch list (top {n} still operating)</title>
   <style>
     body {{ font-family: Georgia, serif; max-width: 920px; margin: 2rem auto; padding: 0 1rem;
            color: #222; line-height: 1.45; }}
@@ -200,29 +263,252 @@ def _html_page(cards: str, n: int, score_year: int, caveats: str, intro: str = "
     table {{ border-collapse: collapse; width: 100%; margin: 0.6rem 0; }}
     th {{ text-align: left; width: 28%; color: #444; font-weight: 600; padding: 0.2rem 0.4rem; }}
     td {{ padding: 0.2rem 0.4rem; }}
+    table.roster th {{ width: auto; vertical-align: top; }}
+    table.roster td {{ vertical-align: top; }}
     code {{ font-size: 0.9rem; }}
     {STATUS_CSS}
   </style>
 </head>
 <body>
-  <h1>Watch list — top {n} (score year {score_year})</h1>
+  <h1>Watch list — top {n} still operating (score year {score_year})</h1>
   <div class="banner">
     <strong>Not a verdict.</strong> Ranked elevated-risk indicators from a statistical model
     trained on historical institution-year features. A high score means the school resembles
-    past closures/mergers on trailing observables — not that it will close. The score year
-    is the latest <em>right-censored</em> year with published IPEDS finance (later directory
-    years are omitted because unpublished finance looks like pre-closure missingness).
-    Composite scores lag; HCM is a current snapshot and was not used as a training feature.
-    Library holdings and special-collection notes are <em>enrichment context</em> (IPEDS
-    Academic Libraries + public library pages), not a model input.{BANNER_SENTENCE}
+    past closures/mergers on trailing observables — not that it will close. Scores come from
+    {score_year} federal financial data. The list is elevated-risk indicators, not closure
+    predictions. The main list is the highest-ranked schools that are still operating.
+    The score year is the latest <em>right-censored</em> year with published IPEDS finance
+    (later directory years are omitted because unpublished finance looks like pre-closure
+    missingness). Composite scores lag; HCM is a current snapshot and was not used as a
+    training feature. Library holdings and special-collection notes are
+    <em>enrichment context</em> (IPEDS Academic Libraries + public library pages), not a
+    model input.{BANNER_SENTENCE}
   </div>
+  {depth_note}
   {intro}
   {cards}
+  {teachout}
+  {closed}
   <h2>Limitations</h2>
   <p>{html.escape(caveats)}</p>
 </body>
 </html>
 """
+
+
+def _text(value) -> str:
+    if value is None:
+        return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    text = str(value).strip()
+    if text.lower() in {"nan", "none", "<na>"}:
+        return ""
+    return text
+
+
+def _sale_summary(row: pd.Series) -> str:
+    parts: list[str] = []
+    for key in ("status_detail", "sold_listed_details"):
+        text = _text(row.get(key))
+        if text and text not in parts:
+            parts.append(text)
+    buyer = _text(row.get("buyer_or_broker"))
+    if buyer:
+        parts.append(f"Buyer or broker: {buyer}")
+    when = _text(row.get("event_date"))
+    if when:
+        parts.append(f"Date: {when}")
+    price = _text(row.get("sale_price_published"))
+    if price:
+        parts.append(f"Published price: {price}")
+    return " ".join(parts)
+
+
+def _roster_status(row: pd.Series) -> str:
+    from college_closure.status import CLOSED_BUCKET, operating_bucket
+
+    badge = re.sub(r"<[^>]+>", "", status_badge(row)).strip() or _text(row.get("status")) or "—"
+    if operating_bucket(row) != CLOSED_BUCKET:
+        return badge
+    lowered = badge.lower()
+    if any(word in lowered for word in ("closed", "sold", "merged")):
+        return badge
+    bits: list[str] = []
+    if _text(row.get("auto_scorecard_operating")) == "0":
+        bits.append("College Scorecard school.operating is 0")
+    closed_date = _text(row.get("auto_ipeds_date_closed"))
+    ipeds = _text(row.get("auto_ipeds_status"))
+    if closed_date:
+        bits.append(f"IPEDS close date {closed_date}")
+    elif ipeds:
+        try:
+            code = int(float(ipeds))
+        except (TypeError, ValueError):
+            code = None
+        if code in {3, 4, 7}:
+            bits.append(f"IPEDS inst_status {code}")
+    if bits:
+        return f"{badge}; excluded from the open list ({'; '.join(bits)})"
+    return badge
+
+
+def _roster_table(frame: pd.DataFrame, *, score_year: int) -> str:
+    if frame is None or frame.empty:
+        return "<p>None in the rows walked for this list.</p>"
+    body = []
+    for _, row in frame.iterrows():
+        try:
+            rank = str(int(float(row.get("watchlist_rank"))))
+        except (TypeError, ValueError):
+            rank = "—"
+        badge = _roster_status(row)
+        sources = _source_html(_text(row.get("source_url"))) or "—"
+        body.append(
+            "<tr>"
+            f"<td>{html.escape(rank)}</td>"
+            f"<td>{html.escape(_text(row.get('inst_name')) or '—')}</td>"
+            f"<td>{html.escape(_text(row.get('state_abbr')) or '—')}</td>"
+            f"<td>{_fmt(row.get('risk_score'), 3)}</td>"
+            f"<td>{html.escape(badge)}</td>"
+            f"<td>{html.escape(_sale_summary(row) or '—')}</td>"
+            f"<td>{sources}</td>"
+            "</tr>"
+        )
+    return (
+        "<table class=\"roster\">"
+        "<tr><th>Original rank</th><th>School</th><th>State</th>"
+        f"<th>{score_year} score</th><th>Status</th><th>Status / sale</th><th>Sources</th></tr>"
+        + "".join(body)
+        + "</table>"
+    )
+
+
+def teachout_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
+    return (
+        "<h2>Teach-out / not enrolling</h2>"
+        "<p>These schools are not enrolling new students. They are not part of the "
+        "still-operating top 50. A teach-out note is a sourced description of current "
+        f"enrollment, not a prediction. The score is the {score_year} watch-list score.</p>"
+        + _roster_table(frame, score_year=score_year)
+    )
+
+
+def closed_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
+    heading = (
+        f"Closed or defunct since the {score_year} data"
+        if score_year
+        else "Closed or defunct since the 2022 data"
+    )
+    return (
+        f"<h2>{heading}</h2>"
+        "<p>These schools were ranked above the last still-operating school in the main list. "
+        f"The score is the {score_year} watch-list score from federal financial data, not a "
+        "prediction that the school would close. A campus or location that has closed "
+        "(including a local campus of a multi-campus system such as DeVry or Strayer) is "
+        "listed here even when a parent campus is still in the directory. Sale and listing "
+        "details come from the curated file when a source recorded them.</p>"
+        + _roster_table(frame, score_year=score_year)
+    )
+
+
+_REPORT_STATUS_COLS = (
+    "unitid",
+    "status",
+    "status_badge",
+    "status_detail",
+    "property_disposition",
+    "buyer_or_broker",
+    "event_date",
+    "sale_price_published",
+    "sold_listed_details",
+    "source_url",
+    "checked_at",
+    "disagreement",
+    "auto_scorecard_operating",
+    "auto_fsa_match",
+    "auto_ipeds_year",
+    "auto_ipeds_status",
+    "auto_ipeds_date_closed",
+    "auto_checked_at",
+    "list_bucket",
+)
+
+
+def _with_status(ranked: pd.DataFrame, status: pd.DataFrame) -> pd.DataFrame:
+    frame = ranked.copy()
+    if "watchlist_rank" not in frame.columns:
+        frame["watchlist_rank"] = range(1, len(frame) + 1)
+    if status is None or status.empty or "unitid" not in status.columns:
+        return frame
+    cols = [c for c in _REPORT_STATUS_COLS if c in status.columns]
+    if "unitid" not in cols:
+        return frame
+    extra = status[cols].copy()
+    extra["unitid"] = pd.to_numeric(extra["unitid"], errors="coerce")
+    frame["unitid"] = pd.to_numeric(frame["unitid"], errors="coerce")
+    frame = frame.drop(columns=[c for c in cols if c != "unitid" and c in frame.columns])
+    return frame.merge(extra.drop_duplicates("unitid"), on="unitid", how="left")
+
+
+def write_operating_report(
+    path,
+    ranked: pd.DataFrame,
+    status: pd.DataFrame,
+    *,
+    open_n: int = 50,
+    score_year: int = 2022,
+    caveats: str | None = None,
+    intro: str = "",
+    shap_global: list | None = None,
+) -> dict[str, int]:
+    """Write the still-operating top list plus teach-out and closed sections."""
+    merged = _with_status(ranked, status)
+    open_df, teach_df, closed_df, depth = partition_operating(merged, open_n)
+    if shap_global is None:
+        metrics_path = path.parent / "model_metrics.json"
+        shap_global = []
+        if metrics_path.exists():
+            try:
+                shap_global = json.loads(metrics_path.read_text(encoding="utf-8")).get("shap_global") or []
+            except (OSError, json.JSONDecodeError):
+                shap_global = []
+    cards = []
+    for i, (_, row) in enumerate(open_df.iterrows(), start=1):
+        cards.append(_evidence_card(row, _row_shap_fallback(row, shap_global), i))
+    if caveats is None:
+        caveats = (
+            "Watch list only. Scores come from the score-year federal snapshot and are "
+            "elevated-risk indicators, not closure predictions. IPEDS lag; official FSA "
+            "composites currently end FY 2018; HCM / Scorecard HCM2 are current-list "
+            "evidence and were not training features. The main list keeps schools that "
+            "are still operating. Teach-out schools and closed, merged, or campus-sold "
+            "schools are listed below it. Library holdings are enrichment context, not "
+            "a training feature. Missing library data is not evidence of no library."
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        _html_page(
+            "\n".join(cards),
+            n=len(open_df),
+            score_year=score_year,
+            caveats=caveats,
+            intro=intro,
+            teachout=teachout_section_html(teach_df, score_year=score_year),
+            closed=closed_section_html(closed_df, score_year=score_year),
+            depth=depth,
+        ),
+        encoding="utf-8",
+    )
+    return {
+        "n_open": int(len(open_df)),
+        "n_teachout": int(len(teach_df)),
+        "n_closed": int(len(closed_df)),
+        "depth": int(depth),
+    }
 
 
 def _model_card_md(metrics: dict, score_year: int, n_watch: int, beats_note: str) -> str:
@@ -486,36 +772,9 @@ def run_report(
     shortlist[shortlist_cols].to_csv(out_dir / "libraries_top50.csv", index=False)
 
     status_frame = load_status_for_report(settings)
-    status_cols = [
-        c
-        for c in (
-            "unitid",
-            "status",
-            "status_badge",
-            "status_detail",
-            "property_disposition",
-            "buyer_or_broker",
-            "event_date",
-            "sale_price_published",
-            "sold_listed_details",
-            "source_url",
-            "checked_at",
-            "disagreement",
-        )
-        if c in status_frame.columns
-    ]
-    if status_cols and "unitid" in status_cols and "unitid" in current.columns:
-        current = current.drop(columns=[c for c in status_cols if c != "unitid" and c in current.columns])
-        status_frame = status_frame.copy()
-        status_frame["unitid"] = pd.to_numeric(status_frame["unitid"], errors="coerce")
-        current["unitid"] = pd.to_numeric(current["unitid"], errors="coerce")
-        current = current.merge(status_frame[status_cols].drop_duplicates("unitid"), on="unitid", how="left")
-
     shap_global = metrics.get("shap_global") or []
-    top = current.head(top_n)
-    cards = []
-    for i, (_, row) in enumerate(top.iterrows(), start=1):
-        cards.append(_evidence_card(row, _row_shap_fallback(row, shap_global), i))
+    ranked = current.head(500).copy()
+    ranked["watchlist_rank"] = range(1, len(ranked) + 1)
 
     beats = metrics.get("beats_naive") or {}
     if beats.get("any_test_year"):
@@ -543,15 +802,15 @@ def run_report(
         "Current-status badges are a later curated check plus federal operating flags, "
         "not a model output. Campus sales and listings are curated only."
     )
-    (out_dir / "top50_report.html").write_text(
-        _html_page(
-            "\n".join(cards),
-            n=len(top),
-            score_year=score_year,
-            caveats=caveats,
-            intro=distinctive_notes_html(shortlist),
-        ),
-        encoding="utf-8",
+    report_counts = write_operating_report(
+        out_dir / "top50_report.html",
+        ranked,
+        status_frame,
+        open_n=top_n,
+        score_year=score_year,
+        caveats=caveats,
+        intro=distinctive_notes_html(shortlist),
+        shap_global=shap_global,
     )
     (out_dir / "model_card.md").write_text(
         _model_card_md(metrics, score_year, n_watch=len(watch), beats_note=beats_note),
@@ -564,6 +823,6 @@ def run_report(
     return {
         "score_year": score_year,
         "n_watch": len(watch),
-        "n_cards": int(len(top)),
+        "n_cards": int(report_counts["n_open"]),
         "n_library_shortlist": int(len(shortlist)),
     }

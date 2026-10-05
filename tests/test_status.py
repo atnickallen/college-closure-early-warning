@@ -391,11 +391,18 @@ def test_scorecard_lookup_maps_operating_and_does_not_require_parquet(monkeypatc
 def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
     curated = load_curated(ROOT / "data" / "status" / "status_curated.csv")
     watch = load_watchlist(ROOT / "outputs" / "watchlist.csv", 50)
-    assert len(curated) == 50
-    assert curated["unitid"].astype(int).tolist() == watch["unitid"].astype(int).tolist()
-    assert curated["inst_name"].tolist() == watch["inst_name"].tolist()
-    assert curated["checked_at"].eq("2026-10-05").all()
+    seed = curated.iloc[:50]
+    assert len(seed) == 50
+    assert seed["unitid"].astype(int).tolist() == watch["unitid"].astype(int).tolist()
+    assert seed["inst_name"].tolist() == watch["inst_name"].tolist()
+    assert seed["checked_at"].eq("2026-10-05").all()
     assert curated["source_url"].str.contains("http").all()
+    extra = curated.iloc[50:]
+    if not extra.empty:
+        assert set(extra["status"]) == {"operating"}
+        assert extra["sale_price_published"].eq("").all()
+        assert extra["checked_at"].str.match(r"\d{4}-\d{2}-\d{2}").all()
+        assert extra["watchlist_rank"].astype(int).min() > 50
     assert set(curated["status"]) <= {"operating", "not_enrolling", "closed", "merged_acquired"}
     assert set(curated["property_disposition"]) <= {
         "not_applicable",
@@ -472,3 +479,274 @@ def test_report_template_mentions_status_without_treating_it_as_a_score():
     assert ".badge-closed" in page
     assert "not closure predictions" in page
     assert "do not report them" in page
+    assert "2022 federal financial data" in page
+    assert "still operating" in page
+
+
+def _ranked_status_rows() -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            {
+                "watchlist_rank": 1,
+                "unitid": 1,
+                "inst_name": "DeVry-like",
+                "state_abbr": "NV",
+                "status": "closed",
+                "property_disposition": "no_sale_found",
+                "status_detail": "Local campus closed; system still operating",
+                "auto_ipeds_status": "1",
+                "auto_ipeds_date_closed": "",
+                "auto_scorecard_operating": "1",
+                "risk_score": 0.9,
+                "year": 2022,
+                "inst_control": 3,
+                "source_url": "https://example.edu/devry",
+            },
+            {
+                "watchlist_rank": 2,
+                "unitid": 2,
+                "inst_name": "Sold Campus",
+                "state_abbr": "CA",
+                "status": "closed",
+                "property_disposition": "sold",
+                "buyer_or_broker": "Buyer",
+                "sale_price_published": "$1",
+                "auto_ipeds_status": "1",
+                "auto_scorecard_operating": "",
+                "risk_score": 0.8,
+                "year": 2022,
+                "inst_control": 3,
+                "source_url": "https://example.edu/sold",
+            },
+            {
+                "watchlist_rank": 3,
+                "unitid": 3,
+                "inst_name": "Teach Out",
+                "state_abbr": "CA",
+                "status": "not_enrolling",
+                "property_disposition": "not_applicable",
+                "auto_ipeds_status": "1",
+                "auto_scorecard_operating": "1",
+                "risk_score": 0.7,
+                "year": 2022,
+                "inst_control": 3,
+                "source_url": "https://example.edu/teach",
+            },
+            {
+                "watchlist_rank": 4,
+                "unitid": 4,
+                "inst_name": "Still Open",
+                "state_abbr": "TX",
+                "status": "operating",
+                "property_disposition": "no_sale_found",
+                "auto_ipeds_status": "1",
+                "auto_scorecard_operating": "1",
+                "risk_score": 0.6,
+                "year": 2022,
+                "inst_control": 2,
+                "source_url": "https://example.edu/open",
+            },
+            {
+                "watchlist_rank": 5,
+                "unitid": 5,
+                "inst_name": "Directory Closed",
+                "state_abbr": "OH",
+                "status": "",
+                "property_disposition": "",
+                "auto_ipeds_status": "4",
+                "auto_ipeds_date_closed": "2024-06-01",
+                "auto_scorecard_operating": "",
+                "risk_score": 0.5,
+                "year": 2022,
+                "inst_control": 3,
+                "source_url": "https://educationdata.urban.org/example",
+            },
+            {
+                "watchlist_rank": 6,
+                "unitid": 6,
+                "inst_name": "Directory Merged",
+                "state_abbr": "NY",
+                "status": "",
+                "property_disposition": "",
+                "auto_ipeds_status": "3",
+                "auto_ipeds_date_closed": "",
+                "auto_scorecard_operating": "",
+                "risk_score": 0.4,
+                "year": 2022,
+                "inst_control": 2,
+            },
+            {
+                "watchlist_rank": 7,
+                "unitid": 7,
+                "inst_name": "Scorecard Closed",
+                "state_abbr": "FL",
+                "status": "",
+                "property_disposition": "",
+                "auto_ipeds_status": "1",
+                "auto_scorecard_operating": "0",
+                "risk_score": 0.3,
+                "year": 2022,
+                "inst_control": 3,
+            },
+            {
+                "watchlist_rank": 8,
+                "unitid": 8,
+                "inst_name": "Later Open",
+                "state_abbr": "WA",
+                "status": "",
+                "property_disposition": "",
+                "auto_ipeds_status": "1",
+                "auto_ipeds_date_closed": "",
+                "auto_ipeds_year": "2025",
+                "auto_scorecard_operating": "1",
+                "risk_score": 0.2,
+                "year": 2022,
+                "inst_control": 3,
+            },
+            {
+                "watchlist_rank": 9,
+                "unitid": 9,
+                "inst_name": "Acquired Open",
+                "state_abbr": "MO",
+                "status": "merged_acquired",
+                "property_disposition": "institutional_sale",
+                "auto_ipeds_status": "1",
+                "auto_scorecard_operating": "1",
+                "risk_score": 0.1,
+                "year": 2022,
+                "inst_control": 2,
+                "source_url": "https://example.edu/acquired",
+            },
+            {
+                "watchlist_rank": 10,
+                "unitid": 10,
+                "inst_name": "Too Far",
+                "state_abbr": "OR",
+                "status": "operating",
+                "property_disposition": "no_sale_found",
+                "auto_ipeds_status": "1",
+                "risk_score": 0.05,
+                "year": 2022,
+                "inst_control": 2,
+            },
+        ]
+    )
+
+
+def test_operating_partition_keeps_only_schools_still_operating():
+    from college_closure.status import operating_bucket, partition_operating
+
+    table = _ranked_status_rows()
+    assert operating_bucket(table.iloc[0]) == "closed"
+    assert (
+        operating_bucket(
+            {
+                "status": "",
+                "property_disposition": "",
+                "auto_ipeds_status": "1",
+                "auto_ipeds_date_closed": "2023-01-15",
+                "auto_scorecard_operating": "",
+            }
+        )
+        == "closed"
+    )
+    assert (
+        operating_bucket(
+            {
+                "status": "not_enrolling",
+                "property_disposition": "not_applicable",
+                "auto_ipeds_status": "4",
+                "auto_ipeds_date_closed": "2024-01-01",
+                "auto_scorecard_operating": "1",
+            }
+        )
+        == "closed"
+    )
+    open_df, teach, closed, depth = partition_operating(table, 3)
+    assert open_df["inst_name"].tolist() == ["Still Open", "Later Open", "Acquired Open"]
+    assert teach["inst_name"].tolist() == ["Teach Out"]
+    assert set(closed["inst_name"]) == {
+        "DeVry-like",
+        "Sold Campus",
+        "Directory Closed",
+        "Directory Merged",
+        "Scorecard Closed",
+    }
+    assert depth == 9
+    placed = set(open_df["inst_name"]) | set(teach["inst_name"]) | set(closed["inst_name"])
+    assert "Too Far" not in placed
+
+
+def test_append_operating_rows_does_not_touch_existing_lines(tmp_path):
+    from college_closure.status import CURATED_COLUMNS, append_curated_rows, federal_operating_curated_fields
+
+    path = tmp_path / "status_curated.csv"
+    original = (
+        ",".join(CURATED_COLUMNS)
+        + "\n"
+        + "111,1,11,1,Holy Names,CA,closed,Sold the campus,sold,Buyer,2023-05,1000000,"
+        + "sold the campus,https://example.edu/sale,2026-10-05,\n"
+    )
+    path.write_text(original, encoding="utf-8")
+    new = federal_operating_curated_fields(
+        {
+            "unitid": 222,
+            "opeid6": "2",
+            "opeid8": "22",
+            "watchlist_rank": 60,
+            "inst_name": "New Open",
+            "state_abbr": "TX",
+            "auto_ipeds_year": "2025",
+            "auto_ipeds_status": "1",
+            "auto_scorecard_operating": "1",
+        },
+        "2026-10-05",
+    )
+    appended = append_curated_rows(path, [new, new])
+    assert len(appended) == 1
+    text = path.read_text(encoding="utf-8")
+    assert text.startswith(original)
+    assert "New Open" in text
+    assert "1000000" in text
+    assert "https://educationdata.urban.org/api/v1/college-university/ipeds/directory/2025/?unitid=222" in text
+    assert append_curated_rows(path, [new]) == []
+    assert path.read_text(encoding="utf-8") == text
+
+
+def test_operating_report_sections_list_rank_score_and_sources(tmp_path):
+    from college_closure.report import write_operating_report
+
+    table = _ranked_status_rows()
+    path = tmp_path / "top50_report.html"
+    stats = write_operating_report(path, table, table, open_n=3, score_year=2022)
+    page = path.read_text(encoding="utf-8")
+    assert stats["n_open"] == 3
+    assert stats["depth"] == 9
+    assert "Teach-out / not enrolling" in page
+    assert "Closed or defunct since the 2022 data" in page
+    assert "2022 federal financial data" in page
+    assert "not closure predictions" in page
+    assert "through rank 9" in page
+    assert "watch-list rank 8" in page
+    main, _, after_teach = page.partition("Teach-out / not enrolling")
+    assert "<h2>1. Still Open</h2>" in main
+    assert "Teach Out" not in main
+    assert "DeVry-like" not in main
+    teach_body, _, closed_body = after_teach.partition("Closed or defunct since the 2022 data")
+    assert "Teach Out" in teach_body
+    assert "DeVry-like" in closed_body
+    assert "Original rank" in closed_body
+    assert "0.900" in closed_body
+    assert "https://example.edu/devry" in closed_body
+
+
+def test_status_refresh_workflow_survives_pr_creation_refusal():
+    text = (ROOT / ".github/workflows/status-refresh.yml").read_text(encoding="utf-8")
+    assert "contents: write" in text
+    assert 'branch="status-refresh"' in text
+    assert "GITHUB_STEP_SUMMARY" in text
+    assert "compare/main...status-refresh" in text
+    assert "elif gh pr create" in text
+    assert "Pull request was not created" in text
+    assert text.strip().endswith("exit 0")
+    assert "git push --force-with-lease origin" in text

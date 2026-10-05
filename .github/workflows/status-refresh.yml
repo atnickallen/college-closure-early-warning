@@ -1,8 +1,14 @@
 # Weekly current-status refresh.
-# Updates outputs/status_current.csv (and the report badge) from federal sources.
-# Does not edit data/status/status_curated.csv.
+# Walks the ranked watch list, keeps the still-operating top 50, and writes
+# outputs/status_current.csv, outputs/status_refresh.md, and outputs/top50_report.html.
+# It may append still-operating schools that are missing from data/status/status_curated.csv.
+# It does not overwrite existing curated sale, listing, buyer, date, or price fields.
 # Scorecard runs only when the DATA_GOV_API_KEY repository secret is set.
 # An empty secret is fine: the checker skips Scorecard and still tries IPEDS and FSA.
+#
+# Pull-request creation is optional. Some repositories do not let GitHub Actions
+# open pull requests. The job still pushes branch status-refresh and writes a
+# job summary with a compare link.
 
 name: Current status refresh
 
@@ -13,6 +19,8 @@ on:
 
 permissions:
   contents: write
+  # Used only for the optional pull-request attempt. If the repository does
+  # not allow Actions to open pull requests, that attempt is ignored.
   pull-requests: write
 
 jobs:
@@ -31,31 +39,72 @@ jobs:
       - name: Refresh status
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
-        run: python3 scripts/check_status.py --top 50
+        run: python3 scripts/check_status.py
 
-      - name: Open a pull request if outputs changed
+      - name: Publish the refresh branch and job summary
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- outputs/status_current.csv outputs/status_refresh.md outputs/top50_report.html; then
-            echo "No status output changes"
+          paths=(
+            outputs/status_current.csv
+            outputs/status_refresh.md
+            outputs/top50_report.html
+            data/status/status_curated.csv
+          )
+          compare_url="https://github.com/${GITHUB_REPOSITORY}/compare/main...status-refresh?expand=1"
+          {
+            echo "## Current status refresh"
+            echo ""
+            echo "Scores on the watch list come from 2022 federal financial data. The list is elevated-risk indicators, not closure predictions."
+            echo ""
+            echo "Scorecard \`school.operating\` runs when \`DATA_GOV_API_KEY\` is set. IPEDS directory status is checked while walking the ranked watch list for schools that are still operating."
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          if git diff --quiet -- "${paths[@]}"; then
+            {
+              echo "No status output changes."
+              echo ""
+              echo "[Compare status-refresh with main](${compare_url})"
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           branch="status-refresh"
           git checkout -B "$branch"
-          git add outputs/status_current.csv outputs/status_refresh.md outputs/top50_report.html
+          git add -- "${paths[@]}"
           git commit -m "Refresh current-status snapshot"
           if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
             git push --force-with-lease origin "$branch"
           else
             git push -u origin "$branch"
           fi
-          body="Automated refresh of outputs/status_current.csv for the top 50 watch-list rows. College Scorecard school.operating runs only when the DATA_GOV_API_KEY repository secret is set. IPEDS directory status and the FSA closed-school file are tried either way. Campus sales and listings stay in data/status/status_curated.csv; this job does not edit that file. Disagreements are flagged, not overwritten. The watch list is elevated-risk indicators, not a closure prediction."
-          if gh pr view "$branch" --json url >/dev/null 2>&1; then
-            echo "Updated existing pull request for $branch"
+          {
+            echo "Pushed branch \`${branch}\`."
+            echo ""
+            echo '```'
+            git diff --stat HEAD~1 HEAD
+            echo '```'
+            echo ""
+            echo "[Compare status-refresh with main](${compare_url})"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          pr_note=""
+          if gh pr view "$branch" --json url --jq .url > /tmp/status-pr-url 2>/tmp/status-pr-err; then
+            pr_note="Existing pull request: $(cat /tmp/status-pr-url)"
+          elif gh pr create --base main --head "$branch" --title "Weekly current-status refresh" --body "Automated refresh of the still-operating watch list. Scores come from 2022 federal financial data. The list is elevated-risk indicators, not closure predictions. Campus sales and listings stay in the curated rows that were already written; this job does not overwrite them. Disagreements are flagged, not overwritten." > /tmp/status-pr-url 2>/tmp/status-pr-err; then
+            pr_note="Opened pull request: $(cat /tmp/status-pr-url)"
           else
-            gh pr create --base main --head "$branch" --title "Weekly current-status refresh" --body "$body"
+            pr_note="Pull request was not created. GitHub Actions may not be allowed to open pull requests. Review the compare link above."
           fi
+          {
+            echo "$pr_note"
+            if [[ "$pr_note" == Pull\ request\ was\ not\ created* ]] && [[ -s /tmp/status-pr-err ]]; then
+              echo ""
+              echo '```'
+              tail -n 20 /tmp/status-pr-err
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
