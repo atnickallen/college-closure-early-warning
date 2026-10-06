@@ -38,6 +38,7 @@ LAND_COLUMNS = (
     "lat",
     "lon",
     "coord_source",
+    "campus_map_url",
 )
 
 HOUSING_COLUMNS = (
@@ -218,6 +219,7 @@ def attach_campus(
                 "lat",
                 "lon",
                 "coord_source",
+                "campus_map_url",
             )
             if c in piece.columns
         ]

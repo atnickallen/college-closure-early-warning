@@ -190,3 +190,5 @@ def test_land_file_has_a_campus_pin_for_every_row():
     assert html.count(">Satellite view</a>") >= 50
     assert "center=42.307206,-83.694097&amp;zoom=17&amp;basemap=satellite" in html
     assert "42.273157" not in html
+    assert "campus_map_url" in land.columns
+    assert main.count(">Campus map</a>") >= 35
