@@ -234,6 +234,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
             <th>Acreage</th><td>{html.escape(_acreage_text(row))}</td></tr>
         <tr><th>Own campus</th><td>{html.escape(_own_campus_text(row))}</td>
             <th>Land source</th><td>{_source_html(_text(row.get("campus_source_url"))) or "—"}</td></tr>
+        {_satellite_row(row)}
       </table>
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
       Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
@@ -328,6 +329,22 @@ def _html_page(
 </body>
 </html>
 """
+
+
+def _satellite_anchor(row: pd.Series) -> str:
+    from college_closure.campus import satellite_maps_url
+
+    url = satellite_maps_url(row.get("lat"), row.get("lon"))
+    if not url:
+        return ""
+    return f'<a href="{html.escape(url, quote=True)}">Satellite view</a>'
+
+
+def _satellite_row(row: pd.Series) -> str:
+    link = _satellite_anchor(row)
+    if not link:
+        return ""
+    return f"<tr><th>Satellite view</th><td colspan=\"3\">{link}</td></tr>"
 
 
 def _campus_photo_html(row: pd.Series) -> str:
@@ -458,6 +475,7 @@ def _roster_table(frame: pd.DataFrame, *, score_year: int) -> str:
             rank = "—"
         badge = _roster_status(row)
         sources = _source_html(_text(row.get("source_url"))) or "—"
+        satellite = _satellite_anchor(row) or "—"
         body.append(
             "<tr>"
             f"<td>{html.escape(rank)}</td>"
@@ -467,12 +485,14 @@ def _roster_table(frame: pd.DataFrame, *, score_year: int) -> str:
             f"<td>{html.escape(badge)}</td>"
             f"<td>{html.escape(_sale_summary(row) or '—')}</td>"
             f"<td>{sources}</td>"
+            f"<td>{satellite}</td>"
             "</tr>"
         )
     return (
         "<table class=\"roster\">"
         "<tr><th>Original rank</th><th>School</th><th>State</th>"
-        f"<th>{score_year} score</th><th>Status</th><th>Status / sale</th><th>Sources</th></tr>"
+        f"<th>{score_year} score</th><th>Status</th><th>Status / sale</th><th>Sources</th>"
+        "<th>Satellite view</th></tr>"
         + "".join(body)
         + "</table>"
     )
@@ -512,13 +532,14 @@ def excluded_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
                 f"<td>{html.escape(_housing_text(row))}</td>"
                 f"<td>{html.escape(_acreage_text(row))}</td>"
                 f"<td>{html.escape(reason)}</td>"
+                f"<td>{_satellite_anchor(row) or '—'}</td>"
                 "</tr>"
             )
         body = (
             "<table class=\"roster\">"
             "<tr><th>Original rank</th><th>School</th><th>State</th>"
             f"<th>{score_year} score</th><th>Dorm capacity</th><th>Acreage</th>"
-            "<th>Why excluded</th></tr>"
+            "<th>Why excluded</th><th>Satellite view</th></tr>"
             + "".join(rows)
             + "</table>"
         )
@@ -582,6 +603,9 @@ _REPORT_STATUS_COLS = (
     "image_credit_url",
     "image_license",
     "image_author",
+    "lat",
+    "lon",
+    "coord_source",
     "exclusion_reason",
 )
 
