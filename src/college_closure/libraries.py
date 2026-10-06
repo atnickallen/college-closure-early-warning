@@ -1290,13 +1290,16 @@ def library_section_html(row: pd.Series) -> str:
             _count_or_missing(row.get(col)) != "not reported"
             for col in ("lib_physical_books", "lib_electronic_books", "lib_total_circulation", "lib_expenditures", "lib_staff_fte")
         )
-        if has_figure or from_parent:
+        books_source = _cell(row.get("lib_books_source"))
+        if (has_figure or from_parent) and not ( _truthy_flag(row.get("lib_physical_override")) and year is None and not from_parent):
             survey = "IPEDS Academic Libraries"
             if year is not None and year != 2022:
                 survey += f" {year}"
             if from_parent:
                 who = parent_name or "the parent campus"
                 survey += f", parent's figures ({who})"
+        elif books_source:
+            survey = books_source
 
     note = _cell(row.get("lib_special_collections")) or _cell(row.get("lib_special_collections_note"))
     note_url = _cell(row.get("lib_special_collections_url")) or _cell(row.get("lib_note_url"))
@@ -1307,20 +1310,55 @@ def library_section_html(row: pd.Series) -> str:
     else:
         note_html = "not reported"
 
-    contact_bits = []
-    contact_name = _cell(row.get("lib_contact_name"))
-    contact_role = _cell(row.get("lib_contact_role"))
-    contact_email = _cell(row.get("lib_contact_email"))
-    contact_phone = _cell(row.get("lib_contact_phone"))
-    if contact_name:
-        contact_bits.append(_esc(contact_name))
-    if contact_role:
-        contact_bits.append(_esc(contact_role))
-    if contact_email:
-        contact_bits.append(f'<a href="mailto:{_esc(contact_email)}">{_esc(contact_email)}</a>')
-    if contact_phone:
-        contact_bits.append(_esc(contact_phone))
-    contact_html = ", ".join(contact_bits) if contact_bits else "not reported"
+    def _contact_phrase(name: str, role: str, email: str, phone: str) -> str:
+        bits = []
+        if name:
+            bits.append(_esc(name))
+        if role:
+            bits.append(_esc(role))
+        if email:
+            bits.append(f'<a href="mailto:{_esc(email)}">{_esc(email)}</a>')
+        if phone:
+            bits.append(_esc(phone))
+        return ", ".join(bits)
+
+    def _with_source(phrase: str, url: str) -> str:
+        if phrase and url:
+            return f'{phrase} (<a href="{_esc(url)}">source</a>)'
+        return phrase
+
+    contact_html = _with_source(
+        _contact_phrase(
+            _cell(row.get("lib_contact_name")),
+            _cell(row.get("lib_contact_role")),
+            _cell(row.get("lib_contact_email")),
+            _cell(row.get("lib_contact_phone")),
+        ),
+        _cell(row.get("lib_contact_url")),
+    )
+    fallback_html = _with_source(
+        _contact_phrase(
+            _cell(row.get("lib_fallback_name")),
+            _cell(row.get("lib_fallback_role")),
+            _cell(row.get("lib_fallback_email")),
+            _cell(row.get("lib_fallback_phone")),
+        ),
+        _cell(row.get("lib_fallback_url")),
+    )
+    fallback_label = _cell(row.get("lib_fallback_label"))
+    if fallback_html:
+        labeled = f"{_esc(fallback_label)}: {fallback_html}" if fallback_label else fallback_html
+        contact_html = f"{contact_html}; {labeled}" if contact_html else labeled
+    if not contact_html:
+        contact_html = "not reported"
+    books_html = _count_or_missing(row.get("lib_physical_books"))
+    if _truthy_flag(row.get("lib_physical_override")):
+        books_src = _cell(row.get("lib_books_source"))
+        books_url = _cell(row.get("lib_books_source_url"))
+        if books_src and books_url:
+            books_html += f' ({_esc(books_src)}; <a href="{_esc(books_url)}">source</a>)'
+        elif books_src:
+            books_html += f" ({_esc(books_src)})"
     parent_line = ""
     if from_parent:
         who = _esc(parent_name) if parent_name else "the parent campus"
@@ -1331,7 +1369,7 @@ def library_section_html(row: pd.Series) -> str:
       <table>
         <tr><th>Library</th><td>{name_html}</td>
             <th>Survey</th><td>{_esc(survey)}</td></tr>
-        <tr><th>Physical books</th><td>{_count_or_missing(row.get("lib_physical_books"))}</td>
+        <tr><th>Physical books</th><td>{books_html}</td>
             <th>E-books</th><td>{_count_or_missing(row.get("lib_electronic_books"))}</td></tr>
         <tr><th>Total circulation</th><td>{_count_or_missing(row.get("lib_total_circulation"))}</td>
             <th>Library staff FTE</th><td>{_fte_or_missing(row.get("lib_staff_fte"))}</td></tr>
@@ -1362,6 +1400,16 @@ PROFILE_COLUMNS = (
     "contact_email",
     "contact_phone",
     "contact_url",
+    "fallback_label",
+    "fallback_name",
+    "fallback_role",
+    "fallback_email",
+    "fallback_phone",
+    "fallback_url",
+    "collections_sources",
+    "physical_books_override",
+    "physical_books_source",
+    "physical_books_source_url",
 )
 
 
@@ -1500,9 +1548,25 @@ def attach_report_libraries(frame: pd.DataFrame, root: Path) -> pd.DataFrame:
             "lib_contact_email": _profile("contact_email"),
             "lib_contact_phone": _profile("contact_phone"),
             "lib_contact_url": _profile("contact_url"),
+            "lib_fallback_label": _profile("fallback_label"),
+            "lib_fallback_name": _profile("fallback_name"),
+            "lib_fallback_role": _profile("fallback_role"),
+            "lib_fallback_email": _profile("fallback_email"),
+            "lib_fallback_phone": _profile("fallback_phone"),
+            "lib_fallback_url": _profile("fallback_url"),
+            "lib_collections_sources": _profile("collections_sources"),
+            "lib_books_source": _profile("physical_books_source"),
+            "lib_books_source_url": _profile("physical_books_source_url"),
+            "lib_physical_override": False,
         }
         for col in _AL_NUMERIC:
             item[col] = used[col] if used is not None and col in used.index else pd.NA
+        override = _profile("physical_books_override")
+        current_books = item.get("lib_physical_books")
+        books_missing = current_books is None or (isinstance(current_books, float) and pd.isna(current_books)) or _count_or_missing(current_books) == "not reported"
+        if override and books_missing:
+            item["lib_physical_books"] = pd.to_numeric(override, errors="coerce")
+            item["lib_physical_override"] = True
         built.append(item)
     extra = pd.DataFrame(built, index=frame.index)
     out = frame.drop(columns=[c for c in extra.columns if c in frame.columns])
@@ -1538,6 +1602,15 @@ def write_top50_library_csv(open_df: pd.DataFrame, dest: Path) -> Path:
                 "contact_email": _cell(row.get("lib_contact_email")),
                 "contact_phone": _cell(row.get("lib_contact_phone")),
                 "contact_url": _cell(row.get("lib_contact_url")),
+                "fallback_label": _cell(row.get("lib_fallback_label")),
+                "fallback_name": _cell(row.get("lib_fallback_name")),
+                "fallback_role": _cell(row.get("lib_fallback_role")),
+                "fallback_email": _cell(row.get("lib_fallback_email")),
+                "fallback_phone": _cell(row.get("lib_fallback_phone")),
+                "fallback_url": _cell(row.get("lib_fallback_url")),
+                "collections_sources": _cell(row.get("lib_collections_sources")),
+                "physical_books_source": _cell(row.get("lib_books_source")) if _truthy_flag(row.get("lib_physical_override")) else "",
+                "physical_books_source_url": _cell(row.get("lib_books_source_url")) if _truthy_flag(row.get("lib_physical_override")) else "",
             }
         )
     dest.parent.mkdir(parents=True, exist_ok=True)
