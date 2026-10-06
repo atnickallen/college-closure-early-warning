@@ -11,6 +11,7 @@ from college_closure.constants import (
     FINANCE_PANEL_COLUMNS,
     PARENT_CHILD_CHILD,
     PARENT_CHILD_PARENT,
+    SENTINEL_VALUES,
 )
 from college_closure.ids import add_id_keys
 
@@ -91,6 +92,123 @@ def carry_parent_ids(df: pd.DataFrame) -> pd.DataFrame:
         if col in out.columns:
             out[col] = out.groupby("unitid", sort=False)[col].ffill()
     return out
+
+
+def _real_parent_id(series: pd.Series) -> pd.Series:
+    parent = pd.to_numeric(series, errors="coerce")
+    return parent.where(parent.notna() & ~parent.isin(SENTINEL_VALUES) & (parent > 0))
+
+
+def links_from_finance(finance: pd.DataFrame) -> pd.DataFrame:
+    """Child → parent links already stored on IPEDS finance rows (PCF / parent UNITID)."""
+    empty = pd.DataFrame(columns=["unitid", "year", "parent_child_flag", "parent_unitid"])
+    if finance is None or finance.empty or "parent_unitid" not in finance.columns:
+        return empty
+    work = finance.copy()
+    work["unitid"] = pd.to_numeric(work["unitid"], errors="coerce")
+    work["year"] = pd.to_numeric(work["year"], errors="coerce")
+    flag = pd.to_numeric(work.get("parent_child_flag"), errors="coerce")
+    parent = _real_parent_id(work["parent_unitid"])
+    child = flag.isin(PARENT_CHILD_CHILD) & parent.notna() & (parent != work["unitid"])
+    out = work.loc[child, ["unitid", "year"]].copy()
+    out["parent_child_flag"] = flag.loc[child].to_numpy()
+    out["parent_unitid"] = parent.loc[child].to_numpy()
+    return out.dropna(subset=["unitid", "year", "parent_unitid"])
+
+
+def links_from_flags(flags: pd.DataFrame, year: int) -> pd.DataFrame:
+    """Child → parent links from an IPEDS FLAGS file (PRCH_F / IDX_F).
+
+    FLAGS names the finance parent-child indicator ``PRCH_F`` and the parent
+    UNITID ``IDX_F``. ``PCF_F`` on that file is the allocation percent, not the
+    parent id. Full children often have no finance row of their own; the flag
+    file is what names their parent filer.
+    """
+    empty = pd.DataFrame(columns=["unitid", "year", "parent_child_flag", "parent_unitid"])
+    if flags is None or flags.empty:
+        return empty
+    columns = {c.upper(): c for c in flags.columns}
+    if "UNITID" not in columns or "IDX_F" not in columns or "PRCH_F" not in columns:
+        return empty
+    work = pd.DataFrame(
+        {
+            "unitid": pd.to_numeric(flags[columns["UNITID"]], errors="coerce"),
+            "parent_child_flag": pd.to_numeric(flags[columns["PRCH_F"]], errors="coerce"),
+            "parent_unitid": _real_parent_id(flags[columns["IDX_F"]]),
+        }
+    )
+    child = work["parent_child_flag"].isin(PARENT_CHILD_CHILD) & work["parent_unitid"].notna()
+    child &= work["parent_unitid"] != work["unitid"]
+    out = work.loc[child].dropna(subset=["unitid"]).copy()
+    out["year"] = int(year)
+    return out[["unitid", "year", "parent_child_flag", "parent_unitid"]]
+
+
+def attach_parent_links(panel: pd.DataFrame, links: pd.DataFrame) -> pd.DataFrame:
+    """Fill a child campus's parent UNITID when its own finance row is missing.
+
+    The latest link at or before the panel year wins. Enrollment columns are
+    left untouched. A campus that already reports revenue keeps that revenue;
+    the rollup only copies dollars onto missing or zero revenue.
+    """
+    if panel is None or panel.empty or links is None or links.empty:
+        return panel
+    out = panel.copy()
+    out["unitid"] = pd.to_numeric(out["unitid"], errors="coerce")
+    out["year"] = pd.to_numeric(out["year"], errors="coerce")
+    link = links.copy()
+    link["unitid"] = pd.to_numeric(link["unitid"], errors="coerce")
+    link["year"] = pd.to_numeric(link["year"], errors="coerce")
+    link["parent_unitid"] = _real_parent_id(link["parent_unitid"])
+    link["parent_child_flag"] = pd.to_numeric(link.get("parent_child_flag"), errors="coerce")
+    link = link.dropna(subset=["unitid", "year", "parent_unitid"])
+    link = link.sort_values(["unitid", "year"]).drop_duplicates(["unitid", "year"], keep="last")
+    if link.empty:
+        return out
+    if "parent_unitid" not in out.columns:
+        out["parent_unitid"] = pd.NA
+    if "parent_child_flag" not in out.columns:
+        out["parent_child_flag"] = pd.NA
+    right = link.rename(
+        columns={"year": "link_year", "parent_unitid": "_link_parent", "parent_child_flag": "_link_flag"}
+    )
+    # Latest link with link_year <= panel year. A python merge_asof needs a
+    # globally sorted key, so match inside each UNITID.
+    pieces = []
+    grouped_links = {int(uid): g for uid, g in right.groupby(right["unitid"].astype(int), sort=False)}
+    for uid, rows in out.groupby(out["unitid"].astype("Int64"), sort=False):
+        if pd.isna(uid) or int(uid) not in grouped_links:
+            pieces.append(rows)
+            continue
+        g = grouped_links[int(uid)].sort_values("link_year")
+        block = rows.sort_values("year")
+        matched = pd.merge_asof(
+            block,
+            g[["link_year", "_link_parent", "_link_flag"]],
+            left_on="year",
+            right_on="link_year",
+            direction="backward",
+        )
+        pieces.append(matched)
+    merged = pd.concat(pieces, ignore_index=True)
+    if "_link_parent" not in merged.columns:
+        return out
+    rev = (
+        pd.to_numeric(merged["rev_total_current"], errors="coerce")
+        if "rev_total_current" in merged.columns
+        else pd.Series(pd.NA, index=merged.index)
+    )
+    need = rev.isna() | (rev == 0)
+    existing = _real_parent_id(merged["parent_unitid"])
+    unitid = pd.to_numeric(merged["unitid"], errors="coerce")
+    missing_pointer = existing.isna() | (existing == unitid)
+    take = need & missing_pointer & merged["_link_parent"].notna()
+    merged.loc[take, "parent_unitid"] = merged.loc[take, "_link_parent"]
+    merged.loc[take, "parent_child_flag"] = merged.loc[take, "_link_flag"]
+    n = int(take.sum())
+    if n:
+        LOGGER.info("Attached IPEDS finance parent links on %s child rows", n)
+    return merged.drop(columns=[c for c in ("link_year", "_link_parent", "_link_flag") if c in merged.columns])
 
 
 def apply_parent_child_finance_rollup(df: pd.DataFrame) -> pd.DataFrame:

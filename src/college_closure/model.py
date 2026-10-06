@@ -359,3 +359,41 @@ def run_model(settings: Settings) -> dict:
         f"{n_ranked:,}",
     )
     return metrics
+
+
+def publish_frozen_snapshot(settings: Settings, booster, features: list[str]) -> pd.DataFrame:
+    """Score the current vintage snapshot with a booster fit on the pre-fix panel.
+
+    Does not refit and does not rewrite model_metrics.json.
+    """
+    from college_closure.campus import ranked_universe_path, write_ranked_universe
+    from college_closure.vintage import (
+        build_vintage_snapshot,
+        merge_file_manifest,
+        source_file_manifest,
+        write_vintage_outputs,
+    )
+
+    feat = pd.read_parquet(settings.processed_dir / "features.parquet")
+    if "in_risk_model_universe" in feat.columns:
+        univ = feat.loc[feat["in_risk_model_universe"] == True].copy()  # noqa: E712
+    else:
+        univ = feat
+    snapshot, meta = build_vintage_snapshot(univ)
+    if snapshot.empty:
+        raise RuntimeError("Vintage snapshot is empty")
+    for column in features:
+        if column not in snapshot.columns:
+            snapshot[column] = pd.NA
+    snapshot["risk_score"] = predict_proba(booster, snapshot[features])
+    snapshot["vintage_snapshot"] = True
+    score_year = int(meta["score_year"])
+    meta = merge_file_manifest(meta, source_file_manifest(settings.processed_dir, settings.raw_dir))
+    meta["score_year_label"] = f"{score_year}-{score_year + 1}"
+    meta["booster"] = "frozen_pre_fix"
+    write_vintage_outputs(snapshot, meta, settings.outputs_dir)
+    dest = settings.processed_dir / "scored.parquet"
+    snapshot.to_parquet(dest, index=False)
+    n_ranked = write_ranked_universe(snapshot, ranked_universe_path(settings), prefer_year=None)
+    LOGGER.info("Frozen snapshot scored %s schools; ranked %s", f"{len(snapshot):,}", f"{n_ranked:,}")
+    return snapshot

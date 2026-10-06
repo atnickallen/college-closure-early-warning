@@ -239,15 +239,26 @@ def _align_finance_year(snapshot: pd.DataFrame, pool: pd.DataFrame) -> pd.DataFr
         snapshot.loc[~has_finance, "miss_finance"] = True
         snapshot["miss_finance_year"] = snapshot["year_finance"]
     if "finance_from_parent" in pool.columns and "miss_finance" in pool.columns:
-        reported = pool.loc[~pool["miss_finance"].fillna(True).astype(bool), ["unitid", "year", "finance_from_parent"]]
+        extra = ["finance_from_parent"]
+        if "parent_unitid" in pool.columns:
+            extra.append("parent_unitid")
+        reported = pool.loc[~pool["miss_finance"].fillna(True).astype(bool), ["unitid", "year", *extra]]
         reported = reported.drop_duplicates(["unitid", "year"], keep="last")
         keys = snapshot.loc[has_finance, ["unitid", "year_finance"]].rename(columns={"year_finance": "year"})
         merged = keys.merge(reported, on=["unitid", "year"], how="left")
         parent = pd.Series(False, index=snapshot.index)
         parent.loc[has_finance] = merged["finance_from_parent"].fillna(False).astype(bool).to_numpy()
         snapshot["finance_from_parent"] = parent
+        if "parent_unitid" in merged.columns:
+            parent_ids = pd.Series(pd.NA, index=snapshot.index, dtype="Float64")
+            parent_ids.loc[has_finance] = pd.to_numeric(merged["parent_unitid"], errors="coerce").to_numpy()
+            snapshot["parent_unitid"] = parent_ids
         if "finance_from_parent_year" in snapshot.columns:
             snapshot.loc[has_finance, "finance_from_parent_year"] = snapshot.loc[has_finance, "year_finance"]
+    if "miss_finance" in snapshot.columns:
+        snapshot["insufficient_data"] = snapshot["miss_finance"].fillna(True).astype(bool)
+    else:
+        snapshot["insufficient_data"] = True
     return snapshot
 
 

@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from college_closure.campus import write_ranked_universe
-from college_closure.report import movement_section_html, vintage_note_html
+from college_closure.report import left_after_data_fix_html, movement_section_html, vintage_note_html
 from college_closure.vintage import build_vintage_snapshot, finance_complete_year, newest_complete_year
 
 
@@ -162,6 +162,36 @@ def test_snapshot_uses_newer_enrollment_and_records_finance_fallback():
     assert pd.isna(beta["admit_rate_year"]) or beta["admit_rate"] != beta["admit_rate"]
 
 
+def test_insufficient_finance_sorts_behind_reported_finance():
+    scored = pd.DataFrame(
+        [
+            {
+                "unitid": 1,
+                "year": 2023,
+                "risk_score": 0.99,
+                "inst_name": "Blank",
+                "label_complete_h3": False,
+                "miss_finance": True,
+                "insufficient_data": True,
+            },
+            {
+                "unitid": 2,
+                "year": 2023,
+                "risk_score": 0.20,
+                "inst_name": "Filed",
+                "label_complete_h3": False,
+                "miss_finance": False,
+                "insufficient_data": False,
+            },
+        ]
+    )
+    dest = Path("/tmp/ranked_insuff.csv")
+    write_ranked_universe(scored, dest, prefer_year=None)
+    loaded = pd.read_csv(dest)
+    assert list(loaded["inst_name"]) == ["Filed", "Blank"]
+    assert int(loaded.iloc[0]["universe_rank"]) == 1
+
+
 def test_ranked_universe_without_prefer_year_follows_finance():
     scored = pd.DataFrame(
         [
@@ -195,6 +225,18 @@ def test_movement_section_names_entered_and_left_schools():
     assert "Entered College" in html
     assert "Left College" in html
     assert "1 entered and 1 left" in html
+    ranked = pd.DataFrame(
+        [
+            {"unitid": 10, "risk_score": 0.4},
+            {"unitid": 11, "risk_score": 0.3},
+            {"unitid": 12, "risk_score": 0.046371},
+        ]
+    )
+    left = left_after_data_fix_html(open_df, ranked, baseline)
+    assert "Left the list after data fix" in left
+    assert "Left College" in left
+    assert "0.046371" in left
+    assert "Entered College" not in left
     note = vintage_note_html(
         {
             "score_year": 2023,

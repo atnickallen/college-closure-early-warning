@@ -74,6 +74,17 @@ def test_title_iv_missing_is_kept():
     assert set(out["unitid"]) == {10}
 
 
+def test_title_iv_code_3_stays_out_until_the_spine_asks_for_it():
+    df = pd.DataFrame([_row(unitid=30, title_iv_indicator=3, inst_name="Grove City College")])
+    assert filter_college_universe(df, FILTERS).empty
+    widened = dict(FILTERS)
+    widened["title_iv_participating"] = [1, 2, 3, 4, 8]
+    out = filter_college_universe(df, widened)
+    assert set(out["unitid"]) == {30}
+    assert bool(out.iloc[0]["title_iv_participating"]) is False
+    assert bool(out.iloc[0]["in_risk_model_universe"]) is True
+
+
 def test_publics_stay_but_are_flagged_out_of_risk_model():
     df = pd.DataFrame([_row(unitid=20, inst_control=1, sector=1)])
     out = filter_college_universe(df, FILTERS)

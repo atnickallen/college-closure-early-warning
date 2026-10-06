@@ -132,8 +132,23 @@ def own_campus_value(row: pd.Series | dict) -> str:
     return _text(row.get("own_campus")).lower()
 
 
+def _flag_true(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "1.0", "true", "yes"}
+    try:
+        if pd.isna(value):
+            return False
+    except (TypeError, ValueError):
+        return False
+    return bool(value)
+
+
 def acquisition_ready(row: pd.Series | dict) -> bool:
-    """Still operating, residential, and curated own_campus = yes."""
+    """Still operating, residential, own campus, and not missing core finance."""
+    if _flag_true(row.get("insufficient_data")):
+        return False
     if operating_bucket(row) != OPEN_BUCKET:
         return False
     if not is_residential(row):
@@ -150,6 +165,8 @@ def exclusion_reason(row: pd.Series | dict) -> str:
     bucket = operating_bucket(row)
     if bucket != OPEN_BUCKET:
         return ""
+    if _flag_true(row.get("insufficient_data")):
+        return "insufficient data"
     if not is_residential(row):
         return "no on-campus dorms"
     own = own_campus_value(row)
@@ -394,6 +411,275 @@ def load_ranked_universe(path: Path) -> pd.DataFrame:
     return frame
 
 
+def _is_blank(value) -> bool:
+    if value is None:
+        return True
+    try:
+        if pd.isna(value):
+            return True
+    except (TypeError, ValueError):
+        return False
+    text = str(value).strip()
+    return text == "" or text.lower() in {"nan", "none", "<na>", "nat"}
+
+
+def _fill_columns(frame: pd.DataFrame, extra: pd.DataFrame | None, columns: tuple[str, ...] | list[str]) -> pd.DataFrame:
+    """Fill blank columns from ``extra``. A value already on ``frame`` stays."""
+    if frame is None or frame.empty or extra is None or extra.empty or "unitid" not in extra.columns:
+        return frame
+    use = [c for c in columns if c != "unitid" and c in extra.columns]
+    if not use:
+        return frame
+    piece = extra[["unitid", *use]].copy()
+    piece["unitid"] = pd.to_numeric(piece["unitid"], errors="coerce")
+    piece = piece.dropna(subset=["unitid"]).drop_duplicates("unitid")
+    out = frame.merge(piece, on="unitid", how="left", suffixes=("", "___fill"))
+    for col in use:
+        filled = f"{col}___fill"
+        if filled not in out.columns:
+            continue
+        if col not in frame.columns:
+            out = out.rename(columns={filled: col})
+            continue
+        blank = out[col].map(_is_blank)
+        out[col] = out[col].astype(object)
+        out.loc[blank, col] = out.loc[blank, filled].to_numpy()
+        out = out.drop(columns=[filled])
+    return out
+
+
+_SNAPSHOT_FILL = (
+    "status",
+    "status_badge",
+    "status_detail",
+    "property_disposition",
+    "buyer_or_broker",
+    "event_date",
+    "sale_price_published",
+    "sold_listed_details",
+    "source_url",
+    "checked_at",
+    "disagreement",
+    "auto_scorecard_operating",
+    "auto_fsa_match",
+    "auto_ipeds_year",
+    "auto_ipeds_status",
+    "auto_ipeds_date_closed",
+    "auto_checked_at",
+    "housing_year",
+    "oncampus_housing",
+    "dormitory_capacity",
+    "acreage",
+    "own_campus",
+    "campus_source_url",
+    "campus_checked_at",
+    "campus_notes",
+    "image_url",
+    "image_credit_url",
+    "image_license",
+    "image_author",
+    "lat",
+    "lon",
+    "coord_source",
+    "campus_map_url",
+)
+
+_LAND_FILL = (
+    "acreage",
+    "own_campus",
+    "campus_source_url",
+    "campus_checked_at",
+    "image_url",
+    "image_credit_url",
+    "image_license",
+    "image_author",
+    "campus_notes",
+    "lat",
+    "lon",
+    "coord_source",
+    "campus_map_url",
+)
+
+
+def order_by_current_score(watch: pd.DataFrame, scored: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Sort by the current risk score, with missing core finance last.
+
+    Schools already on an older watch list keep that file's row, but the
+    score used for the walk is the rescored value when ``scored`` has one.
+    """
+    if watch is None or watch.empty:
+        return watch.copy() if watch is not None else pd.DataFrame()
+    frame = watch.copy()
+    frame["unitid"] = pd.to_numeric(frame["unitid"], errors="coerce")
+    if (
+        scored is not None
+        and not scored.empty
+        and "unitid" in scored.columns
+        and "risk_score" in scored.columns
+    ):
+        current = scored.copy()
+        current["unitid"] = pd.to_numeric(current["unitid"], errors="coerce")
+        if "year" in frame.columns and "year" in current.columns:
+            try:
+                year = int(float(pd.to_numeric(frame["year"], errors="coerce").dropna().iloc[0]))
+            except (TypeError, ValueError, IndexError):
+                year = None
+            if year is not None:
+                same = current.loc[pd.to_numeric(current["year"], errors="coerce") == year]
+                if not same.empty:
+                    current = same
+        keep = ["unitid", "risk_score"]
+        if "insufficient_data" in current.columns:
+            keep.append("insufficient_data")
+        piece = current[keep].dropna(subset=["unitid"]).drop_duplicates("unitid")
+        frame = _fill_columns(frame, piece, [c for c in keep if c != "unitid"])
+        if "risk_score___fill" in frame.columns:
+            frame = frame.drop(columns=["risk_score___fill"])
+        # _fill_columns keeps an existing risk_score. Replace it when the
+        # current score is present so an old watch list cannot outrank a rescore.
+        current_scores = piece.set_index("unitid")["risk_score"]
+        mapped = frame["unitid"].map(current_scores)
+        mapped = pd.to_numeric(mapped, errors="coerce")
+        old = pd.to_numeric(frame["risk_score"], errors="coerce") if "risk_score" in frame.columns else mapped
+        frame["risk_score"] = mapped.where(mapped.notna(), old)
+    insuff = frame["insufficient_data"].map(_flag_true) if "insufficient_data" in frame.columns else False
+    frame = frame.assign(_insuff=insuff)
+    frame["_score"] = pd.to_numeric(frame["risk_score"], errors="coerce") if "risk_score" in frame.columns else pd.NA
+    frame = frame.sort_values(["_insuff", "_score"], ascending=[True, False], na_position="last")
+    frame = frame.drop(columns=["_insuff", "_score"]).reset_index(drop=True)
+    frame["watchlist_rank"] = range(1, len(frame) + 1)
+    return frame
+
+
+def prepare_acquisition_universe(
+    ranked: pd.DataFrame,
+    status: pd.DataFrame | None = None,
+    housing: pd.DataFrame | None = None,
+    land: pd.DataFrame | None = None,
+    operating: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Score-sort the full universe and attach operating, housing, and land.
+
+    A status snapshot from an older walk does not decide who can be open.
+    Housing and campus land are joined for every UNITID, and a curated or
+    federal operating row fills schools the snapshot never reached.
+    """
+    frame = order_by_current_score(ranked)
+    if frame.empty:
+        return frame
+    frame = _fill_columns(frame, status, _SNAPSHOT_FILL)
+    frame = _fill_columns(frame, operating, _SNAPSHOT_FILL)
+    frame = _fill_columns(frame, housing, HOUSING_COLUMNS)
+    if land is not None and not land.empty:
+        piece = land.copy()
+        rename = {
+            "source_url": "campus_source_url",
+            "checked_at": "campus_checked_at",
+            "notes": "campus_notes",
+        }
+        piece = piece.rename(columns={k: v for k, v in rename.items() if k in piece.columns})
+        frame = _fill_columns(frame, piece, _LAND_FILL)
+    return frame
+
+
+def load_operating_gap(settings) -> pd.DataFrame:
+    """Curated status plus Scorecard and the latest IPEDS directory status.
+
+    Used for UNITIDs the status snapshot did not reach. Curated sale fields
+    win over a blank federal row because this frame is applied only where
+    the snapshot is blank.
+    """
+    from college_closure.status import _parse_ipeds_date, curated_path, load_curated
+
+    frames: list[pd.DataFrame] = []
+    path = curated_path(settings)
+    if path.exists():
+        curated = load_curated(path)
+        keep = [
+            c
+            for c in (
+                "unitid",
+                "status",
+                "status_detail",
+                "property_disposition",
+                "buyer_or_broker",
+                "event_date",
+                "sale_price_published",
+                "sold_listed_details",
+                "source_url",
+                "checked_at",
+            )
+            if c in curated.columns
+        ]
+        if "unitid" in keep:
+            curated = curated[keep].copy()
+            curated["unitid"] = pd.to_numeric(curated["unitid"], errors="coerce")
+            frames.append(curated.dropna(subset=["unitid"]).drop_duplicates("unitid"))
+    sc_path = settings.processed_dir / "scorecard_operating.parquet"
+    if sc_path.exists():
+        scorecard = pd.read_parquet(sc_path, columns=["unitid", "scorecard_operating"])
+        scorecard["unitid"] = pd.to_numeric(scorecard["unitid"], errors="coerce")
+        scorecard["auto_scorecard_operating"] = scorecard["scorecard_operating"].map(
+            lambda value: "1" if str(value).strip().lower() in {"1", "1.0", "true", "yes"} else (
+                "0" if str(value).strip().lower() in {"0", "0.0", "false", "no"} else ""
+            )
+        )
+        frames.append(
+            scorecard.dropna(subset=["unitid"])[["unitid", "auto_scorecard_operating"]].drop_duplicates("unitid")
+        )
+    dir_path = settings.processed_dir / "directory_raw.parquet"
+    if dir_path.exists():
+        directory = pd.read_parquet(dir_path, columns=["unitid", "year", "inst_status", "date_closed"])
+        directory["unitid"] = pd.to_numeric(directory["unitid"], errors="coerce")
+        directory["year"] = pd.to_numeric(directory["year"], errors="coerce")
+        latest = directory.dropna(subset=["unitid"]).sort_values("year").groupby("unitid", as_index=False).tail(1)
+
+        def _status_code(value) -> str:
+            if _is_blank(value):
+                return ""
+            try:
+                code = int(float(value))
+            except (TypeError, ValueError):
+                return ""
+            if code in {-1, -2, -3}:
+                return ""
+            return str(code)
+
+        latest["auto_ipeds_status"] = latest["inst_status"].map(_status_code)
+        latest["auto_ipeds_date_closed"] = latest["date_closed"].map(_parse_ipeds_date)
+        latest["auto_ipeds_year"] = latest["year"].map(lambda value: "" if _is_blank(value) else str(int(float(value))))
+        frames.append(
+            latest[["unitid", "auto_ipeds_status", "auto_ipeds_date_closed", "auto_ipeds_year"]].drop_duplicates("unitid")
+        )
+    if not frames:
+        return pd.DataFrame(columns=["unitid"])
+    out = frames[0]
+    for piece in frames[1:]:
+        out = out.merge(piece, on="unitid", how="outer")
+    return out
+
+
+def acquisition_universe(settings) -> pd.DataFrame:
+    """Full score-year universe, sorted by the current score, ready to walk."""
+    ranked = load_ranked_universe(ranked_universe_path(settings))
+    scored_path = settings.processed_dir / "scored.parquet"
+    scored = pd.read_parquet(scored_path) if scored_path.exists() else None
+    extended = extend_ranked_universe(ranked, scored)
+    status_path = settings.outputs_dir / "status_current.csv"
+    status = (
+        pd.read_csv(status_path, dtype=str, keep_default_na=False)
+        if status_path.exists()
+        else pd.DataFrame()
+    )
+    return prepare_acquisition_universe(
+        extended,
+        status,
+        load_housing_snapshot(housing_snapshot_path(settings)),
+        load_campus_land(campus_land_path(settings)),
+        load_operating_gap(settings),
+    )
+
+
 RANKED_EXPORT_COLUMNS = (
     "unitid",
     "opeid8",
@@ -418,6 +704,8 @@ RANKED_EXPORT_COLUMNS = (
     "composite_fail",
     "miss_finance",
     "finance_from_parent",
+    "parent_unitid",
+    "insufficient_data",
     "year_finance",
     "year_enrollment",
     "year_fall_enrollment",
@@ -445,9 +733,7 @@ def write_ranked_universe(scored: pd.DataFrame, path: Path, *, prefer_year: int 
                 if int(prefer_year) in set(pd.to_numeric(incomplete["year"], errors="coerce").dropna().astype(int)):
                     held = incomplete
             current = held.loc[pd.to_numeric(held["year"], errors="coerce") == int(prefer_year)].copy()
-            if "risk_score" in current.columns:
-                current = current.sort_values("risk_score", ascending=False)
-            current = current.reset_index(drop=True)
+            current = _sort_score_year(current)
             score_year = int(prefer_year)
     if current.empty:
         return 0
@@ -484,6 +770,20 @@ def select_score_year(scored: pd.DataFrame) -> tuple[pd.DataFrame, int]:
         if len(usable):
             score_year = int(usable.index.max())
     current = current.loc[pd.to_numeric(current["year"], errors="coerce") == score_year].copy()
-    if "risk_score" in current.columns:
-        current = current.sort_values("risk_score", ascending=False)
-    return current.reset_index(drop=True), score_year
+    return _sort_score_year(current), score_year
+
+
+def _sort_score_year(current: pd.DataFrame) -> pd.DataFrame:
+    """Rank schools with core finance first. Blank finance is not a high score."""
+    frame = current.copy()
+    if "insufficient_data" in frame.columns:
+        flag = frame["insufficient_data"].map(_flag_true)
+        frame = frame.assign(_insuff=flag)
+        if "risk_score" in frame.columns:
+            frame = frame.sort_values(["_insuff", "risk_score"], ascending=[True, False])
+        else:
+            frame = frame.sort_values("_insuff", ascending=True)
+        frame = frame.drop(columns=["_insuff"])
+    elif "risk_score" in frame.columns:
+        frame = frame.sort_values("risk_score", ascending=False)
+    return frame.reset_index(drop=True)

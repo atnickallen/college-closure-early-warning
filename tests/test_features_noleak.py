@@ -6,7 +6,12 @@ import pandas as pd
 
 from college_closure.config import load_settings
 from college_closure.features import MODEL_FEATURE_COLUMNS, build_features
-from college_closure.crosswalk import apply_parent_child_finance_rollup
+from college_closure.crosswalk import (
+    apply_parent_child_finance_rollup,
+    attach_parent_links,
+    links_from_flags,
+    links_from_finance,
+)
 
 
 def _settings(tmp_path):
@@ -113,3 +118,59 @@ def test_parent_child_rollup_copies_parent_not_double_source():
     assert bool(child["finance_from_parent"]) is True
     assert parent["rev_total_current"] == 50_000_000
     assert bool(parent["finance_from_parent"]) is False
+
+
+def test_child_with_no_finance_row_inherits_parent_ratios_not_enrollment():
+    panel = pd.DataFrame(
+        [
+            {
+                "unitid": 184603,
+                "year": 2023,
+                "parent_child_flag": 1,
+                "parent_unitid": 184603,
+                "rev_total_current": 217_016_992,
+                "exp_total_current": 225_791_008,
+                "enrollment_fall_total": 9000,
+            },
+            {
+                "unitid": 184694,
+                "year": 2023,
+                "rev_total_current": pd.NA,
+                "enrollment_fall_total": 2885,
+            },
+        ]
+    )
+    flags = pd.DataFrame(
+        [
+            {"UNITID": 184694, "PRCH_F": 2, "IDX_F": 184603},
+            {"UNITID": 184603, "PRCH_F": 1, "IDX_F": 184603},
+        ]
+    )
+    links = links_from_flags(flags, 2023)
+    attached = attach_parent_links(panel, links)
+    out = apply_parent_child_finance_rollup(attached)
+    child = out.loc[out["unitid"] == 184694].iloc[0]
+    assert child["rev_total_current"] == 217_016_992
+    assert child["enrollment_fall_total"] == 2885
+    assert bool(child["finance_from_parent"]) is True
+    assert int(child["parent_unitid"]) == 184603
+
+
+def test_historical_finance_child_link_carries_forward():
+    finance = pd.DataFrame(
+        [
+            {"unitid": 11, "year": 1988, "parent_child_flag": 2, "parent_unitid": 10, "rev_total_current": 0},
+        ]
+    )
+    links = links_from_finance(finance)
+    panel = pd.DataFrame(
+        [
+            {"unitid": 10, "year": 2023, "rev_total_current": 80, "enrollment_fall_total": 4000},
+            {"unitid": 11, "year": 2023, "rev_total_current": pd.NA, "enrollment_fall_total": 120},
+        ]
+    )
+    out = apply_parent_child_finance_rollup(attach_parent_links(panel, links))
+    child = out.loc[out["unitid"] == 11].iloc[0]
+    assert int(child["rev_total_current"]) == 80
+    assert int(child["enrollment_fall_total"]) == 120
+    assert bool(child["finance_from_parent"]) is True

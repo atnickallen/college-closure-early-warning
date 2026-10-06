@@ -1613,6 +1613,9 @@ def run_status_check(
 
             scored = load_ranked_universe(ranked_universe_path(settings))
         watch = extend_ranked_universe(watch, scored)
+        from college_closure.campus import order_by_current_score
+
+        watch = order_by_current_score(watch, scored)
     housing = load_housing_snapshot(housing_snapshot_path(settings))
     land = load_campus_land(campus_land_path(settings))
     curated_file = curated_path(settings)

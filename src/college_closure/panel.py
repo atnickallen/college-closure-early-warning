@@ -1,20 +1,39 @@
-"""Build a UNITID × year panel from directory + left-joined extracts."""
+"""Build a UNITID × year panel from directory rows plus each extract's own years."""
 
 from __future__ import annotations
 
 import logging
+import zipfile
+from pathlib import Path
 
 import pandas as pd
 
 from college_closure.config import Settings
-from college_closure.constants import DIRECTORY_PANEL_COLUMNS
-from college_closure.crosswalk import apply_parent_child_finance_rollup, build_crosswalk
+from college_closure.constants import DIRECTORY_PANEL_COLUMNS, TITLE_IV_PARTICIPATING
+from college_closure.crosswalk import (
+    apply_parent_child_finance_rollup,
+    attach_parent_links,
+    build_crosswalk,
+    links_from_finance,
+    links_from_flags,
+)
+from college_closure.download import download_file
+from college_closure.filters import filter_college_universe
 from college_closure.fsa import attach_composite
 from college_closure.ids import add_id_keys
 from college_closure.nces_finance import merge_urban_and_nces
 from college_closure.qa import missingness_table, write_qa_counts
 
 LOGGER = logging.getLogger(__name__)
+
+EXTRACT_KEY_FILES = (
+    "fall_enrollment.parquet",
+    "enrollment_fte.parquet",
+    "finance.parquet",
+    "admissions.parquet",
+    "instructional_staff.parquet",
+    "noninstructional_staff.parquet",
+)
 
 
 def _read_optional(path) -> pd.DataFrame:
@@ -35,14 +54,129 @@ def _ensure_unitid_year(df: pd.DataFrame) -> pd.DataFrame:
     return out.dropna(subset=["unitid", "year"])
 
 
+def collect_extract_keys(processed: Path) -> pd.DataFrame:
+    """UNITID × year keys present on finance, FTE, fall enrollment, admissions, or staff."""
+    frames = []
+    for name in EXTRACT_KEY_FILES:
+        path = processed / name
+        if not path.exists():
+            continue
+        frame = pd.read_parquet(path, columns=["unitid", "year"])
+        frames.append(frame)
+    if not frames:
+        return pd.DataFrame(columns=["unitid", "year"])
+    keys = pd.concat(frames, ignore_index=True)
+    return _ensure_unitid_year(keys).drop_duplicates(["unitid", "year"])
+
+
+def expand_spine_with_extract_years(spine: pd.DataFrame, keys: pd.DataFrame) -> pd.DataFrame:
+    """Add extract years that the directory spine does not already have.
+
+    Directory attributes for an extract-only year come from that UNITID's
+    nearest directory year. The year column stays the extract year, so a later
+    left join attaches that year's finance or enrollment.
+    """
+    if spine is None or spine.empty or keys is None or keys.empty:
+        return spine
+    base = spine.copy()
+    base["unitid"] = pd.to_numeric(base["unitid"], errors="coerce")
+    base["year"] = pd.to_numeric(base["year"], errors="coerce")
+    base = base.dropna(subset=["unitid", "year"]).drop_duplicates(["unitid", "year"])
+    base["unitid"] = base["unitid"].astype("int64")
+    base["year"] = base["year"].astype("int64")
+    wanted = _ensure_unitid_year(keys).drop_duplicates(["unitid", "year"])
+    wanted["unitid"] = wanted["unitid"].astype("int64")
+    wanted["year"] = wanted["year"].astype("int64")
+    eligible = set(base["unitid"].tolist())
+    wanted = wanted.loc[wanted["unitid"].isin(eligible)]
+    have = base[["unitid", "year"]]
+    missing = wanted.merge(have, on=["unitid", "year"], how="left", indicator=True)
+    missing = missing.loc[missing["_merge"] == "left_only", ["unitid", "year"]]
+    if missing.empty:
+        return base
+    lookup = base.rename(columns={"year": "dir_year"})
+    cross = missing.merge(lookup, on="unitid", how="inner")
+    cross["gap"] = (cross["year"] - cross["dir_year"]).abs()
+    filled = (
+        cross.sort_values(["gap", "dir_year"])
+        .groupby(["unitid", "year"], as_index=False)
+        .head(1)
+        .drop(columns=["gap", "dir_year"])
+    )
+    out = pd.concat([base, filled], ignore_index=True)
+    LOGGER.info("Extract-year spine added %s UNITID×year rows", len(filled))
+    return out.drop_duplicates(["unitid", "year"], keep="first")
+
+
+def _directory_spine(settings: Settings) -> pd.DataFrame:
+    """College-universe directory rows, including Title IV code 3.
+
+    Code 3 is non-participating (Grove City, and Principia's history). Those
+    schools still file IPEDS finance. The participating-code flag stays false
+    for code 3; only the spine keeps the row. Code 5 and other non-participating
+    codes stay out. Public code-3 academies stay in the panel and out of the
+    risk model because control is public.
+    """
+    processed = settings.processed_dir
+    filters = dict(settings.filters)
+    codes = {int(code) for code in filters.get("title_iv_participating", list(TITLE_IV_PARTICIPATING))}
+    codes.add(3)
+    filters["title_iv_participating"] = sorted(codes)
+    raw_path = processed / "directory_raw.parquet"
+    if raw_path.exists():
+        raw = pd.read_parquet(raw_path)
+        directory = filter_college_universe(raw, filters)
+    else:
+        directory = pd.read_parquet(processed / "directory.parquet")
+    directory = _ensure_unitid_year(directory)
+    if directory.empty:
+        raise RuntimeError("Directory spine is empty; run scripts/01_ingest.py first")
+    keep_dir = [c for c in DIRECTORY_PANEL_COLUMNS if c in directory.columns]
+    return directory[keep_dir].drop_duplicates(subset=["unitid", "year"])
+
+
+def _flag_csv(settings: Settings, year: int) -> Path | None:
+    dest_dir = settings.raw_dir / "ipeds" / "flags"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = dest_dir / f"Flags{year}.csv"
+    if csv_path.exists() and csv_path.stat().st_size > 0:
+        return csv_path
+    url = f"https://nces.ed.gov/ipeds/datacenter/data/FLAGS{year}.zip"
+    zip_path = dest_dir / f"FLAGS{year}.zip"
+    saved = download_file(url, zip_path, timeout=(10, 60), max_retries=2, source="nces-flags")
+    if saved is None:
+        return None
+    try:
+        with zipfile.ZipFile(saved) as zf:
+            name = next(n for n in zf.namelist() if n.lower().endswith(".csv"))
+            csv_path.write_bytes(zf.read(name))
+    except (OSError, zipfile.BadZipFile, StopIteration) as exc:
+        LOGGER.warning("Could not read FLAGS%s: %s", year, exc)
+        return None
+    return csv_path
+
+
+def load_parent_links(settings: Settings, finance: pd.DataFrame) -> pd.DataFrame:
+    """Historical finance child rows plus IPEDS FLAGS PRCH_F / IDX_F links."""
+    frames = [links_from_finance(finance)]
+    for year in range(2015, 2026):
+        path = _flag_csv(settings, year)
+        if path is None:
+            continue
+        try:
+            flags = pd.read_csv(path, usecols=lambda c: str(c).upper() in {"UNITID", "PRCH_F", "IDX_F"}, low_memory=False)
+        except ValueError:
+            flags = pd.read_csv(path, low_memory=False)
+        frames.append(links_from_flags(flags, year))
+    frames = [frame for frame in frames if frame is not None and not frame.empty]
+    if not frames:
+        return pd.DataFrame(columns=["unitid", "year", "parent_child_flag", "parent_unitid"])
+    return pd.concat(frames, ignore_index=True)
+
+
 def build_panel(settings: Settings) -> pd.DataFrame:
     processed = settings.processed_dir
-    directory = _ensure_unitid_year(pd.read_parquet(processed / "directory.parquet"))
-    if directory.empty:
-        raise RuntimeError("data/processed/directory.parquet is empty; run scripts/01_ingest.py first")
-
-    keep_dir = [c for c in DIRECTORY_PANEL_COLUMNS if c in directory.columns]
-    panel = directory[keep_dir].drop_duplicates(subset=["unitid", "year"])
+    panel = expand_spine_with_extract_years(_directory_spine(settings), collect_extract_keys(processed))
 
     enrollment = _ensure_unitid_year(_read_optional(processed / "fall_enrollment.parquet"))
     if not enrollment.empty:
@@ -72,6 +206,7 @@ def build_panel(settings: Settings) -> pd.DataFrame:
     if not finance.empty:
         finance_cols = [c for c in finance.columns if c in {"unitid", "year"} or c not in panel.columns]
         panel = panel.merge(finance[finance_cols], on=["unitid", "year"], how="left")
+        panel = attach_parent_links(panel, load_parent_links(settings, finance))
         panel = apply_parent_child_finance_rollup(panel)
 
     admissions = _ensure_unitid_year(_read_optional(processed / "admissions.parquet"))
@@ -148,10 +283,10 @@ def build_panel(settings: Settings) -> pd.DataFrame:
         title="QA: institution × year panel",
         directory=panel,
         notes=[
-            "Panel is directory-left-joined to fall enrollment, FTE, finance, admissions, and staffing.",
+            "The spine keeps Title IV code 3 colleges and each UNITID's finance, FTE, fall enrollment, admissions, and staff years.",
             "Publics remain in the panel; in_risk_model_universe=True for private nonprofit and for-profit.",
-            "Urban finance ends in 2017; NCES F1A/F2/F3 zips backfill later years when downloaded.",
-            "Child campuses with $0/missing revenue inherit parent totals (finance_from_parent).",
+            "Urban finance is the complete finance year; NCES F1A/F2/F3 zips fill 2018–2022.",
+            "Child campuses with no finance row inherit the parent filer's ratios (finance_from_parent) from PCF/IDX_F. Enrollment stays the campus's own.",
             "Composite scores join on UNITID×year, then unambiguous OPEID6×year (main campus if shared).",
         ],
         extra_sections=[("Missingness by year", miss)],

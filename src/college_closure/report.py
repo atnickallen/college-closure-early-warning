@@ -19,6 +19,7 @@ from college_closure.config import Settings
 from college_closure.explain import WHY_CSS, facts_html, why_panel_html
 from college_closure.features import MODEL_FEATURE_COLUMNS
 from college_closure.campus import (
+    _flag_true,
     exclusion_reason,
     is_residential,
     is_small_housing,
@@ -301,6 +302,7 @@ def _html_page(
     depth: int | None = None,
     vintage_note: str = "",
     movement: str = "",
+    insufficient: str = "",
 ) -> str:
     if depth:
         depth_note = (
@@ -371,6 +373,7 @@ def _html_page(
   {teachout}
   {closed}
   {excluded}
+  {insufficient}
   <h2>Limitations</h2>
   <p>{html.escape(caveats)}</p>
 </body>
@@ -427,8 +430,15 @@ def _prior_rank_html(row: pd.Series) -> str:
     return ""
 
 
-def movement_section_html(open_df: pd.DataFrame, baseline: pd.DataFrame) -> str:
-    """Entered and left schools versus the frozen 2022 residential top 50."""
+def movement_section_html(
+    open_df: pd.DataFrame,
+    baseline: pd.DataFrame,
+    *,
+    heading: str = "Compared with the 2022 residential top 50",
+    rank_header: str = "2022 rank",
+    comparison: str = "versus the list scored on 2022 federal data",
+) -> str:
+    """Entered and left schools versus a frozen residential top 50."""
     if open_df is None or open_df.empty or baseline is None or baseline.empty:
         return ""
     if "unitid" not in open_df.columns or "unitid" not in baseline.columns:
@@ -490,16 +500,17 @@ def movement_section_html(open_df: pd.DataFrame, baseline: pd.DataFrame) -> str:
                 "</tr>"
             )
         return (
-            '<table class="roster"><tr><th>New rank</th><th>2022 rank</th>'
-            "<th>School</th><th>State</th><th>UNITID</th></tr>"
+            '<table class="roster"><tr><th>New rank</th><th>'
+            + html.escape(rank_header)
+            + "</th><th>School</th><th>State</th><th>UNITID</th></tr>"
             + "".join(body)
             + "</table>"
         )
 
     return (
-        "<h2>Compared with the 2022 residential top 50</h2>"
+        f"<h2>{html.escape(heading)}</h2>"
         f"<p>{len(entered)} entered and {len(left)} left the residential top 50 "
-        "versus the list scored on 2022 federal data.</p>"
+        f"{html.escape(comparison)}.</p>"
         "<h3>Entered</h3>"
         + _rows(entered, entered_side=True)
         + "<h3>Left</h3>"
@@ -557,8 +568,95 @@ def _load_json(path: Path) -> dict:
     return payload if isinstance(payload, dict) else {}
 
 
-def _baseline_frame(report_path) -> pd.DataFrame:
-    path = Path(report_path).resolve().parent.parent / "data" / "campus" / "top50_2022_baseline.csv"
+def left_after_data_fix_html(
+    open_df: pd.DataFrame,
+    ranked: pd.DataFrame,
+    baseline: pd.DataFrame,
+) -> str:
+    """Schools on the previous 2023 list whose new score is below the residential cutoff."""
+    if open_df is None or open_df.empty or baseline is None or baseline.empty:
+        return ""
+    if "unitid" not in open_df.columns or "unitid" not in baseline.columns:
+        return ""
+    current: set[int] = set()
+    for _, row in open_df.iterrows():
+        try:
+            current.add(int(float(row.get("unitid"))))
+        except (TypeError, ValueError):
+            continue
+    scores: dict[int, float] = {}
+    if ranked is not None and not ranked.empty and "unitid" in ranked.columns and "risk_score" in ranked.columns:
+        for _, row in ranked.iterrows():
+            try:
+                uid = int(float(row.get("unitid")))
+                scores[uid] = float(row.get("risk_score"))
+            except (TypeError, ValueError):
+                continue
+    left = []
+    for _, row in baseline.iterrows():
+        try:
+            uid = int(float(row.get("unitid")))
+            rank = int(float(row.get("old_rank")))
+        except (TypeError, ValueError):
+            continue
+        if uid in current:
+            continue
+        left.append(
+            (
+                rank,
+                uid,
+                _text(row.get("inst_name")) or "—",
+                _text(row.get("state_abbr")) or "—",
+                scores.get(uid),
+            )
+        )
+    if not left:
+        return ""
+    left.sort(key=lambda item: item[0])
+    body = []
+    for rank, uid, name, state, score in left:
+        score_txt = "—" if score is None else f"{score:.6f}"
+        body.append(
+            "<tr>"
+            f"<td>{rank}</td>"
+            f"<td>{html.escape(name)}</td>"
+            f"<td>{html.escape(state)}</td>"
+            f"<td>{score_txt}</td>"
+            f"<td>{uid}</td>"
+            "</tr>"
+        )
+    return (
+        "<h2>Left the list after data fix</h2>"
+        "<p>These schools were on the previous 2023 residential top 50. "
+        "The new list is the first 50 schools in the rescored universe that are still operating, "
+        "report on-campus housing, and have their own campus. "
+        "Their new scores are below that cutoff.</p>"
+        '<table class="roster"><tr><th>Previous 2023 rank</th><th>School</th><th>State</th>'
+        "<th>New score</th><th>UNITID</th></tr>"
+        + "".join(body)
+        + "</table>"
+    )
+
+
+def _movement_blocks(report_path, open_df: pd.DataFrame, baseline: pd.DataFrame, ranked: pd.DataFrame | None = None) -> str:
+    blocks = [movement_section_html(open_df, baseline)]
+    prior = _baseline_frame(report_path, "top50_2023_main_baseline.csv")
+    if not prior.empty:
+        blocks.append(
+            movement_section_html(
+                open_df,
+                prior,
+                heading="Compared with the previous 2023 residential top 50",
+                rank_header="Previous 2023 rank",
+                comparison="versus the 2023 residential list on main before extract-year matching",
+            )
+        )
+        blocks.append(left_after_data_fix_html(open_df, ranked if ranked is not None else open_df, prior))
+    return "\n".join(block for block in blocks if block)
+
+
+def _baseline_frame(report_path, filename: str = "top50_2022_baseline.csv") -> pd.DataFrame:
+    path = Path(report_path).resolve().parent.parent / "data" / "campus" / filename
     if not path.exists():
         return pd.DataFrame()
     frame = pd.read_csv(path)
@@ -774,6 +872,42 @@ def teachout_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
     )
 
 
+def insufficient_section_html(frame: pd.DataFrame, *, score_year: int, n_total: int | None = None) -> str:
+    """Residential schools still missing core finance, kept off the ranked list."""
+    total = n_total if n_total is not None else (0 if frame is None else len(frame))
+    if frame is None or frame.empty:
+        body = "<p>None of the residential rows are in this group.</p>"
+    else:
+        rows = []
+        for _, row in frame.iterrows():
+            rows.append(
+                "<tr>"
+                f"<td>{html.escape(_text(row.get('inst_name')) or '—')}</td>"
+                f"<td>{html.escape(_text(row.get('state_abbr')) or '—')}</td>"
+                f"<td>{html.escape(_text(row.get('unitid')) or '—')}</td>"
+                f"<td>insufficient data</td>"
+                f"<td>{html.escape(_housing_text(row))}</td>"
+                "</tr>"
+            )
+        body = (
+            '<table class="roster"><tr><th>School</th><th>State</th><th>UNITID</th>'
+            "<th>Flag</th><th>Dorm capacity</th></tr>"
+            + "".join(rows)
+            + "</table>"
+        )
+    lead = (
+        f"{total} score-year schools still have no core finance after extract-year matching "
+        "and parent-campus inheritance. They carry an insufficient data flag and are off the ranked list, "
+        "so a blank finance row cannot sort to the top. "
+    )
+    if frame is not None and not frame.empty:
+        lead += (
+            f"{len(frame)} of them report on-campus housing and are listed here instead of in the residential top 50. "
+        )
+    lead += f"The {score_year} score is not used as a rank for these rows."
+    return "<h2>Insufficient data</h2><p>" + html.escape(lead) + "</p>" + body
+
+
 def excluded_section_html(frame: pd.DataFrame, *, score_year: int) -> str:
     """Schools walked for this list that are still operating but not a residential campus."""
     if frame is None or frame.empty:
@@ -908,7 +1042,15 @@ def write_operating_report(
     merged = _with_status(ranked, status)
     baseline = _baseline_frame(path)
     merged = _attach_prior_rank(merged, baseline)
-    open_df, excluded_df, teach_df, closed_df, depth = partition_acquisition(merged, open_n)
+    insuff_mask = (
+        merged["insufficient_data"].map(_flag_true)
+        if "insufficient_data" in merged.columns
+        else pd.Series(False, index=merged.index)
+    )
+    insuff_all = merged.loc[insuff_mask]
+    ranked_rows = merged.loc[~insuff_mask]
+    insuff_residential = insuff_all.loc[insuff_all.apply(is_residential, axis=1)] if not insuff_all.empty else insuff_all
+    open_df, excluded_df, teach_df, closed_df, depth = partition_acquisition(ranked_rows, open_n)
     if shap_global is None:
         metrics_path = path.parent / "model_metrics.json"
         shap_global = []
@@ -960,7 +1102,14 @@ def write_operating_report(
             excluded=excluded_section_html(excluded_df, score_year=score_year),
             depth=depth,
             vintage_note=vintage_note_html(_load_json(Path(path).resolve().parent / "vintage_years.json")),
-            movement=movement_section_html(open_df, baseline),
+            movement=_movement_blocks(path, open_df, baseline, merged),
+            insufficient=insufficient_section_html(
+                insuff_residential,
+                score_year=score_year,
+                n_total=int(len(insuff_all)),
+            )
+            if "insufficient_data" in merged.columns
+            else "",
         ),
         encoding="utf-8",
     )

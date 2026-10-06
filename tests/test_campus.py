@@ -160,6 +160,52 @@ def test_repo_ranked_universe_extends_the_watchlist_past_500():
     assert universe["unitid"].astype(int).head(500).tolist() == watch["unitid"].astype(int).head(500).tolist()
 
 
+def test_status_snapshot_does_not_pin_the_residential_fifty():
+    """A cached status walk cannot keep a low score in front of a higher one."""
+    from college_closure.campus import prepare_acquisition_universe
+
+    ranked = pd.DataFrame(
+        [
+            {"unitid": 1, "inst_name": "Cached Low", "state_abbr": "IL", "year": 2023, "risk_score": 0.04, "insufficient_data": False},
+            {"unitid": 2, "inst_name": "New High", "state_abbr": "CA", "year": 2023, "risk_score": 0.44, "insufficient_data": False},
+            {"unitid": 3, "inst_name": "Blank Finance", "state_abbr": "TX", "year": 2023, "risk_score": 0.99, "insufficient_data": True},
+        ]
+    )
+    status = pd.DataFrame(
+        [
+            {
+                "unitid": 1,
+                "status": "operating",
+                "watchlist_rank": 9,
+                "oncampus_housing": "1",
+                "dormitory_capacity": "100",
+                "own_campus": "yes",
+            }
+        ]
+    )
+    housing = pd.DataFrame(
+        [
+            {"unitid": 1, "housing_year": 2023, "oncampus_housing": 1, "dormitory_capacity": 100},
+            {"unitid": 2, "housing_year": 2023, "oncampus_housing": 1, "dormitory_capacity": 88},
+        ]
+    )
+    land = pd.DataFrame(
+        [
+            {"unitid": 1, "own_campus": "yes", "source_url": "https://example.edu/a"},
+            {"unitid": 2, "own_campus": "yes", "source_url": "https://example.edu/b"},
+        ]
+    )
+    operating = pd.DataFrame(
+        [{"unitid": 2, "status": "operating", "auto_scorecard_operating": "1", "auto_ipeds_status": "1"}]
+    )
+    frame = prepare_acquisition_universe(ranked, status, housing, land, operating)
+    ready = frame.loc[~frame["insufficient_data"].map(lambda v: str(v).lower() in {"true", "1"})]
+    acquired, _, _, _, _ = partition_acquisition(ready, 1)
+    assert int(acquired.iloc[0]["unitid"]) == 2
+    assert int(frame.iloc[0]["unitid"]) == 2
+    assert int(frame.iloc[-1]["unitid"]) == 3
+
+
 def test_satellite_maps_url_uses_the_campus_center():
     url = satellite_maps_url("42.307206", "-83.694097")
     assert url == (
