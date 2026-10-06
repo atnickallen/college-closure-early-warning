@@ -294,7 +294,7 @@ Numbers below are from the v2 agent run on **2026-09-11**. Re-runs rewrite
 | College Scorecard most-recent institution ZIP (no API key) | **Live** (`Most-Recent-Cohorts-Institution_06102026.zip`) | **6,273** institutions; **16** HCM2 flags; **30** `CURROPER=0`. Most-recent file has no `CLOSEDAT`. |
 | College Scorecard API (`DATA_GOV_API_KEY`) | Implemented; key not present on this VM | Same fields (`school.operating`, `school.ownership`, `school.under_investigation`, UNITID / OPEID). Mocked in `tests/test_scorecard.py`. |
 | WICHE Knocking 11th edition workbook | **Live** | **1,683** state-years (2009–2041); `hs_grad_pct_chg_5y` on the panel when `state_abbr` is present |
-| NCES `F1819`–`F2223` finance zips | **Live** | **29,613** rows, **2018–2022** (same as MVP) |
+| NCES `F1819`–`F2223` finance zips | **Live** | **29,613** rows, 2018 through the F2223 academic year (same as MVP) |
 | NCES `F2324_*` / `F2425_*` complete-data zips | **404** (tried `_Data_Stata`, `_P`, `_RV`, `_rev`) | Urban finance CSV already covers 2023. Years after that stay unpublished `miss_finance` and are not the score year |
 | studentaid.gov JS Data Center HCM / post-2018 composites | Direct `.xlsx` timeout/404 | Scorecard `HCM2` used as current evidence flag only |
 | Partner Connect Closed School `.xls` | Dated URLs 404 | Labels remain IPEDS `inst_status` / `date_closed` |
@@ -324,13 +324,14 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 | [`outputs/vintage_years.json`](outputs/vintage_years.json) | Complete year used for each federal source | Finance year is the score year. |
 | [`outputs/feature_years.csv`](outputs/feature_years.csv) | Per-school year used for each model feature | Fallback years when a school missed the complete year. |
 | [`outputs/watchlist_nonprofit.csv`](outputs/watchlist_nonprofit.csv) | Same ranking restricted to `inst_control == 2` (up to 250) | Use when the question is nonprofit-only. |
-| [`outputs/top50_report.html`](outputs/top50_report.html) | Still-operating top 50, then teach-out and closed/defunct sections. Cards include FTE, discount, margins, composite, HCM/Scorecard, enrichment, libraries, SHAP drivers, and which schools entered or left versus the 2022 residential list | Open in a browser. Read the yellow banner first. Scores use the current finance score year. |
-| [`outputs/libraries_top50.md`](outputs/libraries_top50.md) | Unique / unknown library notes for the top-50 + nonprofit shortlist | Cultural/asset context, not a model feature. |
+| [`outputs/top50_report.html`](outputs/top50_report.html) | The 50 open schools with their own campus and on-campus dorms, in rank order. Each card has a photo, satellite link, campus map, current status, score, endowment, endowment per FTE, enrollment, enrollment trend, why it ranks here, and a library block | Open in a browser. The page states the federal data year once. |
+| [`outputs/top50_libraries.csv`](outputs/top50_libraries.csv) | Library name, URL, IPEDS book counts, circulation, staff, expenses, special collections, and contact for the same 50 schools | One row per ranked school. A missing IPEDS book count is the text `not reported`. |
+| [`outputs/libraries_top50.md`](outputs/libraries_top50.md) | Library notes from the pipeline shortlist | Holdings context beside the ranked list. |
 | [`outputs/libraries_top50.csv`](outputs/libraries_top50.csv) | Same shortlist as a join table (`lib_*` columns) | Spreadsheet view of holdings + notes. |
 | [`outputs/libraries_oclc_crosswalk.csv`](outputs/libraries_oclc_crosswalk.csv) | UNITID → OCLC symbol / WorldCat Registry / libraries.org id | Accept only when NCES LIBID equals UNITID. |
 | [`outputs/model_card.md`](outputs/model_card.md) | Task, data, split, PR-AUC / recall@K, SHAP, caveats | The narrative companion to the metrics JSON. |
 | [`outputs/model_metrics.json`](outputs/model_metrics.json) | Machine-readable split metrics and year-level baseline comparison | Check `beats_naive` before claiming the model won. |
-| [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | NCES standalone zips after 2022 still 404. Urban finance covers 2023. |
+| [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | Later NCES standalone finance zips still 404. Urban finance covers 2023. |
 | [`outputs/fsa_ingest.md`](outputs/fsa_ingest.md) / [`outputs/fsa_attempts.json`](outputs/fsa_attempts.json) | HTTP table: URL, status, bytes | Verified live vs still impossible. |
 | [`outputs/qa_counts.md`](outputs/qa_counts.md) / [`outputs/qa_panel.md`](outputs/qa_panel.md) | Universe counts and missingness by year | Catch a broken ingest before you trust ranks. |
 | [`outputs/status_current.csv`](outputs/status_current.csv) | Ranked rows walked to fill the still-operating top 50, with curated status plus federal flags | Join on `unitid`. `list_bucket` is `open`, `not_enrolling`, `closed`, or `unknown`. |
@@ -370,17 +371,13 @@ review of the original top 50 (one row per school, with UNITID, name, state,
 top 50 are appended, with the federal source and `checked_at`. Existing rows
 are not overwritten. Edit a row in place when you learn something new.
 
-`outputs/top50_report.html` is not the first 50 rows of the score-year ranking. The
-main list is schools on that ranking that are still operating, have on-campus
-dorms, and have their own campus. The walk continues in original rank order
-until 50 schools meet all three tests, including past the 500-row watch list.
-Later ranks come from `data/processed/scored.parquet` when a pipeline run is
-on disk, and otherwise from the committed score-year file
-`outputs/ranked_universe.csv` (schools already in the watch list are not
-repeated). Scores on the page are the current score-year watch-list scores. The page says so in the header: elevated-risk
-indicators, not closure predictions. A section compares the residential top 50
-with the frozen 2022 list in `data/campus/top50_2022_baseline.csv`. `docs/cover.png` is the banner at the
-top of the report.
+`outputs/top50_report.html` is the 50 highest-scored schools that are still
+operating, have on-campus dorms, and have their own campus. The walk continues
+in score order until 50 schools meet all three tests, including past the
+500-row watch list. Later ranks come from `data/processed/scored.parquet` when
+a pipeline run is on disk, and otherwise from the committed score-year file
+`outputs/ranked_universe.csv`. `docs/cover.png` is the banner at the top of
+the report. The page states the federal data year once: Federal data: 2023-24 IPEDS.
 
 On-campus housing comes from IPEDS Institutional Characteristics
 (`oncampus_housing` and `dormitory_capacity`) for the latest year in which
@@ -409,14 +406,13 @@ A school is left off that main list when any of these is true:
 - IPEDS does not show on-campus housing with a real dorm capacity
 - `data/campus/campus_land.csv` does not mark `own_campus` as `yes`
 
-`not_enrolling` schools (teach-out, not taking new students) are not in the
-top 50. They are in the **Teach-out / not enrolling** section. Schools that
-are still operating but have no dorms, or no confirmed standalone campus, are
-in **Excluded: no on-campus dorms or no standalone campus** at the bottom.
-An acquisition
-that leaves the school operating (`merged_acquired` with `institutional_sale`)
-stays on the open list. A completed merger that ends the separate institution
-does not, even when a later IPEDS directory still shows `inst_status` 1.
+Schools that are not enrolling, closed, without on-campus dorms, or without
+their own campus are left off the report. An acquisition that leaves the
+school operating (`merged_acquired` with `institutional_sale`) can stay on
+the list. A completed merger that ends the separate institution does not,
+even when a later IPEDS directory still shows `inst_status` 1. Schools
+missing core finance stay out of the ranked list; that exclusion is not a
+section of the report.
 
 ```bash
 python3 scripts/check_status.py
@@ -426,18 +422,15 @@ python3 scripts/check_status.py --open 50 --skip-network
 `--open` defaults to 50 (`status.open_n` in `config.yaml`). `--top` limits how
 far down `outputs/watchlist.csv` the scan may go; omit it to scan the whole
 file. The command writes `outputs/status_current.csv` for the rows it walked
-and rebuilds `outputs/top50_report.html` with the residential own-campus list,
-the teach-out section, **Closed or defunct since the score-year data**, and the
-excluded no-dorm / no-campus section (original rank, score-year score, dorm
-capacity, acreage, and sources). Each main-list entry hotlinks a campus photo when one is on file
-(a Commons thumbnail or an image from the school's own site), with the credit
-under the image, or shows "No photo found". Each main-list card also links
-"Satellite view" to Google Maps satellite imagery centered on the campus.
-When `campus_map_url` is set, the card also links "Campus map".
-Coordinates live in `data/campus/campus_land.csv` (`lat`, `lon`,
-`coord_source`), taken from IPEDS HD `LATITUDE` / `LONGITUD` and moved when
-that point is an admin office or a former campus. Closed and excluded rows
-get the same link when coordinates are on file.
+and rebuilds `outputs/top50_report.html` as the residential own-campus list.
+Each card hotlinks a campus photo when one is on file (a Commons thumbnail
+or an image from the school's own site), with the credit under the image, or
+shows "No photo found". Each card also links "Satellite view" to Google Maps
+satellite imagery centered on the campus. When `campus_map_url` is set, the
+card also links "Campus map". Coordinates live in
+`data/campus/campus_land.csv` (`lat`, `lon`, `coord_source`), taken from
+IPEDS HD `LATITUDE` / `LONGITUD` and moved when that point is an admin office
+or a former campus.
 
 ### What each source can say
 

@@ -71,10 +71,10 @@ def test_quality_flag_catches_finance_that_never_reached_the_score():
     row = {"miss_finance": True, "finance_from_parent": False, "enr_pct_chg_5y": None}
     flags = quality_flags(row, {"extract_has_finance": True, "n_missing_features": 28, "control": 2})
     text = " ".join(flags)
-    assert "never saw it" in text
+    assert "missingness pattern" in text
     artifact, reason = suspected_artifact(flags, ["miss_finance", "log_fte", "miss_composite"])
     assert artifact
-    assert "never saw it" in reason
+    assert "missingness pattern" in reason
 
 
 def test_system_filing_is_an_artifact_even_when_another_feature_ranks_first():
@@ -147,20 +147,21 @@ def test_committed_explanations_cover_the_residential_top_50():
     ottawa = frame[frame["unitid"] == 464226].iloc[0]
     assert int(ottawa["finance_parent_unitid"]) == 155627
     page = (root / "outputs" / "top50_report.html").read_text(encoding="utf-8")
-    main, _, _ = page.partition("Teach-out / not enrolling")
-    assert main.count("Why it ranks here") == 50
-    assert main.count("Endowment and enrollment") == 50
+    assert page.count("Why it ranks here") == 50
+    assert page.count("Endowment and enrollment") == 50
+    assert page.count("<h3>Library</h3>") == 50
+    assert "Federal data: 2023-24 IPEDS" in page
+    assert "2022" not in page
     assert "42.273157" not in page
-    assert "Insufficient data" in page
-    assert "Compared with the previous 2023 residential top 50" in page
-    assert "Left the list after data fix" in page
-    assert "Principia College" in page
-    assert "New Orleans Baptist Theological Seminary" in page
-    assert "Fairleigh Dickinson University-Florham Campus" in page
-    assert "0.046371" in page
-    assert "3 entered and 3 left" in page
-    assert "finance from parent UNITID 215798" in main
-    assert "finance from parent UNITID 155627" in main
+    assert "Insufficient data" not in page
+    assert "Left the list" not in page
+    assert "finance from parent" not in page
+    assert "Principia College" not in page
+    libraries = pd.read_csv(root / "outputs" / "top50_libraries.csv")
+    assert len(libraries) == 50
+    assert set(libraries["physical_books"].astype(str)) != {""}
+    assert ((libraries["physical_books"].astype(str) != "")).all()
     notes = (root / "outputs" / "score_explanations.md").read_text(encoding="utf-8")
-    assert "592,903,744" in notes
-    assert "left the residential top 50" in notes
+    assert "Saint Vincent Seminary" in notes
+    assert "left the residential top 50" not in notes
+    assert "Federal data: 2023-24 IPEDS" in notes

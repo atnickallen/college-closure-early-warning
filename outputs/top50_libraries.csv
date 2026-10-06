@@ -1,0 +1,51 @@
+residential_rank,unitid,inst_name,state_abbr,library_name,library_url,physical_books,ebooks,total_circulation,library_staff_fte,library_expenses,survey_year,figures_from_parent,parent_unitid,parent_name,special_collections,special_collections_url,contact_name,contact_role,contact_email,contact_phone,contact_url
+1,215813,Saint Vincent Seminary,PA,Dale P. Latimer Library,https://stvincent.libguides.com/library,"210,339","243,618","4,215",10.0,"$581,235",2023,yes,215798,Saint Vincent College,Special collections and the Saint Vincent College Archives,https://stvincent.libguides.com/lib/Special_Collections,,,,,
+2,164614,Boston Baptist College,MA,Research Library,https://www.boston.edu/library,"70,712","260,000","1,402",3.0,not reported,2023,,,,,,,,info@boston.edu,,https://www.boston.edu/library
+3,112394,University of Silicon Valley,CA,,,650,"283,000","3,850",3.0,not reported,2023,,,,,,,,,,
+4,211477,Central Penn College,PA,"Charles ""T"" Jones Leadership Library",https://www.centralpenn.edu/library/,"23,296","132,640","72,113",1.3,"$281,679",2023,,,,,,Margaret Schachte,Library Director,margaretschachte@centralpenn.edu,717-728-2249,https://www.centralpenn.edu/library/
+5,238193,Alverno College,WI,,,"21,932","720,500","32,076",15.5,"$544,432",2023,,,,,,,,,,
+6,207254,Spartan College of Aeronautics and Technology,OK,,,"3,527",0,"3,000",1.0,not reported,2023,,,,,,,,,,
+7,225876,Jacksonville College-Main Campus,TX,Jacksonville College Library,https://www.jacksonvillecollege.edu/library/,"6,226","419,739","6,370",3.0,not reported,2023,,,,,,,,,,
+8,179894,Webster University,MO,Webster University Library,https://library.webster.edu/home,"154,096","631,618","77,458",19.6,"$2,648,190",2023,,,,Archives and special collections,https://library.webster.edu/home,,,,,
+9,166911,Montserrat College of Art,MA,Montserrat Library and Learning,https://www.montserrat.edu/life-at-montserrat/library/,"12,390","122,400","1,883",2.0,"$117,574",2023,,,,,,,,,,
+10,112084,San Diego Christian College,CA,San Diego Christian College Library,http://sdcc.edu/library/,"77,296","683,452","31,044",3.8,"$331,947",2023,,,,,,,,,,
+11,148487,Roosevelt University,IL,Murray-Green Library,https://www.roosevelt.edu/library,"192,224","509,710","115,804",21.0,"$836,036",2023,,,,University Archives,https://libguides.roosevelt.edu/archives,,,,,
+12,119058,Middlebury Institute of International Studies at Monterey,CA,Middlebury Institute Library,https://www.middlebury.edu/institute/academics/library,"91,967","61,885","26,784",6.9,"$770,874",2023,,,,,,,,,,
+13,193973,Niagara University,NY,Niagara University Library,https://library.niagara.edu/,"128,813","264,174","424,934",7.5,"$1,156,990",2023,,,,Niagara University Archives,https://library.niagara.edu/archives,,,,,
+14,193308,Monroe University,NY,,,"14,998","11,400","387,738",12.0,"$866,806",2023,,,,,,,,,,
+15,237783,Salem University,WV,Salem University Library,https://www.salemu.edu/library/,"67,689","280,218","6,214",3.0,"$122,514",2023,,,,,,,,library@salemu.edu,,https://www.salemu.edu/library/
+16,141644,Hawaii Pacific University,HI,Hawaii Pacific University Library,https://hpu.libguides.com/,"21,343","425,742","115,727",15.2,"$1,212,502",2023,,,,,,,,,,
+17,169479,Davenport University,MI,Margaret D. Sneden Digital Library,https://www.davenport.edu/Library,not reported,"789,104","218,548",5.0,"$808,821",2023,,,,,,,,,,
+18,130183,Post University,CT,Traurig Library,https://post.edu/student-services/library/,"10,161","3,060,881","1,113,284",9.5,"$984,093",2023,,,,,,,,,,
+19,238078,Wheeling University,WV,,,"130,000","98,000","13,200",16.0,not reported,2023,,,,,,,,,,
+20,102298,Talladega College,AL,Savery Library,https://www.talladega.edu/academics/savery-library/,"43,802",0,"212,692",29.0,"$280,595",2023,,,,,,,,,,
+21,197045,Utica University,NY,Frank E. Gannett Library,https://www.utica.edu/academic/library/aboutlib/collections.cfm,"96,566","304,367","237,187",13.0,"$1,500,340",2023,,,,Utica University Archives,https://www.utica.edu/academic/library/aboutlib/collections.cfm,,,,,
+22,167677,Saint John's Seminary,MA,Saint John's Seminary Library,https://www.sjs.edu/library,not reported,not reported,not reported,not reported,not reported,,,,,Creagh Collection of works on Canon Law,https://www.sjs.edu/library,,,,,
+23,144351,Concordia University-Chicago,IL,Klinck Memorial Library,https://www.cuchicago.edu/academics/academic-resources/library/,"114,328","345,798","418,393",16.0,"$478,459",2023,,,,,,,,library@cuchicago.edu,,https://www.cuchicago.edu/academics/academic-resources/library/
+24,106306,Arkansas Baptist College,AR,J.C. Oliver Library,https://www.arkansasbaptist.edu/academics/library,"24,530",2,45,4.0,not reported,2023,,,,Special collections and legal documents,https://www.arkansasbaptist.edu/academics/library,Jacqueline McGehee,Library Director,jacqueline.mcgehee@arkansasbaptist.edu,501-420-1252,https://www.arkansasbaptist.edu/academics/library
+25,213303,Keystone College,PA,Miller Library,https://www.keystone.edu/venue/miller-library/,"35,832","230,000","117,768",3.0,"$340,000",2023,,,,,,,,,,
+26,228486,Southwestern Christian College,TX,,,"30,398",0,403,3.0,not reported,2023,,,,,,,,,,
+27,489937,Carolina University,NC,George M. Manuel Library,https://library.carolinau.edu,"50,137","305,820","1,173,662",6.5,"$231,379",2023,,,,,,,,,,
+28,191621,Hilbert College,NY,Hilbert College Library,https://www.hilbert.edu/academics/advising-services/library/,"29,984","266,009","22,774",3.0,"$245,229",2023,,,,,,,,askus@hilbert.edu,,https://www.hilbert.edu/academics/advising-services/library/
+29,199458,Mid-Atlantic Christian University,NC,,,"30,662","7,610","9,515",5.0,"$115,060",2023,,,,,,,,,,
+30,184603,Fairleigh Dickinson University-Metropolitan Campus,NJ,Metropolitan Campus Library,https://www.fdu.edu/academics/library-2-2/,"103,021","368,551","105,024",17.2,"$1,322,952",2023,,,,Gehl collection of psychoanalytic materials and the Columbia film archives,https://www.fdu.edu/academics/library-2-2/,,,,,
+31,126076,Yeshiva Ohr Elchonon Chabad West Coast Talmudical Seminary,CA,,,"14,400",0,"3,000",2.0,not reported,2023,,,,,,,,,,
+32,153861,Maharishi International University,IA,Maharishi International University Library,https://library.miu.edu/,"95,501","244,709","10,631",8.0,"$366,886",2023,,,,Special Collections and Archives,https://library.miu.edu/special-collections-and-archives/,,,,,
+33,225575,Huston-Tillotson University,TX,Downs-Jones Library,https://htu.edu/academics/library/,"27,870","450,757","30,319",12.0,"$516,852",2023,,,,,,Dr. Cynthia J. Charles,Director of Library and Media Services,,,https://htu.edu/academics/library/about-the-library/staff/
+34,170000,Grace Christian University,MI,Bultema Memorial Library,https://gracechristian.edu/campus-community/student-resources/campus-facilities/,"42,160","25,339","79,448",5.5,"$118,383",2023,,,,,,,,,,
+35,363934,University of Advancing Technology,AZ,,,0,34,197,10.0,"$122,377",2023,,,,,,,,,,
+36,204617,Ohio Dominican University,OH,Spangler Library,https://www.ohiodominican.edu/library/index.html,"48,357","563,475","30,984",6.2,"$585,712",2023,,,,,,,,ODULibrary@ohiodominican.edu,,https://www.ohiodominican.edu/library/index.html
+37,145619,Benedictine University,IL,Benedictine University Library,https://ben.edu/academics/library/,"106,690","305,134","38,500",6.5,"$757,475",2023,,,,Archives and special collections,https://ben.edu/academics/library/,,,,,
+38,117104,Life Pacific University,CA,Life Pacific University Library,https://lifepacific.edu/directory-department/library/,"38,044","735,863","189,286",2.1,"$185,869",2023,,,,,,Joshua Ortega,Director of Library Services,jortega@lifepacific.edu,(909) 599-5433 ext 351,https://lifepacific.edu/directory-department/library/
+39,199643,Shaw University,NC,Shaw University Library,https://shawu.libguides.com/,"28,042","307,196","24,299",15.0,"$394,800",2023,,,,,,,,,,
+40,464226,Ottawa University-Surprise,AZ,Gangwish Library,https://ottawa.libguides.com/,"48,980","284,426","57,961",5.5,"$293,339",2023,yes,155627,Ottawa University-Ottawa,,,,,,,
+41,242653,Inter American University of Puerto Rico-Metro,PR,,,"120,545","419,507","42,562",13.0,"$1,151,531",2023,,,,,,,,,,
+42,213358,La Roche University,PA,John J. Wright Library,https://library.laroche.edu/,"22,816","353,283","1,898",11.0,"$334,620",2023,,,,,,,,WrightLibrary@LaRoche.edu,,https://library.laroche.edu/
+43,123280,Shasta Bible College and Graduate School,CA,Shasta Bible College Library,https://www.shasta.edu/library.html,"35,718","1,145",614,1.0,not reported,2023,,,,,,,,,,
+44,145372,Greenville University,IL,Ruby E. Dare Library,https://greenville.libguides.com/Library,"64,443","433,185","10,111",3.0,"$143,081",2023,,,,,,,,libref@greenville.edu,,https://greenville.libguides.com/Library
+45,140720,Paine College,GA,Collins-Callaway Library,https://paine.edu/academics/offices/library/,"74,601","353,298","1,101",15.0,"$394,167",2023,,,,College archives,https://paine.edu/academics/offices/library/,Alana Lewis,"Director of Library, Learning Resource Center",Alewis@paine.edu,(706) 821-8361,https://paine.edu/employee/alana-lewis/
+46,495280,Indian Bible College,AZ,,,"10,624",939,338,1.2,not reported,2023,,,,,,,,,,
+47,217925,Columbia International University,SC,G. Allen Fleece Library,https://lib.ciu.edu/,"61,221","558,120","81,865",14.0,"$500,000",2023,,,,,,,,,,
+48,219833,Christian Brothers University,TN,Plough Library,https://www.cbu.edu/library/about-the-library/,"69,196","370,347","28,822",14.0,"$513,876",2023,,,,,,William Brandon,Library Director,,,https://www.cbu.edu/library/about-the-library/
+49,154493,Upper Iowa University,IA,Henderson-Wilder Library,https://uiu.libguides.com/,"65,014","35,869","134,837",9.0,"$217,956",2023,,,,,,,,,,
+50,494685,Urshan University,MO,David K. Bernard Library,https://urshan.edu/library,"61,834","210,000","130,755",8.0,"$175,642",2021,,,,,,,,libraryclerk@urshan.edu,,https://urshan.edu/library

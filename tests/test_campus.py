@@ -232,10 +232,7 @@ def test_land_file_has_a_campus_pin_for_every_row():
     assert "3475 Plymouth" in concordia["coord_source"]
     assert "4090 Geddes" in concordia["coord_source"]
     html = (root / "outputs" / "top50_report.html").read_text(encoding="utf-8")
-    main, _, _ = html.partition("Teach-out / not enrolling")
-    assert main.count(">Satellite view</a>") == 50
-    assert html.count(">Satellite view</a>") >= 50
-    assert "center=42.307206,-83.694097&amp;zoom=17&amp;basemap=satellite" in html
+    assert html.count(">Satellite view</a>") == 50
     assert "42.273157" not in html
     assert "campus_map_url" in land.columns
 
@@ -245,7 +242,7 @@ def test_campus_map_links_follow_the_land_file():
     land = pd.read_csv(root / "data" / "campus" / "campus_land.csv", dtype=str, keep_default_na=False)
     assert "campus_map_url" in land.columns
     report_html = (root / "outputs" / "top50_report.html").read_text(encoding="utf-8")
-    main, _, _ = report_html.partition("Teach-out / not enrolling")
+    main = report_html
     linked = 0
     for _, row in land.iterrows():
         url = row["campus_map_url"].strip()

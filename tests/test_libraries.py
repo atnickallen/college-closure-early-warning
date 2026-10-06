@@ -323,10 +323,10 @@ def test_library_section_html_uses_unknown_not_zero():
         }
     )
     html = library_section_html(row)
-    assert "Libraries" in html
-    assert "not a model feature" in html
+    assert "<h3>Library</h3>" in html
+    assert "not reported" in html
     assert "$0" not in html
-    assert "—" in html
+    assert "Unknown —" not in html
 
 
 def test_write_summary_roundtrip(tmp_path: Path):
