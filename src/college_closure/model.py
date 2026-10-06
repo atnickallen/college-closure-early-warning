@@ -313,5 +313,23 @@ def run_model(settings: Settings) -> dict:
     # Small committed-friendly copy of metrics (no row-level scores)
     settings.outputs_dir.mkdir(parents=True, exist_ok=True)
     (settings.outputs_dir / "model_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
-    LOGGER.info("Wrote %s and %s (%s rows)", metrics_path, dest, f"{len(score_frame):,}")
+    from college_closure.campus import ranked_universe_path, write_ranked_universe
+
+    prefer_year = None
+    watch_csv = settings.outputs_dir / "watchlist.csv"
+    if watch_csv.exists():
+        try:
+            watch_year = pd.read_csv(watch_csv, usecols=["year"], nrows=1)
+            prefer_year = int(float(watch_year.iloc[0]["year"]))
+        except (ValueError, KeyError, IndexError, OSError):
+            prefer_year = None
+    n_ranked = write_ranked_universe(score_frame, ranked_universe_path(settings), prefer_year=prefer_year)
+    LOGGER.info(
+        "Wrote %s and %s (%s rows); ranked universe %s (%s score-year rows)",
+        metrics_path,
+        dest,
+        f"{len(score_frame):,}",
+        ranked_universe_path(settings),
+        f"{n_ranked:,}",
+    )
     return metrics

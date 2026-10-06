@@ -153,7 +153,7 @@ tests/
 | `03_panel.py` | Processed extracts | `panel.parquet`, `outputs/qa_panel.md` | Official composites without UNITID join on OPEID6×year |
 | `04_features.py` | Panel (+ WICHE CSV) | `features.parquet` | Trailing windows only; winsorize 1st/99th |
 | `05_labels.py` | Features + `directory_raw` + optional FSA/Scorecard/trackers | `labels.parquet`, `closure_events.parquet` | Right-censor last *h* years |
-| `06_model.py` | Labels | `scored.parquet`, `outputs/model_metrics.json` | No shuffle; HCM not in the feature matrix |
+| `06_model.py` | Labels | `scored.parquet`, `outputs/ranked_universe.csv`, `outputs/model_metrics.json` | No shuffle; HCM not in the feature matrix. The CSV is the score-year ranking kept in git. |
 | `07_report.py` | Scored + Scorecard + shortlist enrichment + Academic Libraries | `watchlist.csv`, `watchlist_nonprofit.csv`, `top50_report.html`, `libraries_top50.md`, `model_card.md` | Score year = latest right-censored year with published finance |
 
 Features never include future values, current HCM lists, Scorecard investigation
@@ -360,9 +360,29 @@ top 50 are appended, with the federal source and `checked_at`. Existing rows
 are not overwritten. Edit a row in place when you learn something new.
 
 `outputs/top50_report.html` is not the first 50 rows of the 2022 ranking. The
-main list is the first 50 schools on that ranking that are still operating.
-Scores on the page are the 2022 watch-list scores. The page says so in the
-header: elevated-risk indicators, not closure predictions.
+main list is schools on that ranking that are still operating, have on-campus
+dorms, and have their own campus. The walk continues in original rank order
+until 50 schools meet all three tests, including past the 500-row watch list.
+Later ranks come from `data/processed/scored.parquet` when a pipeline run is
+on disk, and otherwise from the committed score-year file
+`outputs/ranked_universe.csv` (schools already in the watch list are not
+repeated). Scores on the page are the 2022 watch-list scores. The page says so in the header: elevated-risk
+indicators, not closure predictions. `docs/cover.png` is the banner at the
+top of the report.
+
+On-campus housing comes from IPEDS Institutional Characteristics
+(`oncampus_housing` and `dormitory_capacity`) for the latest year in which
+housing is actually reported as 0 or 1. Years that store -1, -2, or -3 are
+skipped. A school is residential only when housing is 1 and dorm capacity is
+greater than 0. Capacity under 50 is flagged as small housing. It is not a
+reason to drop the school.
+
+Land is hand-maintained in `data/campus/campus_land.csv` (UNITID, acreage,
+`own_campus`, source, checked date, and optional photo fields). Acreage is
+left blank when the source shows a distinct campus but does not state a
+number. `own_campus` must be `yes`. `no`, `unknown`, or a missing row keeps
+the school off the main list. The weekly job reads this file and does not
+overwrite it.
 
 A school is left off that main list when any of these is true:
 
@@ -374,9 +394,14 @@ A school is left off that main list when any of these is true:
   of Art and Presidio Graduate School)
 - IPEDS `inst_status` is closed (`4` or `7`) or merged (`3`), or `date_closed` is a real date
 - College Scorecard `school.operating` is `0` (only when the API key is set)
+- IPEDS does not show on-campus housing with a real dorm capacity
+- `data/campus/campus_land.csv` does not mark `own_campus` as `yes`
 
 `not_enrolling` schools (teach-out, not taking new students) are not in the
-top 50. They are in the **Teach-out / not enrolling** section. An acquisition
+top 50. They are in the **Teach-out / not enrolling** section. Schools that
+are still operating but have no dorms, or no confirmed standalone campus, are
+in **Excluded: no on-campus dorms or no standalone campus** at the bottom.
+An acquisition
 that leaves the school operating (`merged_acquired` with `institutional_sale`)
 stays on the open list. A completed merger that ends the separate institution
 does not, even when a later IPEDS directory still shows `inst_status` 1.
@@ -389,9 +414,12 @@ python3 scripts/check_status.py --open 50 --skip-network
 `--open` defaults to 50 (`status.open_n` in `config.yaml`). `--top` limits how
 far down `outputs/watchlist.csv` the scan may go; omit it to scan the whole
 file. The command writes `outputs/status_current.csv` for the rows it walked
-and rebuilds `outputs/top50_report.html` with three parts: the still-operating
-top 50, the teach-out section, and **Closed or defunct since the 2022 data**
-(original rank, 2022 score, status or sale details, and sources).
+and rebuilds `outputs/top50_report.html` with the residential own-campus list,
+the teach-out section, **Closed or defunct since the 2022 data**, and the
+excluded no-dorm / no-campus section (original rank, 2022 score, dorm
+capacity, acreage, and sources). Each main-list entry hotlinks a campus photo when one is on file
+(a Commons thumbnail or an image from the school's own site), with the credit
+under the image, or shows "No photo found".
 
 ### What each source can say
 
