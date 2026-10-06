@@ -11,10 +11,10 @@ to enter the residential top list.
 | `own_campus` | `yes`, `no`, or `unknown` |
 | `source_url` | Page that supports the land decision |
 | `checked_at` | Date the source was read (YYYY-MM-DD) |
-| `image_url` | Hotlinked thumbnail, usually a 400px Wikimedia Commons file. Blank when no campus photo was found. |
-| `image_credit_url` | Commons file page or other credit link |
-| `image_license` | Short license name from Commons |
-| `image_author` | Photographer or rights holder, when Commons states one |
+| `image_url` | Hotlinked thumbnail. Commons files use a 400px `Special:FilePath` URL. A school-site image is used when Commons has no photo of this campus. Blank when no campus photo was found. |
+| `image_credit_url` | Commons file page, or the school page the image came from |
+| `image_license` | Short license name from Commons, or a note that the image is from the institution website |
+| `image_author` | Photographer or rights holder, when the source states one |
 | `notes` | Uncertainty, shared grounds, or which campus the acreage belongs to |
 
 `housing_latest.csv` is the latest IPEDS Institutional Characteristics year, for

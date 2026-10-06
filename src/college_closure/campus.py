@@ -340,3 +340,114 @@ def housing_snapshot_path(settings) -> Path:
     cfg = (settings.raw.get("status") or {}) if settings is not None else {}
     rel = cfg.get("housing_csv") or "data/campus/housing_latest.csv"
     return settings.root / rel
+
+
+def ranked_universe_path(settings) -> Path:
+    cfg = (settings.raw.get("status") or {}) if settings is not None else {}
+    rel = cfg.get("ranked_universe_csv") or "outputs/ranked_universe.csv"
+    return settings.root / rel
+
+
+def load_ranked_universe(path: Path) -> pd.DataFrame:
+    """Score-year ranking committed for walks that continue past the top 500.
+
+    An empty frame is returned when the file is missing. ``extend_ranked_universe``
+    then leaves the watch list unchanged.
+    """
+    path = Path(path)
+    if not path.exists():
+        return pd.DataFrame()
+    frame = pd.read_csv(path)
+    for col in ("unitid", "year", "risk_score"):
+        if col in frame.columns:
+            frame[col] = pd.to_numeric(frame[col], errors="coerce")
+    return frame
+
+
+RANKED_EXPORT_COLUMNS = (
+    "unitid",
+    "opeid8",
+    "opeid6",
+    "opeid",
+    "inst_name",
+    "state_abbr",
+    "city",
+    "year",
+    "inst_control",
+    "sector",
+    "fte",
+    "risk_score",
+    "enr_pct_chg_5y",
+    "enr_pct_chg_1y",
+    "ftft_pct_chg_1y",
+    "discount_rate",
+    "operating_margin",
+    "tuition_dependence",
+    "composite_score",
+    "composite_zone",
+    "composite_fail",
+    "miss_finance",
+    "finance_from_parent",
+    "label_complete_h3",
+    "closed_or_merged_within_3_years",
+)
+
+
+def write_ranked_universe(scored: pd.DataFrame, path: Path, *, prefer_year: int | None = None) -> int:
+    """Write the score-year ranking that continues the watch list.
+
+    ``prefer_year`` keeps the continuation on the same year as the committed
+    watch list when that year is still in the scored panel.
+    """
+    current, score_year = select_score_year(scored)
+    if prefer_year and not scored.empty and "year" in scored.columns:
+        years = set(pd.to_numeric(scored["year"], errors="coerce").dropna().astype(int))
+        if int(prefer_year) in years:
+            held = scored
+            if "label_complete_h3" in scored.columns:
+                incomplete = scored.loc[scored["label_complete_h3"] != True]  # noqa: E712
+                if int(prefer_year) in set(pd.to_numeric(incomplete["year"], errors="coerce").dropna().astype(int)):
+                    held = incomplete
+            current = held.loc[pd.to_numeric(held["year"], errors="coerce") == int(prefer_year)].copy()
+            if "risk_score" in current.columns:
+                current = current.sort_values("risk_score", ascending=False)
+            current = current.reset_index(drop=True)
+            score_year = int(prefer_year)
+    if current.empty:
+        return 0
+    current = current.copy()
+    current.insert(0, "universe_rank", range(1, len(current) + 1))
+    cols = ["universe_rank", *[c for c in RANKED_EXPORT_COLUMNS if c in current.columns]]
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    current[cols].to_csv(path, index=False)
+    return len(current)
+
+
+def select_score_year(scored: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Right-censored score year used for the published watch list.
+
+    Matches the report: latest year whose finance is not missing for most
+    schools, among years whose 3-year outcome is not yet complete.
+    """
+    if scored is None or scored.empty:
+        return pd.DataFrame(), 0
+    if "label_complete_h3" in scored.columns:
+        current = scored.loc[scored["label_complete_h3"] != True].copy()  # noqa: E712
+    else:
+        current = scored.iloc[0:0].copy()
+    if current.empty and "year" in scored.columns:
+        ymax = int(pd.to_numeric(scored["year"], errors="coerce").max())
+        current = scored.loc[pd.to_numeric(scored["year"], errors="coerce") == ymax].copy()
+    if current.empty or "year" not in current.columns:
+        return current, 0
+    score_year = int(pd.to_numeric(current["year"], errors="coerce").max())
+    if "miss_finance" in current.columns:
+        rates = current.groupby("year")["miss_finance"].mean()
+        usable = rates[rates < 0.50]
+        if len(usable):
+            score_year = int(usable.index.max())
+    current = current.loc[pd.to_numeric(current["year"], errors="coerce") == score_year].copy()
+    if "risk_score" in current.columns:
+        current = current.sort_values("risk_score", ascending=False)
+    return current.reset_index(drop=True), score_year

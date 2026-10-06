@@ -1600,6 +1600,10 @@ def run_status_check(
             except Exception as exc:  # noqa: BLE001
                 LOGGER.info("scored.parquet unreadable: %s", exc)
                 scored = None
+        if scored is None or getattr(scored, "empty", True):
+            from college_closure.campus import load_ranked_universe, ranked_universe_path
+
+            scored = load_ranked_universe(ranked_universe_path(settings))
         watch = extend_ranked_universe(watch, scored)
     housing = load_housing_snapshot(housing_snapshot_path(settings))
     land = load_campus_land(campus_land_path(settings))

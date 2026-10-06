@@ -202,6 +202,10 @@ status:
   curated_csv: data/status/status_curated.csv
   campus_land_csv: data/campus/campus_land.csv
   housing_csv: data/campus/housing_latest.csv
+  # Full score-year ranking (private nonprofit and for-profit). The status
+  # walk keeps outputs/watchlist.csv as ranks 1–500 and continues with the
+  # schools in this file that are not already listed.
+  ranked_universe_csv: outputs/ranked_universe.csv
   top_n: 50
   open_n: 50
 

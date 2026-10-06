@@ -1,5 +1,7 @@
 """Residential-campus filter: housing year, dorms, and own-campus gate."""
 
+from pathlib import Path
+
 import pandas as pd
 
 from college_closure.campus import (
@@ -10,8 +12,10 @@ from college_closure.campus import (
     is_residential,
     is_small_housing,
     latest_reported_housing,
+    load_ranked_universe,
     partition_acquisition,
     prefix_through_acquisition,
+    write_ranked_universe,
 )
 
 
@@ -119,3 +123,36 @@ def test_walker_continues_past_the_watchlist_when_fifty_are_not_filled():
     assert acquired["inst_name"].tolist() == ["School 3"]
     assert excluded["inst_name"].tolist() == ["School 1", "School 2"]
     assert depth == 3
+
+
+def test_committed_ranked_universe_continues_ranks_after_the_watchlist(tmp_path):
+    scored = pd.DataFrame(
+        [
+            {"unitid": 1, "year": 2022, "risk_score": 0.9, "inst_name": "First", "label_complete_h3": False, "miss_finance": False},
+            {"unitid": 7, "year": 2022, "risk_score": 0.4, "inst_name": "Seventh", "label_complete_h3": False, "miss_finance": False},
+            {"unitid": 8, "year": 2023, "risk_score": 0.99, "inst_name": "Newer", "label_complete_h3": False, "miss_finance": False},
+        ]
+    )
+    dest = tmp_path / "ranked_universe.csv"
+    n = write_ranked_universe(scored, dest, prefer_year=2022)
+    assert n == 2
+    loaded = load_ranked_universe(dest)
+    watch = pd.DataFrame(
+        [{"unitid": 1, "year": 2022, "risk_score": 0.99, "inst_name": "First", "watchlist_rank": 1}]
+    )
+    universe = extend_ranked_universe(watch, loaded)
+    assert universe["inst_name"].tolist() == ["First", "Seventh"]
+    assert universe["watchlist_rank"].tolist() == [1, 2]
+    assert load_ranked_universe(tmp_path / "missing.csv").empty
+
+
+def test_repo_ranked_universe_extends_the_watchlist_past_500():
+    root = Path(__file__).resolve().parents[1]
+    loaded = load_ranked_universe(root / "outputs" / "ranked_universe.csv")
+    assert not loaded.empty
+    assert set(loaded["year"].dropna().astype(int)) == {2022}
+    assert len(loaded) > 500
+    watch = pd.read_csv(root / "outputs" / "watchlist.csv")
+    universe = extend_ranked_universe(watch, loaded)
+    assert int(universe["watchlist_rank"].max()) > 500
+    assert universe["unitid"].astype(int).head(500).tolist() == watch["unitid"].astype(int).head(500).tolist()

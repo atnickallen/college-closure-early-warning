@@ -153,7 +153,7 @@ tests/
 | `03_panel.py` | Processed extracts | `panel.parquet`, `outputs/qa_panel.md` | Official composites without UNITID join on OPEID6×year |
 | `04_features.py` | Panel (+ WICHE CSV) | `features.parquet` | Trailing windows only; winsorize 1st/99th |
 | `05_labels.py` | Features + `directory_raw` + optional FSA/Scorecard/trackers | `labels.parquet`, `closure_events.parquet` | Right-censor last *h* years |
-| `06_model.py` | Labels | `scored.parquet`, `outputs/model_metrics.json` | No shuffle; HCM not in the feature matrix |
+| `06_model.py` | Labels | `scored.parquet`, `outputs/ranked_universe.csv`, `outputs/model_metrics.json` | No shuffle; HCM not in the feature matrix. The CSV is the score-year ranking kept in git. |
 | `07_report.py` | Scored + Scorecard + shortlist enrichment + Academic Libraries | `watchlist.csv`, `watchlist_nonprofit.csv`, `top50_report.html`, `libraries_top50.md`, `model_card.md` | Score year = latest right-censored year with published finance |
 
 Features never include future values, current HCM lists, Scorecard investigation
@@ -362,9 +362,11 @@ are not overwritten. Edit a row in place when you learn something new.
 `outputs/top50_report.html` is not the first 50 rows of the 2022 ranking. The
 main list is schools on that ranking that are still operating, have on-campus
 dorms, and have their own campus. The walk continues in original rank order
-until 50 schools meet all three tests, including past the 500-row watch list
-when `data/processed/scored.parquet` is present. Scores on the page are the
-2022 watch-list scores. The page says so in the header: elevated-risk
+until 50 schools meet all three tests, including past the 500-row watch list.
+Later ranks come from `data/processed/scored.parquet` when a pipeline run is
+on disk, and otherwise from the committed score-year file
+`outputs/ranked_universe.csv` (schools already in the watch list are not
+repeated). Scores on the page are the 2022 watch-list scores. The page says so in the header: elevated-risk
 indicators, not closure predictions. `docs/cover.png` is the banner at the
 top of the report.
 
@@ -415,8 +417,9 @@ file. The command writes `outputs/status_current.csv` for the rows it walked
 and rebuilds `outputs/top50_report.html` with the residential own-campus list,
 the teach-out section, **Closed or defunct since the 2022 data**, and the
 excluded no-dorm / no-campus section (original rank, 2022 score, dorm
-capacity, acreage, and sources). Each main-list entry hotlinks a campus photo
-when one is on file, with the credit under the image, or shows "No photo found".
+capacity, acreage, and sources). Each main-list entry hotlinks a campus photo when one is on file
+(a Commons thumbnail or an image from the school's own site), with the credit
+under the image, or shows "No photo found".
 
 ### What each source can say
 

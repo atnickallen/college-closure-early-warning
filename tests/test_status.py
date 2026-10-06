@@ -400,10 +400,15 @@ def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
     extra = curated.iloc[50:]
     if not extra.empty:
         assert set(extra["status"]) <= {"operating", "not_enrolling", "closed", "merged_acquired"}
-        assert extra["sale_price_published"].eq("").all()
         assert extra["checked_at"].str.match(r"\d{4}-\d{2}-\d{2}").all()
         assert extra["watchlist_rank"].astype(int).min() > 50
         assert extra["source_url"].str.contains("educationdata.urban.org").sum() == 0
+        # A published price on a later row has to be quoted in that row's note.
+        priced_extra = extra[extra["sale_price_published"] != ""]
+        for _, row in priced_extra.iterrows():
+            assert row["sale_price_published"] in (
+                row["sold_listed_details"] + " " + row["status_detail"]
+            )
     assert set(curated["status"]) <= {"operating", "not_enrolling", "closed", "merged_acquired"}
     assert set(curated["property_disposition"]) <= {
         "not_applicable",
@@ -443,8 +448,8 @@ def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
     assert by_rank.loc[36, "sale_price_published"] == "combined $30,000"
     assert by_rank.loc[37, "sale_price_published"] == "$24 million"
     assert by_rank.loc[48, "sale_price_published"] == "~$3.5 million"
-    priced = set(curated.loc[curated["sale_price_published"] != "", "watchlist_rank"].astype(int))
-    assert priced == {30, 36, 37, 48}
+    seed_priced = set(seed.loc[seed["sale_price_published"] != "", "watchlist_rank"].astype(int))
+    assert seed_priced == {30, 36, 37, 48}
 
 
 def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
