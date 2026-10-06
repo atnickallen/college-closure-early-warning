@@ -8,6 +8,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# IRS EO BMF downloads for the camps listing tool (regenerated on each run)
+camps and 501c7's/data/cache/
+
 # Large Urban/IPEDS extracts — regenerate with scripts/01_ingest.py
 data/raw/**
 !data/raw/.gitkeep
