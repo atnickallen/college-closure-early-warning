@@ -1,5 +1,6 @@
 """Residential-campus filter: housing year, dorms, and own-campus gate."""
 
+import html
 from pathlib import Path
 
 import pandas as pd
@@ -191,4 +192,21 @@ def test_land_file_has_a_campus_pin_for_every_row():
     assert "center=42.307206,-83.694097&amp;zoom=17&amp;basemap=satellite" in html
     assert "42.273157" not in html
     assert "campus_map_url" in land.columns
-    assert main.count(">Campus map</a>") >= 35
+
+
+def test_campus_map_links_follow_the_land_file():
+    root = Path(__file__).resolve().parents[1]
+    land = pd.read_csv(root / "data" / "campus" / "campus_land.csv", dtype=str, keep_default_na=False)
+    assert "campus_map_url" in land.columns
+    report_html = (root / "outputs" / "top50_report.html").read_text(encoding="utf-8")
+    main, _, _ = report_html.partition("Teach-out / not enrolling")
+    linked = 0
+    for _, row in land.iterrows():
+        url = row["campus_map_url"].strip()
+        unitid = str(row["unitid"]).split(".")[0]
+        if not url or f"UNITID {unitid}" not in main:
+            continue
+        assert html.escape(url, quote=True) in main
+        linked += 1
+    assert linked == main.count(">Campus map</a>")
+    assert linked <= 50

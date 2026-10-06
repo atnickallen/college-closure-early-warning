@@ -1,0 +1,41 @@
+checked_at: "2026-10-06"
+curated_csv: data/curated_listings.csv
+
+# Public pages only. A blocked response is logged and the run continues.
+sources:
+  - id: loopnet
+    kind: probe
+    url: https://www.loopnet.com/search/commercial-real-estate/usa/for-sale/
+  - id: crexi
+    kind: probe
+    url: https://www.crexi.com/properties
+  - id: landwatch
+    kind: probe
+    url: https://www.landwatch.com/camp-for-sale
+  - id: lands-of-america
+    kind: probe
+    url: https://www.landsofamerica.com/United-States/camps-for-sale/
+  - id: ten-x
+    kind: probe
+    url: https://www.ten-x.com/commercial/
+  - id: aca
+    kind: probe
+    url: https://www.acacamps.org/resource-library/classifieds
+  - id: tranzon
+    kind: probe
+    url: https://www.tranzon.com/property-search/
+  - id: bid4assets
+    kind: probe
+    url: https://www.bid4assets.com/search?q=camp
+  - id: ccca
+    kind: probe
+    url: https://www.ccca.org/
+  - id: summercamphub
+    kind: summercamphub
+    url: https://summercamphub.com/summer-camps-for-sale/
+  - id: news
+    kind: news
+    queries:
+      - 'campus for sale dorm OR "residence hall"'
+      - '"camp for sale" cabins OR lodge'
+      - '"club for sale" bankruptcy OR auction cabin OR lodge'

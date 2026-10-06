@@ -1,0 +1,41 @@
+# Fetch log
+
+- Curated rows: 30
+- loopnet: blocked (HTTP 403) https://www.loopnet.com/search/commercial-real-estate/usa/for-sale/
+- crexi: blocked (HTTP 403) https://www.crexi.com/properties
+- landwatch: blocked (HTTP 403) https://www.landwatch.com/camp-for-sale
+- lands-of-america: blocked (HTTP 403) https://www.landsofamerica.com/United-States/camps-for-sale/
+- ten-x: blocked (HTTP 403) https://www.ten-x.com/commercial/
+- aca: blocked (HTTP 403) https://www.acacamps.org/resource-library/classifieds
+- tranzon: fetched https://www.tranzon.com/property-search/; no housing listings in the HTML
+- bid4assets: fetched https://www.bid4assets.com/search?q=camp; no housing listings in the HTML
+- ccca: fetched https://www.ccca.org/; housing text is present but this source has no row parser
+- summercamphub: parsed 5 housing listings from https://summercamphub.com/summer-camps-for-sale/
+- news: blocked (robots.txt disallows this URL) for campus for sale dorm OR "residence hall"
+- news: blocked (robots.txt disallows this URL) for "camp for sale" cabins OR lodge
+- news: blocked (robots.txt disallows this URL) for "club for sale" bankruptcy OR auction cabin OR lodge
+- EO BMF https://www.irs.gov/pub/irs-soi/eo1.csv: 6520 subsection 07 rows
+- EO BMF https://www.irs.gov/pub/irs-soi/eo2.csv: 20381 subsection 07 rows
+- EO BMF https://www.irs.gov/pub/irs-soi/eo3.csv: 19565 subsection 07 rows
+- EO BMF https://www.irs.gov/pub/irs-soi/eo4.csv: 26 subsection 07 rows
+- EO BMF subsection 07 rows loaded: 46492
+- maps off-grid-hunting-camp-mi: DuckDuckGo search skipped: URLError
+- maps antioch-duck-club-ca: DuckDuckGo search skipped: URLError
+- maps camp-kupugani-leaf-river-il: DuckDuckGo search skipped: URLError
+- maps camp-nelson-lodge-ca: DuckDuckGo search skipped: URLError
+- maps camp-redwing-pa: DuckDuckGo search skipped: URLError
+- maps camp-tuolumne-trails-ca: DuckDuckGo search skipped: URLError
+- maps camp-wyomoco-ny: DuckDuckGo search skipped: URLError
+- maps cedar-crest-resort-ca: DuckDuckGo search skipped: URLError
+- maps east-branch-camp-ny: DuckDuckGo search skipped: URLError
+- maps camp-sandoneida-malvern-oh: DuckDuckGo search skipped: URLError
+- maps notre-dame-college-south-euclid-oh: DuckDuckGo search skipped: URLError
+- maps golden-hills-equine-resort-mo: DuckDuckGo search skipped: URLError
+- maps hampshire-college-amherst-ma: DuckDuckGo search skipped: URLError
+- maps michigan-hunt-fish-cabins-mi: DuckDuckGo search skipped: URLError
+- maps mount-vernon-camp-me: DuckDuckGo search skipped: URLError
+- maps three-rivers-rod-gun-club-mt: Map crawl skipped https://fayranches.com/property/three-rivers-rod-and-gun-club-lodge-parcel/: HTTP 403
+- Published 30 listings (3 college, 21 camp, 6 501c7)
+- Map links on 17 listings; PDF maps on 6 listings
+- No listing name and city matched a single IRS subsection 07 row.
+- Geocoding skipped: Nominatim robots.txt disallows /search. Coordinates are kept only when a listing page stated them.

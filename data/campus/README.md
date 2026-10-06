@@ -19,7 +19,7 @@ to enter the residential top list.
 | `lat` | Campus latitude. IPEDS HD `LATITUDE` unless `coord_source` says the pin was moved. |
 | `lon` | Campus longitude. IPEDS HD `LONGITUD` unless `coord_source` says the pin was moved. |
 | `coord_source` | Where the pin came from. IPEDS points that sit on an admin office or a former campus are adjusted onto the campus. |
-| `campus_map_url` | Public campus map for this school. A PDF is preferred. Blank when none was found. |
+| `campus_map_url` | Public campus map, facility map, or map PDF for this school. A PDF is preferred. Blank when none was found. |
 
 `housing_latest.csv` is the latest IPEDS Institutional Characteristics year, for
 each scored UNITID, in which `oncampus_housing` is 0 or 1. It is not the
@@ -39,3 +39,6 @@ Maps satellite image centered on that point (zoom 17). The same link is shown
 on the closed and excluded tables when those schools have coordinates.
 
 When `campus_map_url` is filled, the main-list card also links "Campus map".
+The camps and 501(c)(7) refresh workflow fills this column with Firecrawl when
+the repository secret is set, and pushes the file on `camps-501c7-refresh`.
+The status checker does not rewrite this file.
