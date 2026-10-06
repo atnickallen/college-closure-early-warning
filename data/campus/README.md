@@ -19,13 +19,17 @@ to enter the residential top list.
 | `lat` | Campus latitude. IPEDS HD `LATITUDE` unless `coord_source` says the pin was moved. |
 | `lon` | Campus longitude. IPEDS HD `LONGITUD` unless `coord_source` says the pin was moved. |
 | `coord_source` | Where the pin came from. IPEDS points that sit on an admin office or a former campus are adjusted onto the campus. |
-| `campus_map_url` | Public campus map, facility map, or map PDF for this school. Blank when none was found. |
+| `campus_map_url` | Public campus map, facility map, or map PDF for this school. A PDF is preferred. Blank when none was found. |
 
 `housing_latest.csv` is the latest IPEDS Institutional Characteristics year, for
-each watch-list UNITID, in which `oncampus_housing` is 0 or 1. It is not the
+each scored UNITID, in which `oncampus_housing` is 0 or 1. It is not the
 bulk IC extract. Sentinel codes -1, -2, and -3 are not stored as the latest
 reported year. The status checker uses this snapshot when the network is
 skipped and when the weekly job does not need to re-download the bulk file.
+
+`top50_2022_baseline.csv` is the residential top 50 from the 2022 score, frozen
+so later rescores can show who entered and who left. The status checker does
+not rewrite it.
 
 Photos are hotlinked. Seals, wordmarks, and logos are not used as campus photos.
 The report shows "No photo found" when `image_url` is blank.

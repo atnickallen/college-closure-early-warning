@@ -10,6 +10,7 @@ import html
 import json
 import logging
 import re
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -61,6 +62,13 @@ WATCHLIST_COLS = [
     "composite_fail",
     "miss_finance",
     "finance_from_parent",
+    "year_finance",
+    "year_enrollment",
+    "year_fall_enrollment",
+    "year_admissions",
+    "year_staff",
+    "year_directory",
+    "year_composite",
     "hcm1_current",
     "hcm2_current",
     "hcm2_scorecard",
@@ -206,8 +214,10 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
         <div class="card-main">
       <h2>{rank}. {name}</h2>
       <p class="meta">{state} · {sector} · score year {year}{rank_bit} · UNITID {row.get("unitid")}</p>
+      {_prior_rank_html(row)}
       <p class="score">Watch-list score: <strong>{_fmt(row.get("risk_score"), 3)}</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      {_feature_years_html(row)}
       {status_block_html(row)}
       <table>
         <tr><th>FTE</th><td>{_fmt(row.get("fte"), 0)}</td>
@@ -258,6 +268,8 @@ def _html_page(
     closed: str = "",
     excluded: str = "",
     depth: int | None = None,
+    vintage_note: str = "",
+    movement: str = "",
 ) -> str:
     if depth:
         depth_note = (
@@ -320,6 +332,8 @@ def _html_page(
     model input.{BANNER_SENTENCE}
   </div>
   {depth_note}
+  {vintage_note}
+  {movement}
   {intro}
   {cards}
   {teachout}
@@ -330,6 +344,211 @@ def _html_page(
 </body>
 </html>
 """
+
+
+def _year_bit(value) -> str:
+    try:
+        if value is None or pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        return ""
+    text = str(value).strip()
+    if not text or text.lower() in {"nan", "none", "<na>"}:
+        return ""
+    try:
+        return str(int(float(text)))
+    except (TypeError, ValueError):
+        return ""
+
+
+def _feature_years_html(row: pd.Series) -> str:
+    bits = []
+    for label, col in (
+        ("finance", "year_finance"),
+        ("enrollment", "year_enrollment"),
+        ("fall enrollment", "year_fall_enrollment"),
+        ("admissions", "year_admissions"),
+        ("staff", "year_staff"),
+        ("directory", "year_directory"),
+    ):
+        year = _year_bit(row.get(col))
+        if year:
+            bits.append(f"{label} {year}")
+    if not bits:
+        return ""
+    return (
+        '<p class="meta">Feature years: '
+        + html.escape(", ".join(bits))
+        + ". A blank source means that school had no reported value. "
+        "Other features from the same source can use an earlier year when the complete year is missing.</p>"
+    )
+
+
+def _prior_rank_html(row: pd.Series) -> str:
+    if "prior_residential_rank" not in row.index and "prior_residential_rank" not in getattr(row, "index", []):
+        return ""
+    year = _year_bit(row.get("prior_residential_rank"))
+    if year:
+        return f'<p class="meta">2022 residential rank {html.escape(year)}</p>'
+    if "prior_residential_rank" in row.index:
+        return '<p class="meta">New to the residential top 50 versus the 2022 list</p>'
+    return ""
+
+
+def movement_section_html(open_df: pd.DataFrame, baseline: pd.DataFrame) -> str:
+    """Entered and left schools versus the frozen 2022 residential top 50."""
+    if open_df is None or open_df.empty or baseline is None or baseline.empty:
+        return ""
+    if "unitid" not in open_df.columns or "unitid" not in baseline.columns:
+        return ""
+    old_rank: dict[int, int] = {}
+    old_name: dict[int, tuple[str, str]] = {}
+    for _, row in baseline.iterrows():
+        try:
+            uid = int(float(row.get("unitid")))
+            rank = int(float(row.get("old_rank")))
+        except (TypeError, ValueError):
+            continue
+        old_rank[uid] = rank
+        old_name[uid] = (
+            _text(row.get("inst_name")) or "—",
+            _text(row.get("state_abbr")) or "—",
+        )
+    if not old_rank:
+        return ""
+    current: list[tuple[int, int, str, str]] = []
+    for rank, (_, row) in enumerate(open_df.iterrows(), start=1):
+        try:
+            uid = int(float(row.get("unitid")))
+        except (TypeError, ValueError):
+            continue
+        current.append(
+            (
+                rank,
+                uid,
+                _text(row.get("inst_name")) or old_name.get(uid, ("—", ""))[0],
+                _text(row.get("state_abbr")) or "—",
+            )
+        )
+    new_ids = {uid for _, uid, _, _ in current}
+    entered = [item for item in current if item[1] not in old_rank]
+    left = []
+    for uid, rank in sorted(old_rank.items(), key=lambda pair: pair[1]):
+        if uid not in new_ids:
+            name, state = old_name.get(uid, ("—", "—"))
+            left.append((rank, uid, name, state))
+
+    def _rows(items: list[tuple], *, entered_side: bool) -> str:
+        if not items:
+            return "<p>None.</p>"
+        body = []
+        for rank, uid, name, state in items:
+            if entered_side:
+                cells = (
+                    f"<td>{rank}</td><td>—</td>"
+                )
+            else:
+                cells = f"<td>—</td><td>{rank}</td>"
+            body.append(
+                "<tr>"
+                f"{cells}"
+                f"<td>{html.escape(name)}</td>"
+                f"<td>{html.escape(state)}</td>"
+                f"<td>{uid}</td>"
+                "</tr>"
+            )
+        return (
+            '<table class="roster"><tr><th>New rank</th><th>2022 rank</th>'
+            "<th>School</th><th>State</th><th>UNITID</th></tr>"
+            + "".join(body)
+            + "</table>"
+        )
+
+    return (
+        "<h2>Compared with the 2022 residential top 50</h2>"
+        f"<p>{len(entered)} entered and {len(left)} left the residential top 50 "
+        "versus the list scored on 2022 federal data.</p>"
+        "<h3>Entered</h3>"
+        + _rows(entered, entered_side=True)
+        + "<h3>Left</h3>"
+        + _rows(left, entered_side=False)
+    )
+
+
+def vintage_note_html(meta: dict | None) -> str:
+    """One paragraph naming the complete year used for each federal source."""
+    if not meta:
+        return ""
+    sources = meta.get("sources") or {}
+    bits = []
+    for key, label in (
+        ("finance", "finance"),
+        ("fall_enrollment", "fall enrollment"),
+        ("enrollment_fte", "enrollment FTE"),
+        ("admissions", "admissions"),
+        ("staff", "instructional staff"),
+        ("directory", "directory"),
+        ("academic_libraries", "academic libraries"),
+    ):
+        block = sources.get(key) or {}
+        year = block.get("complete_year")
+        if year:
+            bits.append(f"{label} {int(year)}")
+    scorecard = sources.get("scorecard") or {}
+    file_name = str(scorecard.get("file") or "").strip()
+    file_date = str(scorecard.get("file_date") or "").strip()
+    if file_name or file_date:
+        bits.append(f"College Scorecard {file_name} {file_date}".strip())
+    if not bits and not meta.get("score_year"):
+        return ""
+    score_year = meta.get("score_year")
+    lead = "Score year"
+    if score_year:
+        lead += f" {int(score_year)} is IPEDS {int(score_year)}-{int(score_year) + 1} finance"
+    lead += "."
+    detail = "; ".join(bits)
+    return (
+        f'<p class="meta">{html.escape(lead)} Complete years by source: {html.escape(detail)}. '
+        "Each feature uses that source's complete year when the school reported it, "
+        "and otherwise the latest earlier year with a value. The year used is stored "
+        "with the score.</p>"
+    )
+
+
+def _load_json(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _baseline_frame(report_path) -> pd.DataFrame:
+    path = Path(report_path).resolve().parent.parent / "data" / "campus" / "top50_2022_baseline.csv"
+    if not path.exists():
+        return pd.DataFrame()
+    frame = pd.read_csv(path)
+    if "unitid" in frame.columns:
+        frame["unitid"] = pd.to_numeric(frame["unitid"], errors="coerce")
+    return frame
+
+
+def _attach_prior_rank(frame: pd.DataFrame, baseline: pd.DataFrame) -> pd.DataFrame:
+    out = frame.copy()
+    if baseline is None or baseline.empty or "unitid" not in out.columns:
+        return out
+    mapping = {}
+    for _, row in baseline.iterrows():
+        try:
+            mapping[int(float(row.get("unitid")))] = int(float(row.get("old_rank")))
+        except (TypeError, ValueError):
+            continue
+    out["prior_residential_rank"] = pd.to_numeric(out["unitid"], errors="coerce").map(
+        lambda uid: mapping.get(int(uid)) if pd.notna(uid) and int(uid) in mapping else pd.NA
+    )
+    return out
 
 
 def _satellite_anchor(row: pd.Series) -> str:
@@ -655,6 +874,8 @@ def write_operating_report(
 ) -> dict[str, int]:
     """Write the residential-campus list plus teach-out, closed, and excluded sections."""
     merged = _with_status(ranked, status)
+    baseline = _baseline_frame(path)
+    merged = _attach_prior_rank(merged, baseline)
     open_df, excluded_df, teach_df, closed_df, depth = partition_acquisition(merged, open_n)
     if shap_global is None:
         metrics_path = path.parent / "model_metrics.json"
@@ -693,6 +914,8 @@ def write_operating_report(
             closed=closed_section_html(closed_df, score_year=score_year),
             excluded=excluded_section_html(excluded_df, score_year=score_year),
             depth=depth,
+            vintage_note=vintage_note_html(_load_json(Path(path).resolve().parent / "vintage_years.json")),
+            movement=movement_section_html(open_df, baseline),
         ),
         encoding="utf-8",
     )
@@ -703,6 +926,45 @@ def write_operating_report(
         "n_closed": int(len(closed_df)),
         "depth": int(depth),
     }
+
+
+def _vintage_md(metrics: dict) -> str:
+    vintage = metrics.get("vintage") or {}
+    sources = vintage.get("sources") or {}
+    if not sources and not vintage.get("score_year"):
+        return ""
+    lines = [
+        "",
+        "## Current federal vintages",
+        "",
+        "The published score is one current row per school. Training rows stay contemporaneous "
+        "(no future years mixed into the fit). Each feature uses the newest complete year of its "
+        "source when that school reported it, and otherwise that school's latest earlier value. "
+        "Per-feature years are in `outputs/feature_years.csv`.",
+        "",
+    ]
+    for key, label in (
+        ("finance", "IPEDS finance"),
+        ("fall_enrollment", "IPEDS fall enrollment"),
+        ("enrollment_fte", "IPEDS enrollment FTE"),
+        ("admissions", "IPEDS admissions"),
+        ("staff", "IPEDS instructional staff"),
+        ("directory", "IPEDS directory"),
+        ("academic_libraries", "IPEDS academic libraries"),
+    ):
+        year = (sources.get(key) or {}).get("complete_year")
+        if year:
+            lines.append(f"- {label}: **{int(year)}**")
+    finance = sources.get("finance") or {}
+    if finance.get("nces_zip_years"):
+        lines.append(f"- NCES finance complete-data zips: {finance['nces_zip_years']}")
+    scorecard = sources.get("scorecard") or {}
+    if scorecard.get("file") or scorecard.get("file_date"):
+        lines.append(
+            f"- College Scorecard: `{scorecard.get('file') or 'bulk ZIP'}` "
+            f"({scorecard.get('file_date') or 'most recent file'})"
+        )
+    return "\n".join(lines) + "\n"
 
 
 def _model_card_md(metrics: dict, score_year: int, n_watch: int, beats_note: str) -> str:
@@ -746,9 +1008,10 @@ closures and mergers on trailing (no-leakage) features.
 
 ## Data
 
-- Urban Institute Education Data Portal IPEDS extracts (directory, enrollment, FTE,
-  admissions, staffing, finance through 2017)
-- NCES IPEDS complete finance files (F1A / F2 / F3) for post-2017 backfill
+- Urban Institute Education Data Portal IPEDS extracts (directory, fall enrollment,
+  enrollment FTE, admissions, staffing, and finance through the newest complete year)
+- NCES IPEDS complete finance files (F1A / F2 / F3) for 2018–2022 backfill. Later
+  standalone finance zips are not invented when they 404.
 - Official FSA composite year workbooks from data.ed.gov (FY 2007–2018) plus
   Urban Institute FSA CSV (2006–2016). Official scores win on overlap.
 - HCM and Closed School lists: ingested when a current Data Center file downloads;
@@ -794,6 +1057,7 @@ Configured feature columns not present in this run: {unused_txt}.
 - Score year: **{score_year}**
 - Rows written: **{n_watch}**
 - Files: `outputs/watchlist.csv`, `outputs/top50_report.html`, `outputs/libraries_top50.md`
+{_vintage_md(metrics)}
 
 ## Caveats
 

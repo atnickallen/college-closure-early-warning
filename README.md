@@ -289,13 +289,13 @@ Numbers below are from the v2 agent run on **2026-09-11**. Re-runs rewrite
 | Source | Status | Coverage vs MVP |
 | --- | --- | --- |
 | Official FSA composites on **data.ed.gov** (AY 2006–07 through 2017–18 `.xls`) | **Live** (CKAN `ff51fef3-9d22-49a7-b34b-54329a290307`) | **40,969** official rows, fiscal years **2007–2018**. Merged with Urban: **74,122** rows, **2006–2018** (MVP was 37,589 / 2006–2016). Contemporaneous panel hits: **2,103** in 2017 and **1,464** in 2018 (MVP was 0 after 2016). |
-| Urban Institute IPEDS extracts | **Live** | Directory 2004–2024; finance through 2017 |
+| Urban Institute IPEDS extracts | **Live** | Directory through 2025; fall enrollment, FTE, admissions, and instructional staff through 2024; finance through 2023 |
 | Urban FSA composite CSV | **Live** | 37,589 rows, 2006–2016 (unchanged) |
 | College Scorecard most-recent institution ZIP (no API key) | **Live** (`Most-Recent-Cohorts-Institution_06102026.zip`) | **6,273** institutions; **16** HCM2 flags; **30** `CURROPER=0`. Most-recent file has no `CLOSEDAT`. |
 | College Scorecard API (`DATA_GOV_API_KEY`) | Implemented; key not present on this VM | Same fields (`school.operating`, `school.ownership`, `school.under_investigation`, UNITID / OPEID). Mocked in `tests/test_scorecard.py`. |
 | WICHE Knocking 11th edition workbook | **Live** | **1,683** state-years (2009–2041); `hs_grad_pct_chg_5y` on the panel when `state_abbr` is present |
 | NCES `F1819`–`F2223` finance zips | **Live** | **29,613** rows, **2018–2022** (same as MVP) |
-| NCES `F2324_*` / `F2425_*` complete-data zips | **404** (tried `_Data_Stata`, `_P`, `_RV`, `_rev`) | Score year stays **2022** — 2023–24 are publication-lag `miss_finance` |
+| NCES `F2324_*` / `F2425_*` complete-data zips | **404** (tried `_Data_Stata`, `_P`, `_RV`, `_rev`) | Urban finance CSV already covers 2023. Years after that stay unpublished `miss_finance` and are not the score year |
 | studentaid.gov JS Data Center HCM / post-2018 composites | Direct `.xlsx` timeout/404 | Scorecard `HCM2` used as current evidence flag only |
 | Partner Connect Closed School `.xls` | Dated URLs 404 | Labels remain IPEDS `inst_status` / `date_closed` |
 | Higher Ed Dive / BestColleges trackers | BestColleges HTML cached (3 regex rows); no unique name+state matches | **0** extra label events. Placeholder: `data/external/closures_curated.csv` |
@@ -310,7 +310,7 @@ Numbers below are from the v2 agent run on **2026-09-11**. Re-runs rewrite
 | Parent/child rollup | **3,028** child rows inherited parent totals |
 | Labels h=3 | **3,703** positives / 50,315 complete *risk-universe* rows (same IPEDS event set as MVP; trackers added no unique matches) |
 | Model | XGBoost test **PR-AUC 0.179** vs naive composite 0.052 / 5y-decline 0.123; recall@50 **0.090** vs 0.009 / 0.045. **Beats both baselines**. Honest note: PR-AUC is slightly below MVP 0.190 after adding 2017–18 composites + WICHE — not a claimed improvement in rank quality. |
-| Watch list | Score year **2022** (`miss_finance` 4.8%). Extra columns: Scorecard HCM2/operating, accreditor/WARN/990 flags |
+| Watch list | Score year is the newest finance-complete right-censored year (IPEDS **2023**, academic year 2023-24). Enrollment, admissions, and staff use 2024 when the school reported them. See `outputs/vintage_years.json`. |
 
 Exact URLs and status codes: [`outputs/fsa_ingest.md`](outputs/fsa_ingest.md).
 
@@ -320,15 +320,17 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 
 | File | What it is | How to use it |
 | --- | --- | --- |
-| [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit rows for the score year (up to 500), including `lib_*` columns | Sort is already by `risk_score` descending. Not a closure list. |
+| [`outputs/watchlist.csv`](outputs/watchlist.csv) | Ranked private nonprofit / for-profit rows for the score year (up to 500), including `lib_*` and source-year columns | Sort is already by `risk_score` descending. Not a closure list. |
+| [`outputs/vintage_years.json`](outputs/vintage_years.json) | Complete year used for each federal source | Finance year is the score year. |
+| [`outputs/feature_years.csv`](outputs/feature_years.csv) | Per-school year used for each model feature | Fallback years when a school missed the complete year. |
 | [`outputs/watchlist_nonprofit.csv`](outputs/watchlist_nonprofit.csv) | Same ranking restricted to `inst_control == 2` (up to 250) | Use when the question is nonprofit-only. |
-| [`outputs/top50_report.html`](outputs/top50_report.html) | Still-operating top 50, then teach-out and closed/defunct sections. Cards include FTE, discount, margins, composite, HCM/Scorecard, enrichment, libraries, SHAP drivers | Open in a browser. Read the yellow banner first. Scores are the 2022 watch-list scores. |
+| [`outputs/top50_report.html`](outputs/top50_report.html) | Still-operating top 50, then teach-out and closed/defunct sections. Cards include FTE, discount, margins, composite, HCM/Scorecard, enrichment, libraries, SHAP drivers, and which schools entered or left versus the 2022 residential list | Open in a browser. Read the yellow banner first. Scores use the current finance score year. |
 | [`outputs/libraries_top50.md`](outputs/libraries_top50.md) | Unique / unknown library notes for the top-50 + nonprofit shortlist | Cultural/asset context, not a model feature. |
 | [`outputs/libraries_top50.csv`](outputs/libraries_top50.csv) | Same shortlist as a join table (`lib_*` columns) | Spreadsheet view of holdings + notes. |
 | [`outputs/libraries_oclc_crosswalk.csv`](outputs/libraries_oclc_crosswalk.csv) | UNITID → OCLC symbol / WorldCat Registry / libraries.org id | Accept only when NCES LIBID equals UNITID. |
 | [`outputs/model_card.md`](outputs/model_card.md) | Task, data, split, PR-AUC / recall@K, SHAP, caveats | The narrative companion to the metrics JSON. |
 | [`outputs/model_metrics.json`](outputs/model_metrics.json) | Machine-readable split metrics and year-level baseline comparison | Check `beats_naive` before claiming the model won. |
-| [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | Why 2023–24 are not ranked. |
+| [`outputs/nces_finance_years.md`](outputs/nces_finance_years.md) | Which NCES F-year zips parsed | NCES standalone zips after 2022 still 404. Urban finance covers 2023. |
 | [`outputs/fsa_ingest.md`](outputs/fsa_ingest.md) / [`outputs/fsa_attempts.json`](outputs/fsa_attempts.json) | HTTP table: URL, status, bytes | Verified live vs still impossible. |
 | [`outputs/qa_counts.md`](outputs/qa_counts.md) / [`outputs/qa_panel.md`](outputs/qa_panel.md) | Universe counts and missingness by year | Catch a broken ingest before you trust ranks. |
 | [`outputs/status_current.csv`](outputs/status_current.csv) | Ranked rows walked to fill the still-operating top 50, with curated status plus federal flags | Join on `unitid`. `list_bucket` is `open`, `not_enrolling`, `closed`, or `unknown`. |
@@ -339,15 +341,24 @@ Committed under `outputs/` so a clone can be read without re-downloading Urban.
 ### Score-year rule
 
 The watch list is scored on the latest **right-censored** year whose
-`miss_finance` is not dominated by unpublished NCES files (threshold: mean
-`miss_finance` &lt; 50%). In this build that year is **2022**. Directory years
-2023–2024 exist, but `F2324` / `F2425` standalone zips still 404, so ranking
-those years would treat publication lag as a risk signal.
+`miss_finance` is not dominated by unpublished finance (threshold: mean
+`miss_finance` &lt; 50%). In this build that year is **2023** (IPEDS 2023-24).
+Urban's finance CSV is complete through 2023. Directory continues through
+2025, and fall enrollment, FTE, admissions, and instructional staff through
+2024. Those later years are not the score year: their finance is still
+missing for essentially every school, and ranking them would treat publication
+lag as a risk signal.
+
+The published row for each school is not a single contemporaneous year. Each
+feature uses the newest complete year of its source when that school reported
+it, and otherwise that school's latest earlier value. The year used is stored
+as `{feature}_year` in `outputs/feature_years.csv`, with source years
+`year_finance`, `year_enrollment`, `year_admissions`, `year_staff`, and
+`year_directory` on the watch list. Training rows stay contemporaneous.
 
 Right-censor means: if the label horizon is 3 years and the last complete
-directory year is 2024, then 2022–2024 rows cannot yet be confirmed *negative*
-(a 2022 school could still close in 2024–25). Those rows are scored, not used
-as training labels.
+directory year is 2025, then 2023–2025 rows cannot yet be confirmed *negative*.
+Those rows are scored, not used as training labels.
 
 ## Current status checker
 
@@ -359,15 +370,16 @@ review of the original top 50 (one row per school, with UNITID, name, state,
 top 50 are appended, with the federal source and `checked_at`. Existing rows
 are not overwritten. Edit a row in place when you learn something new.
 
-`outputs/top50_report.html` is not the first 50 rows of the 2022 ranking. The
+`outputs/top50_report.html` is not the first 50 rows of the score-year ranking. The
 main list is schools on that ranking that are still operating, have on-campus
 dorms, and have their own campus. The walk continues in original rank order
 until 50 schools meet all three tests, including past the 500-row watch list.
 Later ranks come from `data/processed/scored.parquet` when a pipeline run is
 on disk, and otherwise from the committed score-year file
 `outputs/ranked_universe.csv` (schools already in the watch list are not
-repeated). Scores on the page are the 2022 watch-list scores. The page says so in the header: elevated-risk
-indicators, not closure predictions. `docs/cover.png` is the banner at the
+repeated). Scores on the page are the current score-year watch-list scores. The page says so in the header: elevated-risk
+indicators, not closure predictions. A section compares the residential top 50
+with the frozen 2022 list in `data/campus/top50_2022_baseline.csv`. `docs/cover.png` is the banner at the
 top of the report.
 
 On-campus housing comes from IPEDS Institutional Characteristics
@@ -415,13 +427,13 @@ python3 scripts/check_status.py --open 50 --skip-network
 far down `outputs/watchlist.csv` the scan may go; omit it to scan the whole
 file. The command writes `outputs/status_current.csv` for the rows it walked
 and rebuilds `outputs/top50_report.html` with the residential own-campus list,
-the teach-out section, **Closed or defunct since the 2022 data**, and the
-excluded no-dorm / no-campus section (original rank, 2022 score, dorm
+the teach-out section, **Closed or defunct since the score-year data**, and the
+excluded no-dorm / no-campus section (original rank, score-year score, dorm
 capacity, acreage, and sources). Each main-list entry hotlinks a campus photo when one is on file
 (a Commons thumbnail or an image from the school's own site), with the credit
 under the image, or shows "No photo found". Each main-list card also links
 "Satellite view" to Google Maps satellite imagery centered on the campus.
-When `campus_map_url` is set, the card links "Campus map" as well.
+When `campus_map_url` is set, the card also links "Campus map".
 Coordinates live in `data/campus/campus_land.csv` (`lat`, `lon`,
 `coord_source`), taken from IPEDS HD `LATITUDE` / `LONGITUD` and moved when
 that point is an admin office or a former campus. Closed and excluded rows
@@ -525,7 +537,7 @@ Data Portal endpoint 45,
 **2013–2023**. Bulk CSV (preferred):
 `https://educationdata.urban.org/csv/ipeds/colleges_ipeds_academic_libraries.csv`
 (the hyphenated `academic-libraries` filename 404s). Join is UNITID × year; for
-score year 2022 we take the latest AL year **≤ 2022** when one exists, otherwise
+the score year we take the latest AL year **at or before that year** when one exists, otherwise
 the latest available year, and record `lib_year`. Expenditure fields are only
 published for libraries with total expenditures above $100,000 (Urban/IPEDS
 rule). Sentinels `-1/-2/-3` become unknown — never filled with zeros that look
@@ -663,7 +675,7 @@ Full tables: [`outputs/model_card.md`](outputs/model_card.md),
 
 ## How to read a watch-list row
 
-`risk_score` is a model output on the score-year (2022) slice. Higher means
+`risk_score` is a model output on the current score-year snapshot. Higher means
 “looks more like historical positives on trailing features.” It is not a
 probability you should quote as “X% chance of closure.”
 
@@ -754,7 +766,7 @@ FSA pages move; ingest tries several URLs and **continues** on failure.
 - Official FSA composites via data.ed.gov currently end in FY **2018**. Later
   years use last observed score + `composite_is_lagged`. Post-2018 FSA
   workbooks are JS Data Center only (attempted; not ingested).
-- `F2324` / `F2425` standalone zips are still 404. Score year stays 2022.
+- `F2324` / `F2425` standalone zips are still 404. Urban finance through 2023 is the score year. Later years stay off the ranking while finance is unpublished.
 - Official HCM workbook and Closed School weekly `.xls` remain blocked.
 - Extra closure trackers added 0 unique name+state matches this run.
 - College Scorecard most-recent ZIP uses `HCM2` / `CURROPER`, not
@@ -774,8 +786,8 @@ FSA pages move; ingest tries several URLs and **continues** on failure.
 - Official FSA HCM1/HCM2 workbook and weekly Closed School `.xls` (JS Data
   Center / Partner Connect). Try again when a stable direct file exists.
 - Post-2018 official composite workbooks (same JS Data Center).
-- NCES `F2324` / `F2425` standalone complete-data zips — raise the score year
-  only when `miss_finance` is no longer mostly publication lag.
+- NCES `F2324` / `F2425` standalone complete-data zips — a finance year after 2023
+  joins the score only when `miss_finance` is no longer mostly publication lag.
 - Higher Ed Dive / BestColleges structured tables (current regex is conservative;
   unique directory matches only). Prefer filling `data/external/closures_curated.csv`
   from a cited list over fuzzy matching.

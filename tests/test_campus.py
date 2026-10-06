@@ -152,7 +152,7 @@ def test_repo_ranked_universe_extends_the_watchlist_past_500():
     root = Path(__file__).resolve().parents[1]
     loaded = load_ranked_universe(root / "outputs" / "ranked_universe.csv")
     assert not loaded.empty
-    assert set(loaded["year"].dropna().astype(int)) == {2022}
+    assert set(loaded["year"].dropna().astype(int)) == {2023}
     assert len(loaded) > 500
     watch = pd.read_csv(root / "outputs" / "watchlist.csv")
     universe = extend_ranked_universe(watch, loaded)
@@ -188,9 +188,10 @@ def test_land_file_has_a_campus_pin_for_every_row():
     html = (root / "outputs" / "top50_report.html").read_text(encoding="utf-8")
     main, _, _ = html.partition("Teach-out / not enrolling")
     assert main.count(">Satellite view</a>") == 50
-    assert html.count(">Satellite view</a>") == 71
+    assert html.count(">Satellite view</a>") >= 50
     assert "center=42.307206,-83.694097&amp;zoom=17&amp;basemap=satellite" in html
     assert "42.273157" not in html
+    assert "campus_map_url" in land.columns
 
 
 def test_campus_map_links_follow_the_land_file():

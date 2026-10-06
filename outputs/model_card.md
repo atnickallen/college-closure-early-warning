@@ -14,9 +14,10 @@ closures and mergers on trailing (no-leakage) features.
 
 ## Data
 
-- Urban Institute Education Data Portal IPEDS extracts (directory, enrollment, FTE,
-  admissions, staffing, finance through 2017)
-- NCES IPEDS complete finance files (F1A / F2 / F3) for post-2017 backfill
+- Urban Institute Education Data Portal IPEDS extracts (directory, fall enrollment,
+  enrollment FTE, admissions, staffing, and finance through the newest complete year)
+- NCES IPEDS complete finance files (F1A / F2 / F3) for 2018–2022 backfill. Later
+  standalone finance zips are not invented when they 404.
 - Official FSA composite year workbooks from data.ed.gov (FY 2007–2018) plus
   Urban Institute FSA CSV (2006–2016). Official scores win on overlap.
 - HCM and Closed School lists: ingested when a current Data Center file downloads;
@@ -44,10 +45,10 @@ val n=7661; test n=4799.
 
 | Model | PR-AUC | ROC-AUC | Recall@25 | Recall@50 | Recall@100 | n | positives |
 |-------|--------|---------|-----------|-----------|------------|---|-----------|
-| xgboost | 0.179 | 0.748 | 0.049 | 0.090 | 0.148 | 4799 | 223 |
-| logistic | 0.114 | 0.778 | 0.009 | 0.013 | 0.013 | 4799 | 223 |
-| naive: composite < 1.0 | 0.052 | 0.529 | 0.000 | 0.009 | 0.054 | 4799 | 223 |
-| naive: 5y enrollment decline > 30% | 0.123 | 0.737 | 0.009 | 0.045 | 0.090 | 4799 | 223 |
+| xgboost | 0.290 | 0.782 | 0.074 | 0.143 | 0.225 | 4799 | 231 |
+| logistic | 0.324 | 0.853 | 0.074 | 0.134 | 0.234 | 4799 | 231 |
+| naive: composite < 1.0 | 0.054 | 0.527 | 0.000 | 0.009 | 0.052 | 4799 | 231 |
+| naive: 5y enrollment decline > 30% | 0.128 | 0.740 | 0.009 | 0.048 | 0.100 | 4799 | 231 |
 
 On at least one held-out test year the main model beat a naive baseline on PR-AUC and/or recall@50. See `outputs/model_metrics.json` for year-level detail. Beating a baseline is not evidence the watch list is a reliable forecast for any named school.
 
@@ -55,24 +56,39 @@ Configured feature columns not present in this run: none.
 
 ## Top global drivers
 
-- `unrestricted_na_to_exp` (mean |SHAP| 0.8833)
-- `composite_score` (mean |SHAP| 0.5162)
-- `log_fte` (mean |SHAP| 0.4278)
-- `endowment_per_fte` (mean |SHAP| 0.4115)
-- `operating_margin` (mean |SHAP| 0.2667)
-- `yield_rate` (mean |SHAP| 0.2584)
-- `tuition_dependence` (mean |SHAP| 0.2384)
-- `enr_pct_chg_1y` (mean |SHAP| 0.2173)
-- `hs_grad_pct_chg_5y` (mean |SHAP| 0.1780)
-- `admit_rate` (mean |SHAP| 0.1598)
-- `student_staff_ratio` (mean |SHAP| 0.1516)
-- `sector` (mean |SHAP| 0.1441)
+- `unrestricted_na_to_exp` (mean |SHAP| 0.9731)
+- `endowment_per_fte` (mean |SHAP| 0.5370)
+- `composite_score` (mean |SHAP| 0.5088)
+- `log_fte` (mean |SHAP| 0.4178)
+- `operating_margin` (mean |SHAP| 0.2510)
+- `yield_rate` (mean |SHAP| 0.2197)
+- `tuition_dependence` (mean |SHAP| 0.2115)
+- `enr_pct_chg_1y` (mean |SHAP| 0.2039)
+- `hs_grad_pct_chg_5y` (mean |SHAP| 0.1902)
+- `student_staff_ratio` (mean |SHAP| 0.1820)
+- `consec_neg_margin_yrs` (mean |SHAP| 0.1772)
+- `sector` (mean |SHAP| 0.1750)
 
 ## Watch list
 
-- Score year: **2022**
+- Score year: **2023**
 - Rows written: **500**
 - Files: `outputs/watchlist.csv`, `outputs/top50_report.html`, `outputs/libraries_top50.md`
+
+## Current federal vintages
+
+The published score is one current row per school. Training rows stay contemporaneous (no future years mixed into the fit). Each feature uses the newest complete year of its source when that school reported it, and otherwise that school's latest earlier value. Per-feature years are in `outputs/feature_years.csv`.
+
+- IPEDS finance: **2023**
+- IPEDS fall enrollment: **2024**
+- IPEDS enrollment FTE: **2024**
+- IPEDS admissions: **2024**
+- IPEDS instructional staff: **2024**
+- IPEDS directory: **2025**
+- IPEDS academic libraries: **2023**
+- NCES finance complete-data zips: 2018-2022
+- College Scorecard: `Most-Recent-Cohorts-Institution_06102026.zip` (2026-06-10)
+
 
 ## Caveats
 
