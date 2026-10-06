@@ -1,0 +1,107 @@
+# Weekly camps, campuses, and 501(c)(7) listing refresh.
+# Re-reads public listing pages and the curated seed in `camps and 501c7's`.
+# Writes listings.csv, listings.json, index.html, and fetch_log.md.
+# Map search uses the FIRECRAWL_API_KEY repository secret when it is set.
+# An empty secret is fine: the job uses the no-key search and page crawl.
+# The key is never printed.
+#
+# Pull-request creation is optional. Some repositories do not let GitHub Actions
+# open pull requests. The job still pushes branch camps-501c7-refresh and writes
+# a job summary with a compare link.
+
+name: Camps and 501(c)(7) listings refresh
+
+on:
+  schedule:
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install listing dependencies
+        run: pip install "pandas>=2.1" "requests>=2.31" "pyyaml>=6.0"
+
+      - name: Refresh listings
+        env:
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+        run: python3 "camps and 501c7's/scripts/run_listings.py"
+
+      - name: Publish the refresh branch and job summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          paths=(
+            "camps and 501c7's/outputs/listings.csv"
+            "camps and 501c7's/outputs/listings.json"
+            "camps and 501c7's/outputs/index.html"
+            "camps and 501c7's/outputs/fetch_log.md"
+          )
+          compare_url="https://github.com/${GITHUB_REPOSITORY}/compare/main...camps-501c7-refresh?expand=1"
+          {
+            echo "## Camps and 501(c)(7) listings refresh"
+            echo ""
+            echo "Listings are properties for sale that show dorms, cabins, bunkhouses, or a lodge with beds."
+            echo ""
+            echo "Map search uses Firecrawl when \`FIRECRAWL_API_KEY\` is set, and the no-key search otherwise."
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          if git diff --quiet -- "${paths[@]}"; then
+            {
+              echo "No listing output changes."
+              echo ""
+              echo "[Compare camps-501c7-refresh with main](${compare_url})"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          branch="camps-501c7-refresh"
+          git checkout -B "$branch"
+          git add -- "${paths[@]}"
+          git commit -m "Refresh camp and 501(c)(7) listings"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git push --force-with-lease origin "$branch"
+          else
+            git push -u origin "$branch"
+          fi
+          {
+            echo "Pushed branch \`${branch}\`."
+            echo ""
+            echo '```'
+            git diff --stat HEAD~1 HEAD
+            echo '```'
+            echo ""
+            echo "[Compare camps-501c7-refresh with main](${compare_url})"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          pr_note=""
+          if gh pr view "$branch" --json url --jq .url > /tmp/camps-pr-url 2>/tmp/camps-pr-err; then
+            pr_note="Existing pull request: $(cat /tmp/camps-pr-url)"
+          elif gh pr create --base main --head "$branch" --title "Weekly camps and 501(c)(7) listings" --body "Automated refresh of public listings for campuses, camps, and 501(c)(7) clubs that include housing. The curated seed is merged in. Blocked sources are named in the fetch log." > /tmp/camps-pr-url 2>/tmp/camps-pr-err; then
+            pr_note="Opened pull request: $(cat /tmp/camps-pr-url)"
+          else
+            pr_note="Pull request was not created. GitHub Actions may not be allowed to open pull requests. Review the compare link above."
+          fi
+          {
+            echo "$pr_note"
+            if [[ "$pr_note" == Pull\ request\ was\ not\ created* ]] && [[ -s /tmp/camps-pr-err ]]; then
+              echo ""
+              echo '```'
+              tail -n 20 /tmp/camps-pr-err
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0

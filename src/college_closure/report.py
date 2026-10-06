@@ -235,6 +235,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
         <tr><th>Own campus</th><td>{html.escape(_own_campus_text(row))}</td>
             <th>Land source</th><td>{_source_html(_text(row.get("campus_source_url"))) or "—"}</td></tr>
         {_satellite_row(row)}
+        {_campus_map_row(row)}
       </table>
       <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
       Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
@@ -345,6 +346,20 @@ def _satellite_row(row: pd.Series) -> str:
     if not link:
         return ""
     return f"<tr><th>Satellite view</th><td colspan=\"3\">{link}</td></tr>"
+
+
+def _campus_map_anchor(row: pd.Series) -> str:
+    url = _text(row.get("campus_map_url"))
+    if not url:
+        return ""
+    return f'<a href="{html.escape(url, quote=True)}">Campus map</a>'
+
+
+def _campus_map_row(row: pd.Series) -> str:
+    link = _campus_map_anchor(row)
+    if not link:
+        return ""
+    return f"<tr><th>Campus map</th><td colspan=\"3\">{link}</td></tr>"
 
 
 def _campus_photo_html(row: pd.Series) -> str:
@@ -606,6 +621,7 @@ _REPORT_STATUS_COLS = (
     "lat",
     "lon",
     "coord_source",
+    "campus_map_url",
     "exclusion_reason",
 )
 
