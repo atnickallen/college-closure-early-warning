@@ -66,7 +66,11 @@ def _consecutive_neg(df: pd.DataFrame, flag_col: str, window: int = 5) -> pd.Ser
     )
 
 
-def build_features(settings: Settings, panel: pd.DataFrame | None = None) -> pd.DataFrame:
+def build_features(
+    settings: Settings,
+    panel: pd.DataFrame | None = None,
+    winsor_bounds: dict[str, tuple[float, float]] | None = None,
+) -> pd.DataFrame:
     processed = settings.processed_dir
     if panel is None:
         panel = pd.read_parquet(processed / "panel.parquet")
@@ -188,7 +192,12 @@ def build_features(settings: Settings, panel: pd.DataFrame | None = None) -> pd.
         df["hs_grad_pct_chg_5y"] = pd.NA
 
     for col in RATIO_COLS:
-        if col in df.columns:
+        if col not in df.columns:
+            continue
+        if winsor_bounds and col in winsor_bounds:
+            lo, hi = winsor_bounds[col]
+            df[col] = pd.to_numeric(df[col], errors="coerce").clip(lo, hi)
+        else:
             df[col] = _winsorize(df[col])
 
     dest = processed / "features.parquet"

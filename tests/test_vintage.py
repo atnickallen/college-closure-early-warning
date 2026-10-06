@@ -162,6 +162,36 @@ def test_snapshot_uses_newer_enrollment_and_records_finance_fallback():
     assert pd.isna(beta["admit_rate_year"]) or beta["admit_rate"] != beta["admit_rate"]
 
 
+def test_insufficient_finance_sorts_behind_reported_finance():
+    scored = pd.DataFrame(
+        [
+            {
+                "unitid": 1,
+                "year": 2023,
+                "risk_score": 0.99,
+                "inst_name": "Blank",
+                "label_complete_h3": False,
+                "miss_finance": True,
+                "insufficient_data": True,
+            },
+            {
+                "unitid": 2,
+                "year": 2023,
+                "risk_score": 0.20,
+                "inst_name": "Filed",
+                "label_complete_h3": False,
+                "miss_finance": False,
+                "insufficient_data": False,
+            },
+        ]
+    )
+    dest = Path("/tmp/ranked_insuff.csv")
+    write_ranked_universe(scored, dest, prefer_year=None)
+    loaded = pd.read_csv(dest)
+    assert list(loaded["inst_name"]) == ["Filed", "Blank"]
+    assert int(loaded.iloc[0]["universe_rank"]) == 1
+
+
 def test_ranked_universe_without_prefer_year_follows_finance():
     scored = pd.DataFrame(
         [

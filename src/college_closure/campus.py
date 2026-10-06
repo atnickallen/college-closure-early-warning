@@ -132,8 +132,23 @@ def own_campus_value(row: pd.Series | dict) -> str:
     return _text(row.get("own_campus")).lower()
 
 
+def _flag_true(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "1.0", "true", "yes"}
+    try:
+        if pd.isna(value):
+            return False
+    except (TypeError, ValueError):
+        return False
+    return bool(value)
+
+
 def acquisition_ready(row: pd.Series | dict) -> bool:
-    """Still operating, residential, and curated own_campus = yes."""
+    """Still operating, residential, own campus, and not missing core finance."""
+    if _flag_true(row.get("insufficient_data")):
+        return False
     if operating_bucket(row) != OPEN_BUCKET:
         return False
     if not is_residential(row):
@@ -150,6 +165,8 @@ def exclusion_reason(row: pd.Series | dict) -> str:
     bucket = operating_bucket(row)
     if bucket != OPEN_BUCKET:
         return ""
+    if _flag_true(row.get("insufficient_data")):
+        return "insufficient data"
     if not is_residential(row):
         return "no on-campus dorms"
     own = own_campus_value(row)
@@ -418,6 +435,8 @@ RANKED_EXPORT_COLUMNS = (
     "composite_fail",
     "miss_finance",
     "finance_from_parent",
+    "parent_unitid",
+    "insufficient_data",
     "year_finance",
     "year_enrollment",
     "year_fall_enrollment",
@@ -445,9 +464,7 @@ def write_ranked_universe(scored: pd.DataFrame, path: Path, *, prefer_year: int 
                 if int(prefer_year) in set(pd.to_numeric(incomplete["year"], errors="coerce").dropna().astype(int)):
                     held = incomplete
             current = held.loc[pd.to_numeric(held["year"], errors="coerce") == int(prefer_year)].copy()
-            if "risk_score" in current.columns:
-                current = current.sort_values("risk_score", ascending=False)
-            current = current.reset_index(drop=True)
+            current = _sort_score_year(current)
             score_year = int(prefer_year)
     if current.empty:
         return 0
@@ -484,6 +501,20 @@ def select_score_year(scored: pd.DataFrame) -> tuple[pd.DataFrame, int]:
         if len(usable):
             score_year = int(usable.index.max())
     current = current.loc[pd.to_numeric(current["year"], errors="coerce") == score_year].copy()
-    if "risk_score" in current.columns:
-        current = current.sort_values("risk_score", ascending=False)
-    return current.reset_index(drop=True), score_year
+    return _sort_score_year(current), score_year
+
+
+def _sort_score_year(current: pd.DataFrame) -> pd.DataFrame:
+    """Rank schools with core finance first. Blank finance is not a high score."""
+    frame = current.copy()
+    if "insufficient_data" in frame.columns:
+        flag = frame["insufficient_data"].map(_flag_true)
+        frame = frame.assign(_insuff=flag)
+        if "risk_score" in frame.columns:
+            frame = frame.sort_values(["_insuff", "risk_score"], ascending=[True, False])
+        else:
+            frame = frame.sort_values("_insuff", ascending=True)
+        frame = frame.drop(columns=["_insuff"])
+    elif "risk_score" in frame.columns:
+        frame = frame.sort_values("risk_score", ascending=False)
+    return frame.reset_index(drop=True)

@@ -266,6 +266,9 @@ def plain_driver(name: str, value, year, *, context: dict | None = None) -> str:
             else "the composite score was not carried forward"
         )
     if name == "finance_from_parent":
+        parent = context.get("finance_parent_unitid") if context else None
+        if number and parent:
+            return f"finance from parent UNITID {int(parent)}"
         return "finance on the scored row was copied from a parent campus" if number else "finance was not copied from a parent"
     if name == "consec_neg_margin_yrs" and number is not None:
         return f"{int(number)} of the last 5 years show a negative margin"
@@ -303,7 +306,15 @@ def fill_method(name: str, value, row: pd.Series) -> str:
         "discount_rate_chg_5y",
         "operating_margin_chg_5y",
     } and bool(row.get("finance_from_parent")):
-        return "Copied from the parent campus finance row, then winsorized with the rest of the panel."
+        parent = row.get("parent_unitid")
+        parent_txt = ""
+        parent_num = _num(parent)
+        if parent_num is not None:
+            parent_txt = f" UNITID {int(parent_num)}"
+        return (
+            f"Copied from the parent campus finance row{parent_txt}, then winsorized with the rest of the panel. "
+            "Enrollment is this campus's own count."
+        )
     if name in RATIO_COLS:
         return "Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring."
     return "Reported on the scored row. Not imputed."
@@ -324,7 +335,11 @@ def quality_flags(row: pd.Series, facts: dict) -> list[str]:
             f"({facts.get('system_filer_name') or 'the finance-reporting campus'})."
         )
     if bool(row.get("finance_from_parent")):
-        flags.append("Finance on the scored row was inherited from a parent campus.")
+        parent = _num(row.get("parent_unitid")) or _num(facts.get("finance_parent_unitid"))
+        if parent is not None:
+            flags.append(f"finance from parent UNITID {int(parent)}")
+        else:
+            flags.append("finance from parent")
     investment = _num(facts.get("investment_return"))
     revenue = _num(facts.get("revenue"))
     if investment is not None and revenue not in (None, 0) and abs(investment) > 0.5 * abs(revenue):
@@ -395,11 +410,16 @@ def facts_html(summary: dict) -> str:
     per_fte = summary.get("endowment_per_fte_display")
     scope = summary.get("endowment_scope") or ""
     endow_txt = money(endow) if _num(endow) is not None else "not reported"
+    parent_flag = ""
+    parent_num = _num(summary.get("finance_parent_unitid")) or _num(summary.get("system_filer_unitid"))
+    from_parent = str(summary.get("finance_from_parent")).strip().lower() in {"true", "1", "1.0", "yes"}
+    if from_parent and parent_num is not None:
+        parent_flag = f'<p class="fact-note">finance from parent UNITID {int(parent_num)}</p>'
     if endow_year:
         endow_txt += f" (IPEDS finance {endow_year}"
         endow_txt += ", this campus" if scope == "this campus" else ""
-        if scope == "system filing":
-            endow_txt += f", filed under UNITID {summary.get('system_filer_unitid')}"
+        if scope in {"system filing", "parent filing"} and parent_num is not None:
+            endow_txt += f", finance from parent UNITID {int(parent_num)}"
         endow_txt += ")"
     per_txt = money(per_fte) + " per FTE" if _num(per_fte) is not None else "per FTE not reported"
     fall = _fmt_count(summary.get("fall_headcount"))
@@ -423,6 +443,7 @@ def facts_html(summary: dict) -> str:
     note_html = f"<p class=\"fact-note\">{html.escape(note)}</p>" if note else ""
     return f"""
       <h3>Endowment and enrollment</h3>
+      {parent_flag}
       <table class="facts">
         <tr><th>Endowment</th><td>{html.escape(endow_txt)}</td>
             <th>Per FTE</th><td>{html.escape(per_txt)}</td></tr>
@@ -625,7 +646,12 @@ def _read(path: Path, columns: list[str] | None = None) -> pd.DataFrame:
     return frame
 
 
-def measure_facts(processed: Path, unitids: list[int], names: dict[int, str]) -> dict[int, dict]:
+def measure_facts(
+    processed: Path,
+    unitids: list[int],
+    names: dict[int, str],
+    parents: dict[int, int] | None = None,
+) -> dict[int, dict]:
     """Endowment and enrollment from the extracts, including years the panel dropped."""
     finance = _read(
         processed / "finance.parquet",
@@ -639,19 +665,21 @@ def measure_facts(processed: Path, unitids: list[int], names: dict[int, str]) ->
     out = {}
     for unitid in unitids:
         facts = _one_measure(unitid, finance, fall, fte, names)
-        filer = SYSTEM_FINANCE_FILER.get(unitid)
+        filer = (parents or {}).get(unitid) or SYSTEM_FINANCE_FILER.get(unitid)
         if filer and not facts.get("extract_has_finance"):
             parent = _one_measure(filer, finance, fall, fte, names)
             if parent.get("extract_has_finance"):
+                facts["finance_from_parent"] = True
+                facts["finance_parent_unitid"] = filer
                 facts["system_filer_unitid"] = filer
                 facts["system_filer_name"] = names.get(filer) or parent.get("inst_name") or ""
+                facts["endowment_scope"] = "parent filing"
                 facts["endowment_market_value"] = parent.get("endowment_market_value")
                 facts["endowment_year"] = parent.get("endowment_year")
                 facts["revenue"] = parent.get("revenue")
                 facts["expenses"] = parent.get("expenses")
                 facts["net_tuition"] = parent.get("net_tuition")
                 facts["investment_return"] = parent.get("investment_return")
-                facts["endowment_scope"] = "system filing"
                 facts["endowment_source"] = (
                     f"IPEDS finance F2H02/F1H02 for UNITID {filer} ({facts['system_filer_name']}), "
                     "the campus that files in this extract"
@@ -661,8 +689,10 @@ def measure_facts(processed: Path, unitids: list[int], names: dict[int, str]) ->
                 if own_fte and endow is not None and own_fte > 0:
                     facts["endowment_per_fte_display"] = endow / own_fte
                 facts["endowment_note"] = (
-                    f"This campus has no finance row. The figure is the {facts['system_filer_name']} filing, "
-                    "not a separate endowment measured for this campus alone."
+                    f"finance from parent UNITID {filer}. "
+                    f"The figure is the {facts['system_filer_name']} filing, "
+                    "not a separate endowment measured for this campus alone. "
+                    "Enrollment on this card is this campus's own headcount and FTE."
                 )
         out[unitid] = facts
     return out
@@ -821,7 +851,20 @@ def build_score_explanations(settings) -> tuple[pd.DataFrame, dict]:
         names.setdefault(filer, names.get(filer, ""))
     controls = load_controls(settings.processed_dir)
     unitids = [_unitid(v) for v in open_df["unitid"]]
-    facts_by_id = measure_facts(settings.processed_dir, [u for u in unitids if u is not None], names)
+    parents: dict[int, int] = {}
+    if "finance_from_parent" in snapshot.columns and "parent_unitid" in snapshot.columns:
+        inherited = snapshot.loc[snapshot["finance_from_parent"].fillna(False).astype(bool)]
+        for _, inherited_row in inherited.iterrows():
+            child_id = _unitid(inherited_row.get("unitid"))
+            parent_id = _unitid(inherited_row.get("parent_unitid"))
+            if child_id and parent_id and child_id != parent_id:
+                parents[child_id] = parent_id
+    facts_by_id = measure_facts(
+        settings.processed_dir,
+        [u for u in unitids if u is not None],
+        names,
+        parents,
+    )
     for uid in list(facts_by_id):
         facts_by_id[uid]["control"] = controls.get(uid)
         facts_by_id[uid] = annotate_known_filings(facts_by_id[uid])
@@ -939,6 +982,8 @@ def build_score_explanations(settings) -> tuple[pd.DataFrame, dict]:
                     "fall_year_earlier": facts.get("fall_year_earlier"),
                     "fall_headcount_pct_change": facts.get("fall_headcount_pct_change"),
                     "enrollment_source": facts.get("enrollment_source"),
+                    "finance_from_parent": bool(facts.get("finance_from_parent")),
+                    "finance_parent_unitid": facts.get("finance_parent_unitid") or "",
                 }
             )
     frame = pd.DataFrame.from_records(records)
@@ -982,9 +1027,8 @@ def explanations_markdown(frame: pd.DataFrame, meta: dict) -> str:
     if nobts:
         lines.extend(
             [
-                "New Orleans Baptist Theological Seminary has the same Title IV history gap. "
-                f"A row rebuilt from its 2023 finance extract and 2024 enrollment, with the same booster, scores about {nobts.get('risk_score'):.3f}. "
-                "That figure is not a new published rank.",
+                "New Orleans Baptist Theological Seminary had the same Title IV history gap. "
+                f"Scored on its own filings with the same booster, the row is about {nobts.get('risk_score'):.3f}.",
                 "",
             ]
         )
@@ -1073,38 +1117,27 @@ def _markdown_facts(row: pd.Series) -> str:
 
 def _principia_section(frame: pd.DataFrame, meta: dict) -> str:
     school = frame[frame["unitid"] == 148016]
+    filing = (
+        "The IPEDS finance extract has a 2023 filing: endowment_end $592,903,744, revenue $97,015,232, "
+        "expenses $48,254,224, net tuition $738,933, investment return $77,515,584. "
+        "Fall headcount was 407 in 2019 and 339 in 2024. FTE was 390 in 2019 and 335 in 2024. "
+        "Net tuition is about 0.8% of revenue. The investment return is most of reported revenue, so the accounting margin is not an operating surplus. "
+        "Data USA matches the $593 million IPEDS endowment. "
+        "The Principia Corporation 990 (EIN 43-0652667) covers the college and the Principia School; the card keeps the college IPEDS line."
+    )
     if school.empty:
-        return "Principia College is not in this residential top 50."
-    first = school.iloc[0]
-    counter = meta.get("principia_counterfactual") or {}
-    counter_txt = ""
-    if counter:
-        counter_txt = (
-            f" A row rebuilt from the extracts, without changing the booster, scores about {counter.get('risk_score'):.3f} "
-            f"instead of the published {float(first['risk_score']):.3f}. "
-            "That counterfactual uses 2023 finance and 2024 enrollment and staff, leaves the composite missing, "
-            "and winsorizes ratios at the feature-panel 1st and 99th percentiles. It is not a new published rank."
+        return (
+            "Principia College is not in this residential top 50. "
+            "Title IV code 3 had dropped its 2015–2024 directory years, so the old snapshot scored a stub with blank finance. "
+            "Those extract years are now on the scored row, and the same booster uses the real filing. "
+            + filing
         )
+    first = school.iloc[0]
     return (
         f"Principia College is residential rank {int(first['residential_rank'])} with published risk score {float(first['risk_score']):.3f}. "
-        "The scored row is a 2025 directory stub. Finance, FTE, fall enrollment, admissions, and staff are all missing on it, "
-        f"and miss_finance is true. All {school['feature'].nunique()} model features are on the explanation table. "
-        f"The IPEDS finance extract nevertheless has a 2023 filing: endowment_end $592,903,744, revenue $97,015,232, "
-        f"expenses $48,254,224, net tuition $738,933, investment return $77,515,584. "
-        f"Fall headcount was 407 in 2019 and 339 in 2024. FTE was 390 in 2019 and 335 in 2024. "
-        "Net tuition is about 0.8% of revenue. Endowment per 2024 FTE is about $1.77 million, on the order of 12 years of 2023 expenses. "
-        "The investment return is most of reported revenue, so the accounting margin is not an operating surplus. "
-        "Data USA matches the $593 million IPEDS endowment and the $77.5 million return. "
-        "A college news article says about $1.1 billion and about 300 students. "
-        "The Principia Corporation 990 (EIN 43-0652667) is the college plus the Principia School; its asset total is about $1.2 billion and is not the college-only IPEDS line. "
-        "The published rank does not use the endowment at all. "
-        "The college's directory title_iv_indicator was 3, the same non-Title-IV code as Grove City College and the service academies, through 2024, "
-        "so the college-universe filter dropped those years. The 2025 directory codes it 1, and only that stub entered the panel. "
-        "Finance and enrollment extracts were left-joined onto directory years, so the earlier filings never attached. "
-        "The fix is to build the vintage row from the finance and enrollment extracts when a UNITID is in the current risk universe, "
-        "including years the Title IV filter had dropped, and then rescore that row with the existing booster. "
-        f"The model weights should stay as they are.{counter_txt} "
-        f"Drivers the published score actually used: {first['top_driver_1']}; {first['top_driver_2']}; {first['top_driver_3']}."
+        "The scored row uses the college's own finance and enrollment years, including the years when title_iv_indicator was 3. "
+        + filing
+        + f" Drivers the published score actually used: {first['top_driver_1']}; {first['top_driver_2']}; {first['top_driver_3']}."
     )
 
 

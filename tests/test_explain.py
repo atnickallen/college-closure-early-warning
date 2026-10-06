@@ -140,12 +140,23 @@ def test_committed_explanations_cover_the_residential_top_50():
     assert frame["residential_rank"].nunique() == 50
     assert frame["feature"].nunique() == 39
     principia = frame[frame["unitid"] == 148016].iloc[0]
-    assert principia["suspected_artifact"] == "yes"
+    assert str(principia["suspected_artifact"]).lower() not in {"yes", "true", "1"}
+    assert "never saw it" not in str(principia["data_quality_flags"])
     assert principia["endowment_market_value"] > 500_000_000
     assert principia["fall_headcount"] == 339
+    assert int(principia["residential_rank"]) == 49
+    seminary = frame[frame["unitid"] == 215813].iloc[0]
+    assert str(seminary["finance_from_parent"]).lower() in {"true", "yes", "1"}
+    assert int(seminary["finance_parent_unitid"]) == 215798
+    ottawa = frame[frame["unitid"] == 464226].iloc[0]
+    assert int(ottawa["finance_parent_unitid"]) == 155627
     page = (root / "outputs" / "top50_report.html").read_text(encoding="utf-8")
     main, _, _ = page.partition("Teach-out / not enrolling")
     assert main.count("Why it ranks here") == 50
     assert main.count("Endowment and enrollment") == 50
     assert "$592.9 million" in main
     assert "42.273157" not in page
+    assert "Insufficient data" in page
+    assert "Compared with the previous 2023 residential top 50" in page
+    assert "finance from parent UNITID 215798" in main
+    assert "finance from parent UNITID 155627" in main

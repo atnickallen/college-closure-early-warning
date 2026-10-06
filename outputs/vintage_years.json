@@ -38,6 +38,7 @@
       "file_date": "2026-06-10"
     }
   },
-  "n_schools": 2382,
-  "score_year_label": "2023-2024"
+  "n_schools": 2475,
+  "score_year_label": "2023-2024",
+  "booster": "frozen_pre_fix"
 }
