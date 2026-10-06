@@ -780,6 +780,11 @@ def test_operating_report_sections_list_rank_score_and_sources(tmp_path):
         table.loc[mask, "image_credit_url"] = "https://commons.wikimedia.org/wiki/File:Example.jpg" if image else ""
         table.loc[mask, "image_license"] = "CC BY 4.0" if image else ""
         table.loc[mask, "image_author"] = "Example Photographer" if image else ""
+    table["lat"] = ""
+    table["lon"] = ""
+    table.loc[table["inst_name"] == "Still Open", ["lat", "lon"]] = ["30.250000", "-97.750000"]
+    table.loc[table["inst_name"] == "Later Open", ["lat", "lon"]] = ["41.500000", "-81.600000"]
+    table.loc[table["inst_name"] == "DeVry-like", ["lat", "lon"]] = ["36.170000", "-115.140000"]
     path = tmp_path / "top50_report.html"
     stats = write_operating_report(path, table, table, open_n=3, score_year=2022)
     page = path.read_text(encoding="utf-8")
@@ -812,6 +817,27 @@ def test_operating_report_sections_list_rank_score_and_sources(tmp_path):
     _closed, _, excluded_body = closed_body.partition("Excluded: no on-campus dorms or no standalone campus")
     assert "Later Open" in excluded_body
     assert "no on-campus dorms" in excluded_body
+    still = (
+        "https://www.google.com/maps/@?api=1&amp;map_action=map"
+        "&amp;center=30.25,-97.75&amp;zoom=17&amp;basemap=satellite"
+    )
+    later = (
+        "https://www.google.com/maps/@?api=1&amp;map_action=map"
+        "&amp;center=41.5,-81.6&amp;zoom=17&amp;basemap=satellite"
+    )
+    devry = (
+        "https://www.google.com/maps/@?api=1&amp;map_action=map"
+        "&amp;center=36.17,-115.14&amp;zoom=17&amp;basemap=satellite"
+    )
+    assert still in main
+    assert "Satellite view" in main
+    assert later not in main
+    assert devry not in main
+    assert devry in closed_body
+    assert later in excluded_body
+    assert "Sold Campus" in closed_body
+    sold_row = closed_body.split("Sold Campus", 1)[1].split("</tr>", 1)[0]
+    assert "Satellite view" not in sold_row
 
 
 def test_status_refresh_workflow_survives_pr_creation_refusal():

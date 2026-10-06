@@ -15,6 +15,7 @@ from college_closure.campus import (
     load_ranked_universe,
     partition_acquisition,
     prefix_through_acquisition,
+    satellite_maps_url,
     write_ranked_universe,
 )
 
@@ -156,3 +157,36 @@ def test_repo_ranked_universe_extends_the_watchlist_past_500():
     universe = extend_ranked_universe(watch, loaded)
     assert int(universe["watchlist_rank"].max()) > 500
     assert universe["unitid"].astype(int).head(500).tolist() == watch["unitid"].astype(int).head(500).tolist()
+
+
+def test_satellite_maps_url_uses_the_campus_center():
+    url = satellite_maps_url("42.307206", "-83.694097")
+    assert url == (
+        "https://www.google.com/maps/@?api=1&map_action=map"
+        "&center=42.307206,-83.694097&zoom=17&basemap=satellite"
+    )
+    assert satellite_maps_url("", "-83.6") == ""
+    assert satellite_maps_url(None, None) == ""
+    assert satellite_maps_url("91", "0") == ""
+
+
+def test_land_file_has_a_campus_pin_for_every_row():
+    root = Path(__file__).resolve().parents[1]
+    land = pd.read_csv(root / "data" / "campus" / "campus_land.csv", dtype=str, keep_default_na=False)
+    assert {"lat", "lon", "coord_source"} <= set(land.columns)
+    assert (land["lat"].str.strip() != "").all()
+    assert (land["lon"].str.strip() != "").all()
+    assert land["coord_source"].str.contains("IPEDS HD").all()
+    moved = land[land["coord_source"].str.contains("Adjusted")]
+    assert moved["unitid"].tolist() == ["169363"]
+    concordia = land[land["unitid"] == "169363"].iloc[0]
+    assert abs(float(concordia["lat"]) - 42.307206) < 0.001
+    assert abs(float(concordia["lon"]) + 83.694097) < 0.001
+    assert "3475 Plymouth" in concordia["coord_source"]
+    assert "4090 Geddes" in concordia["coord_source"]
+    html = (root / "outputs" / "top50_report.html").read_text(encoding="utf-8")
+    main, _, _ = html.partition("Teach-out / not enrolling")
+    assert main.count(">Satellite view</a>") == 50
+    assert html.count(">Satellite view</a>") == 71
+    assert "center=42.307206,-83.694097&amp;zoom=17&amp;basemap=satellite" in html
+    assert "42.273157" not in html

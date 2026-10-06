@@ -35,6 +35,9 @@ LAND_COLUMNS = (
     "image_license",
     "image_author",
     "notes",
+    "lat",
+    "lon",
+    "coord_source",
 )
 
 HOUSING_COLUMNS = (
@@ -212,6 +215,9 @@ def attach_campus(
                 "image_license",
                 "image_author",
                 "campus_notes",
+                "lat",
+                "lon",
+                "coord_source",
             )
             if c in piece.columns
         ]
@@ -328,6 +334,28 @@ def extend_ranked_universe(watch: pd.DataFrame, scored: pd.DataFrame | None) -> 
     extra = extra.copy()
     extra["watchlist_rank"] = range(start, start + len(extra))
     return pd.concat([frame, extra], ignore_index=True)
+
+
+def _coord_text(number: float) -> str:
+    return f"{number:.6f}".rstrip("0").rstrip(".")
+
+
+def satellite_maps_url(lat, lon) -> str:
+    """Google Maps satellite view centered on a campus.
+
+    Blank when either coordinate is missing. The link is the public Maps URL
+    ``center=LAT,LON`` at zoom 17 on the satellite basemap.
+    """
+    lat_n = _num(lat)
+    lon_n = _num(lon)
+    if lat_n is None or lon_n is None:
+        return ""
+    if not (-90.0 <= lat_n <= 90.0 and -180.0 <= lon_n <= 180.0):
+        return ""
+    return (
+        "https://www.google.com/maps/@?api=1&map_action=map"
+        f"&center={_coord_text(lat_n)},{_coord_text(lon_n)}&zoom=17&basemap=satellite"
+    )
 
 
 def campus_land_path(settings) -> Path:

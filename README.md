@@ -419,7 +419,12 @@ the teach-out section, **Closed or defunct since the 2022 data**, and the
 excluded no-dorm / no-campus section (original rank, 2022 score, dorm
 capacity, acreage, and sources). Each main-list entry hotlinks a campus photo when one is on file
 (a Commons thumbnail or an image from the school's own site), with the credit
-under the image, or shows "No photo found".
+under the image, or shows "No photo found". Each main-list card also links
+"Satellite view" to Google Maps satellite imagery centered on the campus.
+Coordinates live in `data/campus/campus_land.csv` (`lat`, `lon`,
+`coord_source`), taken from IPEDS HD `LATITUDE` / `LONGITUD` and moved when
+that point is an admin office or a former campus. Closed and excluded rows
+get the same link when coordinates are on file.
 
 ### What each source can say
 
