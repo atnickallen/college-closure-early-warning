@@ -244,8 +244,47 @@ def test_weekly_workflow_quotes_the_folder_and_does_not_print_the_key():
     assert "Pull request was not created" in text
     assert "git push --force-with-lease origin" in text
     assert text.strip().endswith("exit 0")
-    assert "FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}" in text
+    assert text.count("FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}") == 2
+    assert "workflow_dispatch" in text
     assert 'python3 "camps and 501c7\'s/scripts/run_listings.py"' in text
+    assert 'python3 "camps and 501c7\'s/scripts/apply_campus_maps.py"' in text
     assert "camps and 501c7's/outputs/listings.csv" in text
+    assert "data/campus/campus_land.csv" in text
+    assert "outputs/top50_report.html" in text
     assert "echo \"$FIRECRAWL_API_KEY\"" not in text
     assert "printenv" not in text
+    assert "set -x" not in text
+
+
+def test_firecrawl_key_searches_schools_that_already_have_a_map(monkeypatch):
+    import importlib.util
+
+    script = ROOT / "scripts" / "apply_campus_maps.py"
+    spec = importlib.util.spec_from_file_location("apply_campus_maps", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    stored = "https://lakeland.edu/PDFs/virtualtour/Lakeland-campus-map.pdf"
+    assert module._keep_existing(stored, "Lakeland University", use_firecrawl=False)
+    assert module._keep_existing(stored, "Lakeland University", use_firecrawl=True) is False
+
+    calls = []
+
+    def fake_find_maps(name, **kwargs):
+        calls.append(kwargs["search_queries"])
+
+        class Result:
+            hits = []
+
+        return Result()
+
+    monkeypatch.setattr(module, "find_maps", fake_find_maps)
+    monkeypatch.setattr(module, "_maps_linked_from", lambda *args, **kwargs: "")
+    monkeypatch.setattr(module, "_probe", lambda *args, **kwargs: "")
+    monkeypatch.setattr(module, "_org_url", lambda row: "https://lakeland.edu/")
+    monkeypatch.setattr(module, "_wiki_site", lambda *args, **kwargs: "")
+    monkeypatch.setattr(module, "_org_from_search", lambda *args, **kwargs: "")
+    row = {"source_url": "https://lakeland.edu/", "image_credit_url": "", "image_url": stored}
+    url = module._find_campus_map("Lakeland University", row, client=None, use_firecrawl=True)
+    assert calls and any("filetype:pdf" in query for query in calls[0])
+    assert '"Lakeland University" site map pdf' in calls[0]
+    assert url == stored

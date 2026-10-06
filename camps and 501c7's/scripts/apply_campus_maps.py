@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import os
 import re
 import sys
 from pathlib import Path
@@ -21,6 +22,7 @@ from camp_listings.maps import (  # noqa: E402
     _query,
     best_campus_map,
     find_maps,
+    queries_for,
 )
 
 # Generic words that show up in many school names and unrelated hosts.
@@ -100,24 +102,30 @@ def main() -> int:
         fields.append("campus_map_url")
     by_id = {row["unitid"]: row for row in rows}
     client = Client(timeout=12)
+    # A set key means this run should query Firecrawl for every school.
+    # An empty result leaves a map that was already stored.
+    use_firecrawl = bool(os.environ.get("FIRECRAWL_API_KEY", "").strip())
     found = 0
     for name, unitid in cards:
         row = by_id.get(unitid)
         if row is None:
             continue
         existing = (row.get("campus_map_url") or "").strip()
-        place_tokens = set(re.findall(r"[a-z0-9]{5,}", name.lower())) & set(_PLACE_WORDS)
-        place_ok = not place_tokens or any(token in existing.lower() for token in place_tokens)
-        if existing and _stored_ok(existing) and place_ok and not _foreign_campus(existing, name):
+        if _keep_existing(existing, name, use_firecrawl=use_firecrawl):
             found += 1
             print(f"{unitid} kept {existing}", flush=True)
             continue
-        url = _find_campus_map(name, row, client)
-        row["campus_map_url"] = url
+        url = _find_campus_map(name, row, client, use_firecrawl=use_firecrawl)
         if url:
+            row["campus_map_url"] = url
             found += 1
             print(f"{unitid} {url}", flush=True)
+        elif existing and _stored_ok(existing):
+            row["campus_map_url"] = existing
+            found += 1
+            print(f"{unitid} kept {existing}", flush=True)
         else:
+            row["campus_map_url"] = ""
             print(f"{unitid} none", flush=True)
         _write_land(land_path, rows, fields)
     for row in rows:
@@ -347,9 +355,17 @@ def _direct_from_row(row: dict) -> str:
     return ""
 
 
-def _find_campus_map(name: str, row: dict, client: Client) -> str:
+def _keep_existing(existing: str, name: str, *, use_firecrawl: bool) -> bool:
+    if use_firecrawl or not existing:
+        return False
+    place_tokens = set(re.findall(r"[a-z0-9]{5,}", name.lower())) & set(_PLACE_WORDS)
+    place_ok = not place_tokens or any(token in existing.lower() for token in place_tokens)
+    return bool(_stored_ok(existing) and place_ok and not _foreign_campus(existing, name))
+
+
+def _find_campus_map(name: str, row: dict, client: Client, *, use_firecrawl: bool = False) -> str:
     direct = _direct_from_row(row)
-    if direct:
+    if direct and not use_firecrawl:
         return direct
     linked = ""
     for key in ("source_url", "image_credit_url"):
@@ -361,24 +377,26 @@ def _find_campus_map(name: str, row: dict, client: Client) -> str:
         org = _wiki_site(client, row.get("source_url") or "")
     probed = _probe(client, org, name)
     best = _prefer(name, linked, probed)
-    if best:
+    if best and not use_firecrawl:
         return best
     if not org:
         org = _org_from_search(client, name)
         probed = _probe(client, org, name)
-        if probed:
+        if probed and not use_firecrawl:
             return probed
+    queries = queries_for(name) if use_firecrawl else [f'"{name}" campus map filetype:pdf', f'"{name}" campus map']
     result = find_maps(
         name,
         client=client,
         listing_url=org,
         org_url=org,
-        search_queries=[f'"{name}" campus map filetype:pdf', f'"{name}" campus map'],
+        search_queries=queries,
     )
     hit = _choose(result.hits, org, name)
-    if hit and _stored_ok(hit.url):
-        return hit.url
-    return ""
+    hit_url = hit.url if hit and _stored_ok(hit.url) else ""
+    if use_firecrawl:
+        return _prefer(name, hit_url, direct, linked, probed)
+    return hit_url
 
 
 def _choose(hits: list[MapHit], org: str, name: str) -> MapHit | None:

@@ -35,3 +35,6 @@ Maps satellite image centered on that point (zoom 17). The same link is shown
 on the closed and excluded tables when those schools have coordinates.
 
 When `campus_map_url` is filled, the main-list card also links "Campus map".
+The camps and 501(c)(7) refresh workflow fills this column with Firecrawl when
+the repository secret is set, and pushes the file on `camps-501c7-refresh`.
+The status checker does not rewrite this file.

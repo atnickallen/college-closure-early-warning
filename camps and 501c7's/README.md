@@ -44,8 +44,11 @@ The key is not written to the log. Without the key, the same queries go to
 DuckDuckGo Lite (its robots.txt allows `/`) and the listing page is crawled
 for PDF and “map” links.
 
-The weekly job is `.github/workflows/camps-501c7-refresh.yml`. It reads
-`FIRECRAWL_API_KEY` from repository secrets and pushes `camps-501c7-refresh`
+The weekly job is `.github/workflows/camps-501c7-refresh.yml`. The schedule
+and `workflow_dispatch` both run the listing finder and the top-50 campus map
+finder. Each step receives `FIRECRAWL_API_KEY` from the repository secret.
+The workflow does not print the secret. It pushes `camps-501c7-refresh`
+(listing outputs, `data/campus/campus_land.csv`, and `outputs/top50_report.html`)
 because Actions cannot always open a pull request.
 
 The same finder fills campus maps for the 50 schools on the main watch-list
@@ -56,8 +59,9 @@ python3 "camps and 501c7's/scripts/apply_campus_maps.py"
 ```
 
 It writes `campus_map_url` in `data/campus/campus_land.csv` and adds a Campus
-map link on each card that has one. The weekly listing job does not rewrite
-that land file.
+map link on each card that has one. When the Firecrawl key is set, every
+school is searched again. A school keeps its stored map when that search
+returns nothing.
 
 ## Sources
 
