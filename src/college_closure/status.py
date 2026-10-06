@@ -1436,6 +1436,7 @@ def refresh_markdown(
     open_count: int | None = None,
     depth: int | None = None,
     curated_note: str | None = None,
+    score_year: int | None = None,
 ) -> str:
     disagree = 0
     if not table.empty and "disagreement" in table.columns:
@@ -1455,7 +1456,7 @@ def refresh_markdown(
         lines.append(f"Residential own-campus schools in the main list: {open_count}")
         lines.append(
             "The main list keeps schools that are still operating, have on-campus dorms, "
-            "and have their own campus. Scores remain 2022 federal financial data."
+            f"and have their own campus. Scores remain {_score_phrase(score_year)}."
         )
     if depth:
         lines.append(f"Ranked rows walked to fill that list: {depth}")
@@ -1510,6 +1511,7 @@ def write_status_outputs(
             open_count=open_count,
             depth=depth,
             curated_note=curated_note,
+            score_year=_score_year(watch),
         ),
         encoding="utf-8",
     )
@@ -1525,6 +1527,12 @@ def write_status_outputs(
             score_year=_score_year(watch),
         )
     return {"csv": str(csv_path), "markdown": str(md_path), "html": str(html_path)}
+
+
+def _score_phrase(score_year: int | None) -> str:
+    if score_year:
+        return f"{int(score_year)} federal financial data"
+    return "federal financial data"
 
 
 def _score_year(watch: pd.DataFrame) -> int:

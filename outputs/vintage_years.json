@@ -1,0 +1,43 @@
+{
+  "score_year": 2023,
+  "sources": {
+    "finance": {
+      "complete_year": 2023,
+      "nces_zip_years": "2018-2022",
+      "note": "Urban IPEDS finance CSV is the complete finance year. NCES F1819\u2013F2223 complete-data zips fill 2018\u20132022. Later NCES standalone zips are not in the panel."
+    },
+    "enrollment": {
+      "complete_year": 2024
+    },
+    "admissions": {
+      "complete_year": 2024
+    },
+    "staff": {
+      "complete_year": 2024
+    },
+    "directory": {
+      "complete_year": 2025
+    },
+    "composite": {
+      "complete_year": 2025
+    },
+    "wiche": {
+      "complete_year": 2025
+    },
+    "fall_enrollment": {
+      "complete_year": 2024
+    },
+    "enrollment_fte": {
+      "complete_year": 2024
+    },
+    "academic_libraries": {
+      "complete_year": 2023
+    },
+    "scorecard": {
+      "file": "Most-Recent-Cohorts-Institution_06102026.zip",
+      "file_date": "2026-06-10"
+    }
+  },
+  "n_schools": 2382,
+  "score_year_label": "2023-2024"
+}

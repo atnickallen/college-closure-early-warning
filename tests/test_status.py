@@ -390,11 +390,12 @@ def test_scorecard_lookup_maps_operating_and_does_not_require_parquet(monkeypatc
 
 def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
     curated = load_curated(ROOT / "data" / "status" / "status_curated.csv")
-    watch = load_watchlist(ROOT / "outputs" / "watchlist.csv", 50)
     seed = curated.iloc[:50]
     assert len(seed) == 50
-    assert seed["unitid"].astype(int).tolist() == watch["unitid"].astype(int).tolist()
-    assert seed["inst_name"].tolist() == watch["inst_name"].tolist()
+    # The 2026-10-05 seed is the original watch-list research pass. Later
+    # rescores append rows and do not rewrite those sale notes.
+    assert int(seed.iloc[0]["unitid"]) == 467368
+    assert seed.iloc[0]["inst_name"] == "Carrington College-Ontario"
     assert seed["checked_at"].eq("2026-10-05").all()
     assert curated["source_url"].str.contains("http").all()
     extra = curated.iloc[50:]
@@ -484,7 +485,10 @@ def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
     assert (tmp_path / "outputs" / "status_current.csv").exists()
     refresh = (tmp_path / "outputs" / "status_refresh.md").read_text(encoding="utf-8")
     assert "not modified" in refresh
-    assert table.loc[0, "property_source"] == "curated"
+    curated_ids = set(pd.read_csv(curated_path, dtype=str)["unitid"].astype(int))
+    for _, row in table.iterrows():
+        expected = "curated" if int(row["unitid"]) in curated_ids else ""
+        assert row["property_source"] == expected
 
 
 def test_report_template_mentions_status_without_treating_it_as_a_score():

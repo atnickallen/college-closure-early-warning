@@ -416,6 +416,12 @@ RANKED_EXPORT_COLUMNS = (
     "composite_fail",
     "miss_finance",
     "finance_from_parent",
+    "year_finance",
+    "year_enrollment",
+    "year_fall_enrollment",
+    "year_admissions",
+    "year_staff",
+    "year_directory",
     "label_complete_h3",
     "closed_or_merged_within_3_years",
 )

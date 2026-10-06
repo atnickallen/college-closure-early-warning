@@ -306,6 +306,37 @@ def run_model(settings: Settings) -> dict:
     Xs, _ = _xy(score_frame, features, label)
     score_frame["risk_score"] = predict_proba(booster, Xs)
     score_frame["risk_score_logit"] = logit.predict_proba(Xs)[:, 1]
+    from college_closure.vintage import (
+        build_vintage_snapshot,
+        merge_file_manifest,
+        source_file_manifest,
+        write_vintage_outputs,
+    )
+
+    snapshot, vintage_meta = build_vintage_snapshot(score_frame)
+    if not snapshot.empty and vintage_meta.get("score_year") is not None:
+        Xs_now, _ = _xy(snapshot, features, label)
+        snapshot["risk_score"] = predict_proba(booster, Xs_now)
+        snapshot["risk_score_logit"] = logit.predict_proba(Xs_now)[:, 1]
+        score_year_now = int(vintage_meta["score_year"])
+        keep = score_frame.loc[pd.to_numeric(score_frame["year"], errors="coerce") != score_year_now]
+        score_frame = pd.concat([keep, snapshot], ignore_index=True)
+        vintage_meta = merge_file_manifest(
+            vintage_meta,
+            source_file_manifest(settings.processed_dir, settings.raw_dir),
+        )
+        vintage_meta["score_year_label"] = f"{score_year_now}-{score_year_now + 1}"
+        metrics["vintage"] = {
+            "score_year": score_year_now,
+            "sources": vintage_meta.get("sources"),
+            "n_schools": vintage_meta.get("n_schools"),
+        }
+        write_vintage_outputs(snapshot, vintage_meta, settings.outputs_dir)
+        LOGGER.info(
+            "Vintage snapshot year %s for %s schools",
+            score_year_now,
+            f"{len(snapshot):,}",
+        )
     dest = settings.processed_dir / "scored.parquet"
     score_frame.to_parquet(dest, index=False)
     metrics_path = settings.processed_dir / "model_metrics.json"
@@ -315,15 +346,10 @@ def run_model(settings: Settings) -> dict:
     (settings.outputs_dir / "model_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     from college_closure.campus import ranked_universe_path, write_ranked_universe
 
-    prefer_year = None
-    watch_csv = settings.outputs_dir / "watchlist.csv"
-    if watch_csv.exists():
-        try:
-            watch_year = pd.read_csv(watch_csv, usecols=["year"], nrows=1)
-            prefer_year = int(float(watch_year.iloc[0]["year"]))
-        except (ValueError, KeyError, IndexError, OSError):
-            prefer_year = None
-    n_ranked = write_ranked_universe(score_frame, ranked_universe_path(settings), prefer_year=prefer_year)
+    # The published ranking follows select_score_year (newest finance-complete
+    # right-censored year). An explicit prefer_year remains available for tests
+    # and one-off reruns; the committed watch list must not pin an older year.
+    n_ranked = write_ranked_universe(score_frame, ranked_universe_path(settings), prefer_year=None)
     LOGGER.info(
         "Wrote %s and %s (%s rows); ranked universe %s (%s score-year rows)",
         metrics_path,
