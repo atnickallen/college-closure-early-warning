@@ -23,16 +23,13 @@ def main() -> None:
     settings = load_settings()
     frame, meta = build_score_explanations(settings)
     write_explanation_outputs(frame, meta, settings.outputs_dir)
-    ranked = __import__("pandas").read_csv(settings.outputs_dir / "ranked_universe.csv")
-    status = __import__("pandas").read_csv(settings.outputs_dir / "status_current.csv", dtype=str, keep_default_na=False)
-    from college_closure.campus import extend_ranked_universe
+    from college_closure.campus import acquisition_universe
 
-    scored = __import__("pandas").read_parquet(settings.processed_dir / "scored.parquet")
-    extended = extend_ranked_universe(ranked, scored)
+    universe = acquisition_universe(settings)
     stats = write_operating_report(
         settings.outputs_dir / "top50_report.html",
-        extended,
-        status,
+        universe,
+        __import__("pandas").DataFrame(),
         open_n=50,
         score_year=2023,
     )

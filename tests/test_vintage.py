@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from college_closure.campus import write_ranked_universe
-from college_closure.report import movement_section_html, vintage_note_html
+from college_closure.report import left_after_data_fix_html, movement_section_html, vintage_note_html
 from college_closure.vintage import build_vintage_snapshot, finance_complete_year, newest_complete_year
 
 
@@ -225,6 +225,18 @@ def test_movement_section_names_entered_and_left_schools():
     assert "Entered College" in html
     assert "Left College" in html
     assert "1 entered and 1 left" in html
+    ranked = pd.DataFrame(
+        [
+            {"unitid": 10, "risk_score": 0.4},
+            {"unitid": 11, "risk_score": 0.3},
+            {"unitid": 12, "risk_score": 0.046371},
+        ]
+    )
+    left = left_after_data_fix_html(open_df, ranked, baseline)
+    assert "Left the list after data fix" in left
+    assert "Left College" in left
+    assert "0.046371" in left
+    assert "Entered College" not in left
     note = vintage_note_html(
         {
             "score_year": 2023,

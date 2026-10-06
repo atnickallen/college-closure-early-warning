@@ -8,7 +8,7 @@ None of the top 50 were flagged.
 
 ## Principia College
 
-Principia College is residential rank 49 with published risk score 0.046. The scored row uses the college's own finance and enrollment years, including the years when title_iv_indicator was 3. The IPEDS finance extract has a 2023 filing: endowment_end $592,903,744, revenue $97,015,232, expenses $48,254,224, net tuition $738,933, investment return $77,515,584. Fall headcount was 407 in 2019 and 339 in 2024. FTE was 390 in 2019 and 335 in 2024. Net tuition is about 0.8% of revenue. The investment return is most of reported revenue, so the accounting margin is not an operating surplus. Data USA matches the $593 million IPEDS endowment. The Principia Corporation 990 (EIN 43-0652667) covers the college and the Principia School; the card keeps the college IPEDS line. Drivers the published score actually used: endowment covers 12.3 years of expenses, $1.2 million per FTE (2023); net assets cover 10.5 years of expenses (2023); tuition is 2% of revenue (2023).
+Principia College left the residential top 50 after the extract-year repair. The scored row uses the college's own finance and enrollment years, including the years when title_iv_indicator was 3. That score sits below the 50th school that is still operating, has on-campus housing, and has its own campus. The published score on that filing is 0.046. The IPEDS finance extract has a 2023 filing: endowment_end $592,903,744, revenue $97,015,232, expenses $48,254,224, net tuition $738,933, investment return $77,515,584. Fall headcount was 407 in 2019 and 339 in 2024. FTE was 390 in 2019 and 335 in 2024. Net tuition is about 0.8% of revenue. The investment return is most of reported revenue, so the accounting margin is not an operating surplus. Data USA matches the $593 million IPEDS endowment. The Principia Corporation 990 (EIN 43-0652667) covers the college and the Principia School; the card keeps the college IPEDS line.
 
 ## School by school
 
@@ -694,9 +694,71 @@ The model's five-year enrollment feature is the FTE change (-28%). Fall headcoun
 | State high-school graduates, 5-year change | -0.0394 | 2025 | 14.2 | -0.84 | 0.0364 | -1.0607 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -1.5050 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 12. Niagara University (NY)
+### 12. Middlebury Institute of International Studies at Monterey (CA)
 
-Residential rank 12. Watch-list rank 327. Published risk score 0.430. Federal composite score 2.50 (year 2025.0).
+Residential rank 12. Watch-list rank 311. Published risk score 0.443. Federal composite score missing.
+
+Endowment $1.60 billion in 2023 ($2.9 million per FTE). Scope: parent filing. Source: IPEDS finance F2H02/F1H02 for UNITID 230959 (Middlebury College), the campus that files in this extract. Fall headcount 526 in 2024 (undergraduate 12; graduate 514). FTE 555 in 2024. Fall headcount 688 in 2019 versus 526 in 2024 (-24%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract. finance from parent UNITID 230959. The figure is the Middlebury College filing, not a separate endowment measured for this campus alone. Enrollment on this card is this campus's own headcount and FTE.
+
+Top drivers:
+
+- endowment covers 4.9 years of expenses, $1.2 million per FTE (2023)
+- net assets cover 5.2 years of expenses (2023)
+- sector is 2 (2025)
+
+Missing or imputed:
+
+Endowment per FTE: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Net assets per dollar of expense: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Operating-margin change, 5 years: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Operating margin: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Discount-rate change, 5 years: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Tuition share of revenue: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Discount rate: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Admit-rate change, 5 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Yield-rate change, 5 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | First-time enrollment change, 1 year: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Admit rate: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Tuition is at least 70% of revenue: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Yield rate: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Federal composite score: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Negative-margin years in the last 5: Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count.
+
+Data-quality flags:
+
+finance from parent UNITID 230959
+
+| Feature | Raw value | Year | Percentile | Z-score | Weight | Contribution | How the model saw it |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Endowment per FTE | 1.193e+06 | 2023 | 100.0 | 3.91 | 0.1018 | +1.5906 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Net assets per dollar of expense | 5.201 | 2023 | 91.3 | 1.39 | 0.1840 | +1.3088 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Sector | 2 | 2025 | 65.3 | -0.61 | 0.0331 | +0.4736 | Reported on the scored row. Not imputed. |
+| Operating-margin change, 5 years | -0.07512 | 2023 | 26.2 | -0.36 | 0.0075 | +0.3630 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Enrollment change, 1 year | 0.00726 | 2024 | 46.7 | -0.11 | 0.0388 | +0.3057 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Students per staff member | 3.265 | 2024 | 13.6 | -0.60 | 0.0347 | +0.2455 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Operating margin | -0.03328 | 2023 | 26.1 | -0.27 | 0.0479 | +0.2301 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Staff change, 5 years | -0.07104 | 2024 | 38.8 | -0.25 | 0.0103 | +0.2155 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Discount-rate change, 5 years | 0.02204 | 2023 | 50.4 | -0.08 | 0.0198 | +0.1473 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Tuition share of revenue | 0.5807 | 2023 | 45.1 | -0.15 | 0.0405 | +0.1451 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Staff change, 1 year | -0.02299 | 2024 | 33.8 | -0.19 | 0.0212 | +0.1250 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Discount rate | 0.3335 | 2023 | 62.4 | 0.37 | 0.0204 | +0.1052 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Four-year institution | 1 | 2025 | 100.0 | 0.52 | 0.0032 | +0.0976 | Reported on the scored row. Not imputed. |
+| Urban locale | 0 | 2025 | 44.6 | -1.11 | 0.0050 | +0.0617 | Reported on the scored row. Not imputed. |
+| Student-staff ratio change, 1 year | 0.09804 | 2024 | 53.5 | -0.03 | 0.0080 | +0.0298 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Years in the composite zone | 0 | 2025 | 96.7 | -0.18 | 0.0023 | +0.0248 | Reported on the scored row. Not imputed. |
+| Admit-rate change, 5 years |  |  |  |  | 0.0148 | +0.0245 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Yield-rate change, 5 years |  |  |  |  | 0.0192 | +0.0234 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Control (2 nonprofit, 3 for-profit) | 2 | 2025 | 68.7 | -0.68 | 0.0010 | +0.0197 | Reported on the scored row. Not imputed. |
+| First-time enrollment change, 1 year |  |  |  |  | 0.0119 | +0.0081 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Admit rate |  |  |  |  | 0.0252 | +0.0079 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Finance missing on the scored row | 0 | 2023 | 97.8 | -0.15 | 0.0036 | +0.0056 | Reported on the scored row. Not imputed. |
+| Composite score is carried forward | 0 | 2025 | 20.2 | -1.99 | 0.0026 | +0.0040 | Reported on the scored row. Not imputed. |
+| Faith-related Carnegie class | 0 | 2025 | 87.8 | -0.37 | 0.0001 | +0.0009 | Reported on the scored row. Not imputed. |
+| Tuition is at least 70% of revenue | 0 | 2023 | 55.7 | -0.89 | 0.0001 | +0.0005 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Composite below 1.0 |  |  |  |  | 0.0000 | -0.0000 | Reported on the scored row. Not imputed. |
+| Enrollment change, 10 years | -0.3478 | 2024 | 22.5 | -0.55 | 0.0046 | -0.0047 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Rural locale | 0 | 2025 | 93.9 | -0.26 | 0.0030 | -0.0126 | Reported on the scored row. Not imputed. |
+| Yield rate |  |  |  |  | 0.0418 | -0.0382 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Composite in the 1.0–1.5 zone |  |  |  |  | 0.0009 | -0.0444 | Reported on the scored row. Not imputed. |
+| Enrollment down more than 30% in 5 years | 1 | 2024 | 100.0 | 2.19 | 0.0033 | -0.0527 | Reported on the scored row. Not imputed. |
+| Composite score missing | 1 | 2025 | 100.0 | 0.00 | 0.0158 | -0.1011 | Reported on the scored row. Not imputed. |
+| FTE under 1,000 | 1 | 2024 | 100.0 | 0.80 | 0.0115 | -0.2346 | Reported on the scored row. Not imputed. |
+| Enrollment change, 5 years | -0.3106 | 2024 | 16.3 | -0.61 | 0.0125 | -0.2934 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| State high-school graduates, 5-year change | 0.004182 | 2025 | 46.1 | -0.22 | 0.0364 | -0.3526 | Reported on the scored row. Not imputed. |
+| Log enrollment (FTE) | 6.319 | 2024 | 45.3 | -0.02 | 0.0797 | -0.3997 | Reported on the scored row. Not imputed. |
+| Federal composite score |  |  |  |  | 0.0966 | -0.4346 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Negative-margin years in the last 5 | 3 | 2023 | 87.6 | 0.94 | 0.0338 | -0.4556 | Copied from the parent campus finance row UNITID 230959, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
+| Finance copied from a parent campus | 1 | 2023 | 100.0 | 4.64 | 0.0031 | -2.7200 | Reported on the scored row. Not imputed. |
+
+### 13. Niagara University (NY)
+
+Residential rank 13. Watch-list rank 327. Published risk score 0.430. Federal composite score 2.50 (year 2025.0).
 
 Endowment $100.3 million in 2023 ($24,745 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 193973. Fall headcount 4,033 in 2024 (undergraduate 2,692; graduate 1,341). FTE 4,053 in 2024. Fall headcount 3,723 in 2019 versus 4,033 in 2024 (+8%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -756,9 +818,9 @@ None.
 | Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.6076 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -1.2729 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 13. Monroe University (NY)
+### 14. Monroe University (NY)
 
-Residential rank 13. Watch-list rank 331. Published risk score 0.426. Federal composite score 2.40 (year 2025.0).
+Residential rank 14. Watch-list rank 331. Published risk score 0.426. Federal composite score 2.40 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 193308; endowment_end (F2H02/F1H02) is blank. Fall headcount 8,141 in 2024 (undergraduate 6,205; graduate 1,936). FTE 9,676 in 2024. Fall headcount 6,517 in 2019 versus 8,141 in 2024 (+25%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -818,9 +880,9 @@ For-profit FASB filers do not report endowment assets. A blank endowment is the 
 | State high-school graduates, 5-year change | -0.0524 | 2025 | 10.1 | -1.02 | 0.0364 | -0.4866 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.9695 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 14. Salem University (WV)
+### 15. Salem University (WV)
 
-Residential rank 14. Watch-list rank 354. Published risk score 0.406. Federal composite score 1.60 (year 2025.0).
+Residential rank 15. Watch-list rank 354. Published risk score 0.406. Federal composite score 1.60 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 237783; endowment_end (F2H02/F1H02) is blank. Fall headcount 1,083 in 2024 (undergraduate 892; graduate 191). FTE 1,007 in 2024. Fall headcount 960 in 2019 versus 1,083 in 2024 (+13%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -880,9 +942,9 @@ For-profit FASB filers do not report endowment assets. A blank endowment is the 
 | Negative-margin years in the last 5 | 3 | 2023 | 87.6 | 0.94 | 0.0338 | -0.2850 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.3345 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 15. Hawaii Pacific University (HI)
+### 16. Hawaii Pacific University (HI)
 
-Residential rank 15. Watch-list rank 358. Published risk score 0.403. Federal composite score 2.00 (year 2025.0).
+Residential rank 16. Watch-list rank 358. Published risk score 0.403. Federal composite score 2.00 (year 2025.0).
 
 Endowment $51.4 million in 2023 ($13,929 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 141644. Fall headcount 4,921 in 2024 (undergraduate 3,533; graduate 1,388). FTE 3,690 in 2024. Fall headcount 4,170 in 2019 versus 4,921 in 2024 (+18%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -942,9 +1004,9 @@ None.
 | Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.4774 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.8754 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 16. Davenport University (MI)
+### 17. Davenport University (MI)
 
-Residential rank 16. Watch-list rank 361. Published risk score 0.400. Federal composite score 2.30 (year 2025.0).
+Residential rank 17. Watch-list rank 361. Published risk score 0.400. Federal composite score 2.30 (year 2025.0).
 
 Endowment $32.0 million in 2023 ($9,234 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 169479. Fall headcount 4,815 in 2024 (undergraduate 3,741; graduate 1,074). FTE 3,465 in 2024. Fall headcount 6,429 in 2019 versus 4,815 in 2024 (-25%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1004,9 +1066,9 @@ None.
 | Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.4331 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.8483 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 17. Post University (CT)
+### 18. Post University (CT)
 
-Residential rank 17. Watch-list rank 365. Published risk score 0.399. Federal composite score 2.10 (year 2025.0).
+Residential rank 18. Watch-list rank 365. Published risk score 0.399. Federal composite score 2.10 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 130183; endowment_end (F2H02/F1H02) is blank. Fall headcount 16,178 in 2024 (undergraduate 14,116; graduate 2,062). FTE 14,766 in 2024. Fall headcount 10,642 in 2019 versus 16,178 in 2024 (+52%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1066,9 +1128,9 @@ Five-year FTE change is +53%, an outlier against a typical campus. | For-profit 
 | Staff change, 1 year | -0.4913 | 2024 | 1.6 | -2.25 | 0.0212 | -0.2648 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.3118 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 18. Wheeling University (WV)
+### 19. Wheeling University (WV)
 
-Residential rank 18. Watch-list rank 368. Published risk score 0.398. Federal composite score 1.90 (year 2025.0).
+Residential rank 19. Watch-list rank 368. Published risk score 0.398. Federal composite score 1.90 (year 2025.0).
 
 Endowment $4.6 million in 2023 ($6,508 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 238078. Fall headcount 774 in 2024 (undergraduate 619; graduate 155). FTE 707 in 2024. Fall headcount 798 in 2019 versus 774 in 2024 (-3%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1128,9 +1190,9 @@ None.
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.2439 | Carried forward from the last official composite year. composite_is_lagged is true. |
 | Operating margin | -0.3227 | 2023 | 6.3 | -1.37 | 0.0479 | -0.3324 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 
-### 19. Talladega College (AL)
+### 20. Talladega College (AL)
 
-Residential rank 19. Watch-list rank 383. Published risk score 0.382. Federal composite score 3.00 (year 2025.0).
+Residential rank 20. Watch-list rank 383. Published risk score 0.382. Federal composite score 3.00 (year 2025.0).
 
 Endowment $2.6 million in 2023 ($3,790 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 102298. Fall headcount 760 in 2024 (undergraduate 701; graduate 59). FTE 692 in 2024. Fall headcount 1,239 in 2019 versus 760 in 2024 (-39%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1190,9 +1252,9 @@ None.
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1976 | Carried forward from the last official composite year. composite_is_lagged is true. |
 | Operating margin | -0.3073 | 2023 | 6.7 | -1.31 | 0.0479 | -0.3093 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 
-### 20. Utica University (NY)
+### 21. Utica University (NY)
 
-Residential rank 20. Watch-list rank 394. Published risk score 0.376. Federal composite score 2.70 (year 2025.0).
+Residential rank 21. Watch-list rank 394. Published risk score 0.376. Federal composite score 2.70 (year 2025.0).
 
 Endowment $35.4 million in 2023 ($10,911 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 197045. Fall headcount 3,627 in 2024 (undergraduate 2,329; graduate 1,298). FTE 3,241 in 2024. Fall headcount 4,947 in 2019 versus 3,627 in 2024 (-27%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1252,9 +1314,9 @@ None.
 | State high-school graduates, 5-year change | -0.0524 | 2025 | 10.1 | -1.02 | 0.0364 | -0.2724 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.6220 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 21. Saint John's Seminary (MA)
+### 22. Saint John's Seminary (MA)
 
-Residential rank 21. Watch-list rank 407. Published risk score 0.366. Federal composite score 2.20 (year 2025.0).
+Residential rank 22. Watch-list rank 407. Published risk score 0.366. Federal composite score 2.20 (year 2025.0).
 
 Endowment $38.4 million in 2023 ($451,632 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 167677. Fall headcount 86 in 2024 (undergraduate 23; graduate 63). FTE 85 in 2024. Fall headcount 111 in 2019 versus 86 in 2024 (-23%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1314,9 +1376,9 @@ Investment return ($10.0 million) is more than half of reported revenue ($13.3 m
 | Operating margin | 0.5182 | 2023 | 98.4 | 1.82 | 0.0479 | -0.3263 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Log enrollment (FTE) | 4.443 | 2024 | 12.8 | -1.15 | 0.0797 | -0.4327 | Reported on the scored row. Not imputed. |
 
-### 22. Concordia University-Chicago (IL)
+### 23. Concordia University-Chicago (IL)
 
-Residential rank 22. Watch-list rank 415. Published risk score 0.358. Federal composite score 2.10 (year 2025.0).
+Residential rank 23. Watch-list rank 415. Published risk score 0.358. Federal composite score 2.10 (year 2025.0).
 
 Endowment $32.4 million in 2023 ($8,743 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 144351. Fall headcount 4,770 in 2024 (undergraduate 1,368; graduate 3,402). FTE 3,711 in 2024. Fall headcount 6,205 in 2019 versus 4,770 in 2024 (-23%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1376,9 +1438,9 @@ None.
 | State high-school graduates, 5-year change | -0.0394 | 2025 | 14.2 | -0.84 | 0.0364 | -0.2469 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.5264 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 23. Arkansas Baptist College (AR)
+### 24. Arkansas Baptist College (AR)
 
-Residential rank 23. Watch-list rank 418. Published risk score 0.355. Federal composite score -0.70 (year 2025.0).
+Residential rank 24. Watch-list rank 418. Published risk score 0.355. Federal composite score -0.70 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 106306; endowment_end (F2H02/F1H02) is blank. Fall headcount 342 in 2024 (undergraduate 342; graduate not reported). FTE 291 in 2024. Fall headcount 531 in 2019 versus 342 in 2024 (-36%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1438,9 +1500,9 @@ This nonprofit filed IPEDS finance and left endowment assets blank. No confirmed
 | Enrollment change, 10 years | -0.66 | 2024 | 6.0 | -0.86 | 0.0046 | -0.1258 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | State high-school graduates, 5-year change | 0.04523 | 2025 | 71.5 | 0.35 | 0.0364 | -0.1673 | Reported on the scored row. Not imputed. |
 
-### 24. Keystone College (PA)
+### 25. Keystone College (PA)
 
-Residential rank 24. Watch-list rank 426. Published risk score 0.349. Federal composite score 0.40 (year 2025.0).
+Residential rank 25. Watch-list rank 426. Published risk score 0.349. Federal composite score 0.40 (year 2025.0).
 
 Endowment $6.2 million in 2023 ($6,800 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 213303. Fall headcount 952 in 2024 (undergraduate 894; graduate 58). FTE 905 in 2024. Fall headcount 1,364 in 2019 versus 952 in 2024 (-30%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1500,9 +1562,9 @@ None.
 | Yield rate | 0.1075 | 2024 | 10.0 | -1.08 | 0.0418 | -0.1388 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1424 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 25. Southwestern Christian College (TX)
+### 26. Southwestern Christian College (TX)
 
-Residential rank 25. Watch-list rank 431. Published risk score 0.345. Federal composite score 1.40 (year 2025.0).
+Residential rank 26. Watch-list rank 431. Published risk score 0.345. Federal composite score 1.40 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 228486; endowment_end (F2H02/F1H02) is blank. Fall headcount 110 in 2024 (undergraduate 110; graduate not reported). FTE 111 in 2024. Fall headcount 106 in 2019 versus 110 in 2024 (+4%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1562,9 +1624,9 @@ This nonprofit filed IPEDS finance and left endowment assets blank. No confirmed
 | Operating margin | -0.194 | 2023 | 10.0 | -0.88 | 0.0479 | -0.0923 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Log enrollment (FTE) | 4.71 | 2024 | 16.2 | -0.98 | 0.0797 | -0.2086 | Reported on the scored row. Not imputed. |
 
-### 26. Carolina University (NC)
+### 27. Carolina University (NC)
 
-Residential rank 26. Watch-list rank 443. Published risk score 0.340. Federal composite score 3.00 (year 2025.0).
+Residential rank 27. Watch-list rank 443. Published risk score 0.340. Federal composite score 3.00 (year 2025.0).
 
 Endowment $386,000 in 2023 ($429 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 489937. Fall headcount 880 in 2024 (undergraduate 460; graduate 420). FTE 899 in 2024. Fall headcount 668 in 2019 versus 880 in 2024 (+32%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1624,9 +1686,9 @@ None.
 | Operating margin | -0.2965 | 2023 | 7.1 | -1.27 | 0.0479 | -0.1706 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.2329 | Reported on the scored row. Not imputed. |
 
-### 27. Hilbert College (NY)
+### 28. Hilbert College (NY)
 
-Residential rank 27. Watch-list rank 446. Published risk score 0.334. Federal composite score 2.20 (year 2025.0).
+Residential rank 28. Watch-list rank 446. Published risk score 0.334. Federal composite score 2.20 (year 2025.0).
 
 Endowment $3.8 million in 2023 ($3,726 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 191621. Fall headcount 968 in 2024 (undergraduate 931; graduate 37). FTE 1,022 in 2024. Fall headcount 766 in 2019 versus 968 in 2024 (+26%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1686,9 +1748,9 @@ None.
 | Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.1840 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.3779 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 28. Mid-Atlantic Christian University (NC)
+### 29. Mid-Atlantic Christian University (NC)
 
-Residential rank 28. Watch-list rank 448. Published risk score 0.333. Federal composite score 1.60 (year 2025.0).
+Residential rank 29. Watch-list rank 448. Published risk score 0.333. Federal composite score 1.60 (year 2025.0).
 
 Endowment $4.6 million in 2023 ($36,482 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 199458. Fall headcount 140 in 2024 (undergraduate 140; graduate not reported). FTE 125 in 2024. Fall headcount 198 in 2019 versus 140 in 2024 (-29%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1748,9 +1810,9 @@ None.
 | State high-school graduates, 5-year change | 0.04486 | 2025 | 70.8 | 0.35 | 0.0364 | -0.1224 | Reported on the scored row. Not imputed. |
 | Log enrollment (FTE) | 4.828 | 2024 | 18.1 | -0.91 | 0.0797 | -0.2937 | Reported on the scored row. Not imputed. |
 
-### 29. Fairleigh Dickinson University-Metropolitan Campus (NJ)
+### 30. Fairleigh Dickinson University-Metropolitan Campus (NJ)
 
-Residential rank 29. Watch-list rank 449. Published risk score 0.333. Federal composite score 3.00 (year 2025.0).
+Residential rank 30. Watch-list rank 449. Published risk score 0.333. Federal composite score 3.00 (year 2025.0).
 
 Endowment $100.2 million in 2023 ($22,122 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 184603. Fall headcount 8,045 in 2024 (undergraduate 5,690; graduate 2,355). FTE 4,531 in 2024. Fall headcount 8,206 in 2019 versus 8,045 in 2024 (-2%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1810,9 +1872,9 @@ None.
 | Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.2458 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.4253 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 30. Yeshiva Ohr Elchonon Chabad West Coast Talmudical Seminary (CA)
+### 31. Yeshiva Ohr Elchonon Chabad West Coast Talmudical Seminary (CA)
 
-Residential rank 30. Watch-list rank 453. Published risk score 0.332. Federal composite score 2.20 (year 2025.0).
+Residential rank 31. Watch-list rank 453. Published risk score 0.332. Federal composite score 2.20 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 126076; endowment_end (F2H02/F1H02) is blank. Fall headcount 163 in 2024 (undergraduate 163; graduate not reported). FTE 162 in 2024. Fall headcount 138 in 2019 versus 163 in 2024 (+18%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1872,9 +1934,9 @@ The model's five-year enrollment feature is the FTE change (-30%). Fall headcoun
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1124 | Carried forward from the last official composite year. composite_is_lagged is true. |
 | Log enrollment (FTE) | 5.088 | 2024 | 22.8 | -0.76 | 0.0797 | -0.1286 | Reported on the scored row. Not imputed. |
 
-### 31. Maharishi International University (IA)
+### 32. Maharishi International University (IA)
 
-Residential rank 31. Watch-list rank 459. Published risk score 0.329. Federal composite score 2.60 (year 2025.0).
+Residential rank 32. Watch-list rank 459. Published risk score 0.329. Federal composite score 2.60 (year 2025.0).
 
 Endowment $12.1 million in 2023 ($5,459 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 153861. Fall headcount 2,592 in 2024 (undergraduate 922; graduate 1,670). FTE 2,219 in 2024. Fall headcount 1,861 in 2019 versus 2,592 in 2024 (+39%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1934,9 +1996,9 @@ None.
 | Yield-rate change, 5 years | 0.2412 | 2024 | 93.6 | 1.67 | 0.0192 | -0.1702 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.3925 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 32. Huston-Tillotson University (TX)
+### 33. Huston-Tillotson University (TX)
 
-Residential rank 32. Watch-list rank 463. Published risk score 0.327. Federal composite score 1.40 (year 2025.0).
+Residential rank 33. Watch-list rank 463. Published risk score 0.327. Federal composite score 1.40 (year 2025.0).
 
 Endowment $13.6 million in 2023 ($25,207 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 225575. Fall headcount 1,059 in 2024 (undergraduate 1,024; graduate 35). FTE 540 in 2024. Fall headcount 1,121 in 2019 versus 1,059 in 2024 (-6%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -1996,9 +2058,9 @@ The model's five-year enrollment feature is the FTE change (-45%). Fall headcoun
 | State high-school graduates, 5-year change | 0.08271 | 2025 | 92.7 | 0.88 | 0.0364 | -0.1086 | Reported on the scored row. Not imputed. |
 | Enrollment change, 5 years | -0.454 | 2024 | 9.0 | -0.81 | 0.0125 | -0.1581 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 
-### 33. Grace Christian University (MI)
+### 34. Grace Christian University (MI)
 
-Residential rank 33. Watch-list rank 467. Published risk score 0.325. Federal composite score 1.80 (year 2025.0).
+Residential rank 34. Watch-list rank 467. Published risk score 0.325. Federal composite score 1.80 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 170000; endowment_end (F2H02/F1H02) is blank. Fall headcount 1,017 in 2024 (undergraduate 928; graduate 89). FTE 628 in 2024. Fall headcount 1,097 in 2019 versus 1,017 in 2024 (-7%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2058,9 +2120,9 @@ This nonprofit filed IPEDS finance and left endowment assets blank. No confirmed
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1005 | Carried forward from the last official composite year. composite_is_lagged is true. |
 | Yield-rate change, 5 years | 0.2633 | 2024 | 94.7 | 1.80 | 0.0192 | -0.1298 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 
-### 34. University of Advancing Technology (AZ)
+### 35. University of Advancing Technology (AZ)
 
-Residential rank 34. Watch-list rank 501. Published risk score 0.308. Federal composite score 2.60 (year 2025.0).
+Residential rank 35. Watch-list rank 501. Published risk score 0.308. Federal composite score 2.60 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 363934; endowment_end (F2H02/F1H02) is blank. Fall headcount 933 in 2024 (undergraduate 855; graduate 78). FTE 869 in 2024. Fall headcount 789 in 2019 versus 933 in 2024 (+18%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2120,9 +2182,9 @@ The model's five-year enrollment feature is the FTE change (-13%). Fall headcoun
 | Yield-rate change, 5 years | 0.2281 | 2024 | 93.2 | 1.58 | 0.0192 | -0.0796 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.2081 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 35. Ohio Dominican University (OH)
+### 36. Ohio Dominican University (OH)
 
-Residential rank 35. Watch-list rank 503. Published risk score 0.308. Federal composite score 2.10 (year 2025.0).
+Residential rank 36. Watch-list rank 503. Published risk score 0.308. Federal composite score 2.10 (year 2025.0).
 
 Endowment $19.8 million in 2023 ($17,587 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 204617. Fall headcount 1,209 in 2024 (undergraduate 843; graduate 366). FTE 1,127 in 2024. Fall headcount 1,640 in 2019 versus 1,209 in 2024 (-26%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2182,9 +2244,9 @@ None.
 | Negative-margin years in the last 5 | 3 | 2023 | 87.6 | 0.94 | 0.0338 | -0.0920 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.3157 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 36. Benedictine University (IL)
+### 37. Benedictine University (IL)
 
-Residential rank 36. Watch-list rank 505. Published risk score 0.306. Federal composite score 2.70 (year 2025.0).
+Residential rank 37. Watch-list rank 505. Published risk score 0.306. Federal composite score 2.70 (year 2025.0).
 
 Endowment $34.7 million in 2023 ($12,103 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 145619. Fall headcount 2,917 in 2024 (undergraduate 1,972; graduate 945). FTE 2,864 in 2024. Fall headcount 4,401 in 2019 versus 2,917 in 2024 (-34%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2244,9 +2306,9 @@ None.
 | Negative-margin years in the last 5 | 3 | 2023 | 87.6 | 0.94 | 0.0338 | -0.1192 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.3099 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 37. Life Pacific University (CA)
+### 38. Life Pacific University (CA)
 
-Residential rank 37. Watch-list rank 514. Published risk score 0.298. Federal composite score 2.50 (year 2025.0).
+Residential rank 38. Watch-list rank 514. Published risk score 0.298. Federal composite score 2.50 (year 2025.0).
 
 Endowment $4.9 million in 2023 ($9,146 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 117104. Fall headcount 621 in 2024 (undergraduate 460; graduate 161). FTE 538 in 2024. Fall headcount 552 in 2019 versus 621 in 2024 (+12%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2306,9 +2368,9 @@ None.
 | Negative-margin years in the last 5 | 3 | 2023 | 87.6 | 0.94 | 0.0338 | -0.0996 | Reported on the scored row. Not imputed. |
 | Yield rate | 0.3377 | 2024 | 48.5 | -0.37 | 0.0418 | -0.1211 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 
-### 38. Shaw University (NC)
+### 39. Shaw University (NC)
 
-Residential rank 38. Watch-list rank 523. Published risk score 0.291. Federal composite score 1.20 (year 2025.0).
+Residential rank 39. Watch-list rank 523. Published risk score 0.291. Federal composite score 1.20 (year 2025.0).
 
 Endowment $14.3 million in 2023 ($16,492 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 199643. Fall headcount 964 in 2024 (undergraduate 877; graduate 87). FTE 867 in 2024. Fall headcount 1,291 in 2019 versus 964 in 2024 (-25%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2368,9 +2430,9 @@ None.
 | Operating margin | -0.3155 | 2023 | 6.4 | -1.34 | 0.0479 | -0.0740 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1619 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 39. Ottawa University-Surprise (AZ)
+### 40. Ottawa University-Surprise (AZ)
 
-Residential rank 39. Watch-list rank 534. Published risk score 0.286. Federal composite score missing.
+Residential rank 40. Watch-list rank 534. Published risk score 0.286. Federal composite score missing.
 
 Endowment $25.9 million in 2023 ($31,074 per FTE). Scope: parent filing. Source: IPEDS finance F2H02/F1H02 for UNITID 155627 (Ottawa University-Ottawa), the campus that files in this extract. Fall headcount 912 in 2024 (undergraduate 837; graduate 75). FTE 833 in 2024. Fall headcount 806 in 2019 versus 912 in 2024 (+13%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract. finance from parent UNITID 155627. The figure is the Ottawa University-Ottawa filing, not a separate endowment measured for this campus alone. Enrollment on this card is this campus's own headcount and FTE.
 
@@ -2430,9 +2492,9 @@ finance from parent UNITID 155627
 | Negative-margin years in the last 5 | 3 | 2023 | 87.6 | 0.94 | 0.0338 | -0.0820 | Copied from the parent campus finance row UNITID 155627, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
 | Finance copied from a parent campus | 1 | 2023 | 100.0 | 4.64 | 0.0031 | -0.3940 | Reported on the scored row. Not imputed. |
 
-### 40. Inter American University of Puerto Rico-Metro (PR)
+### 41. Inter American University of Puerto Rico-Metro (PR)
 
-Residential rank 40. Watch-list rank 548. Published risk score 0.277. Federal composite score 3.00 (year 2025.0).
+Residential rank 41. Watch-list rank 548. Published risk score 0.277. Federal composite score 3.00 (year 2025.0).
 
 Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 242653; endowment_end (F2H02/F1H02) is blank. Fall headcount 4,101 in 2024 (undergraduate 2,711; graduate 1,390). FTE 3,212 in 2024. Fall headcount 7,791 in 2019 versus 4,101 in 2024 (-47%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2492,9 +2554,9 @@ This nonprofit filed IPEDS finance and left endowment assets blank. No confirmed
 | Enrollment change, 5 years | -0.4987 | 2024 | 7.3 | -0.87 | 0.0125 | -0.0850 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.0863 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 41. La Roche University (PA)
+### 42. La Roche University (PA)
 
-Residential rank 41. Watch-list rank 561. Published risk score 0.271. Federal composite score 1.80 (year 2025.0).
+Residential rank 42. Watch-list rank 561. Published risk score 0.271. Federal composite score 1.80 (year 2025.0).
 
 Endowment $13.8 million in 2023 ($12,002 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 213358. Fall headcount 2,153 in 2024 (undergraduate 1,828; graduate 325). FTE 1,146 in 2024. Fall headcount 1,401 in 2019 versus 2,153 in 2024 (+54%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2554,9 +2616,9 @@ The model's five-year enrollment feature is the FTE change (-10%). Fall headcoun
 | State high-school graduates, 5-year change | -0.03434 | 2025 | 20.2 | -0.77 | 0.0364 | -0.0623 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1961 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 42. Shasta Bible College and Graduate School (CA)
+### 43. Shasta Bible College and Graduate School (CA)
 
-Residential rank 42. Watch-list rank 588. Published risk score 0.263. Federal composite score 2.20 (year 2025.0).
+Residential rank 43. Watch-list rank 588. Published risk score 0.263. Federal composite score 2.20 (year 2025.0).
 
 Endowment $47,615 in 2023 ($2,976 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 123280. Fall headcount 25 in 2024 (undergraduate 21; graduate 4). FTE 16 in 2024. Fall headcount 41 in 2019 versus 25 in 2024 (-39%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2616,9 +2678,9 @@ None.
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.0642 | Carried forward from the last official composite year. composite_is_lagged is true. |
 | Log enrollment (FTE) | 2.773 | 2024 | 2.1 | -2.15 | 0.0797 | -0.1078 | Reported on the scored row. Not imputed. |
 
-### 43. Greenville University (IL)
+### 44. Greenville University (IL)
 
-Residential rank 43. Watch-list rank 590. Published risk score 0.262. Federal composite score 2.20 (year 2025.0).
+Residential rank 44. Watch-list rank 590. Published risk score 0.262. Federal composite score 2.20 (year 2025.0).
 
 Endowment $28.6 million in 2023 ($26,742 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 145372. Fall headcount 1,104 in 2024 (undergraduate 986; graduate 118). FTE 1,069 in 2024. Fall headcount 1,092 in 2019 versus 1,104 in 2024 (+1%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2678,9 +2740,9 @@ None.
 | State high-school graduates, 5-year change | -0.0394 | 2025 | 14.2 | -0.84 | 0.0364 | -0.0752 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1962 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 44. Paine College (GA)
+### 45. Paine College (GA)
 
-Residential rank 44. Watch-list rank 596. Published risk score 0.258. Federal composite score 1.20 (year 2025.0).
+Residential rank 45. Watch-list rank 596. Published risk score 0.258. Federal composite score 1.20 (year 2025.0).
 
 Endowment $11.6 million in 2023 ($63,255 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 140720. Fall headcount 390 in 2024 (undergraduate 390; graduate not reported). FTE 184 in 2024. Fall headcount 448 in 2019 versus 390 in 2024 (-13%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2740,9 +2802,71 @@ Five-year FTE change is -54%, an outlier against a typical campus. | The model's
 | Yield rate | 0.08347 | 2024 | 4.7 | -1.15 | 0.0418 | -0.0638 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Enrollment change, 5 years | -0.5365 | 2024 | 6.3 | -0.92 | 0.0125 | -0.0782 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 
-### 45. Columbia International University (SC)
+### 46. Indian Bible College (AZ)
 
-Residential rank 45. Watch-list rank 602. Published risk score 0.255. Federal composite score 2.40 (year 2025.0).
+Residential rank 46. Watch-list rank 597. Published risk score 0.258. Federal composite score missing.
+
+Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 495280; endowment_end (F2H02/F1H02) is blank. Fall headcount 38 in 2024 (undergraduate 38; graduate not reported). FTE 22 in 2024. Five-year fall headcount is not available. Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
+
+Top drivers:
+
+- net assets cover 1.6 years of expenses (2023)
+- tuition is 12% of revenue (2023)
+- 0 of the last 5 years show a negative margin
+
+Missing or imputed:
+
+Discount-rate change, 5 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Yield-rate change, 5 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | First-time enrollment change, 1 year: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Staff change, 5 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Enrollment change, 10 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Admit rate: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Admit-rate change, 5 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Operating-margin change, 5 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Yield rate: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Endowment per FTE: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Federal composite score: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank.
+
+Data-quality flags:
+
+This nonprofit filed IPEDS finance and left endowment assets blank. No confirmed Form 990 endowment was substituted.
+
+| Feature | Raw value | Year | Percentile | Z-score | Weight | Contribution | How the model saw it |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Net assets per dollar of expense | 1.591 | 2023 | 54.0 | -0.19 | 0.1840 | +0.2211 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Tuition share of revenue | 0.1159 | 2023 | 5.4 | -1.71 | 0.0405 | +0.1126 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Negative-margin years in the last 5 | 0 | 2023 | 27.5 | -1.14 | 0.0338 | +0.0585 | Reported on the scored row. Not imputed. |
+| Operating margin | 0.01601 | 2023 | 38.1 | -0.08 | 0.0479 | +0.0569 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Sector | 2 | 2025 | 65.3 | -0.61 | 0.0331 | +0.0540 | Reported on the scored row. Not imputed. |
+| Discount rate | 0.2931 | 2023 | 58.6 | 0.20 | 0.0204 | +0.0192 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Discount-rate change, 5 years |  | 2023 |  |  | 0.0198 | +0.0168 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Four-year institution | 1 | 2025 | 100.0 | 0.52 | 0.0032 | +0.0142 | Reported on the scored row. Not imputed. |
+| Enrollment change, 5 years | -0.04348 | 2024 | 45.3 | -0.25 | 0.0125 | +0.0081 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Yield-rate change, 5 years |  |  |  |  | 0.0192 | +0.0048 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Finance copied from a parent campus | 0 | 2023 | 95.6 | -0.22 | 0.0031 | +0.0041 | Reported on the scored row. Not imputed. |
+| First-time enrollment change, 1 year |  |  |  |  | 0.0119 | +0.0038 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Staff change, 5 years |  | 2024 |  |  | 0.0103 | +0.0036 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Staff change, 1 year | 0.1667 | 2024 | 89.1 | 0.65 | 0.0212 | +0.0031 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Enrollment down more than 30% in 5 years | 0 | 2024 | 82.8 | -0.46 | 0.0033 | +0.0027 | Reported on the scored row. Not imputed. |
+| Enrollment change, 10 years |  | 2024 |  |  | 0.0046 | +0.0026 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Admit rate |  |  |  |  | 0.0252 | +0.0017 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Student-staff ratio change, 1 year | -0.5119 | 2024 | 24.0 | -0.14 | 0.0080 | +0.0013 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Admit-rate change, 5 years |  |  |  |  | 0.0148 | +0.0013 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Years in the composite zone | 0 | 2025 | 96.7 | -0.18 | 0.0023 | +0.0012 | Reported on the scored row. Not imputed. |
+| Control (2 nonprofit, 3 for-profit) | 2 | 2025 | 68.7 | -0.68 | 0.0010 | +0.0011 | Reported on the scored row. Not imputed. |
+| Finance missing on the scored row | 0 | 2023 | 97.8 | -0.15 | 0.0036 | +0.0007 | Reported on the scored row. Not imputed. |
+| Composite score is carried forward | 0 | 2025 | 20.2 | -1.99 | 0.0026 | +0.0004 | Reported on the scored row. Not imputed. |
+| Tuition is at least 70% of revenue | 0 | 2023 | 55.7 | -0.89 | 0.0001 | +0.0001 | Reported on the scored row. Not imputed. |
+| Faith-related Carnegie class | 0 | 2025 | 87.8 | -0.37 | 0.0001 | +0.0000 | Reported on the scored row. Not imputed. |
+| Composite below 1.0 |  |  |  |  | 0.0000 | -0.0000 | Reported on the scored row. Not imputed. |
+| Operating-margin change, 5 years |  | 2023 |  |  | 0.0075 | -0.0002 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Rural locale | 0 | 2025 | 93.9 | -0.26 | 0.0030 | -0.0023 | Reported on the scored row. Not imputed. |
+| Urban locale | 1 | 2025 | 100.0 | 0.90 | 0.0050 | -0.0037 | Reported on the scored row. Not imputed. |
+| Yield rate |  |  |  |  | 0.0418 | -0.0042 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Students per staff member | 1.571 | 2024 | 3.9 | -0.74 | 0.0347 | -0.0051 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Composite in the 1.0–1.5 zone |  |  |  |  | 0.0009 | -0.0055 | Reported on the scored row. Not imputed. |
+| Enrollment change, 1 year | -0.12 | 2024 | 14.2 | -0.63 | 0.0388 | -0.0069 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| FTE under 1,000 | 1 | 2024 | 100.0 | 0.80 | 0.0115 | -0.0129 | Reported on the scored row. Not imputed. |
+| Composite score missing | 1 | 2025 | 100.0 | 0.00 | 0.0158 | -0.0138 | Reported on the scored row. Not imputed. |
+| Endowment per FTE |  | 2023 |  |  | 0.1018 | -0.0339 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| State high-school graduates, 5-year change | 0.1121 | 2025 | 96.9 | 1.29 | 0.0364 | -0.0471 | Reported on the scored row. Not imputed. |
+| Federal composite score |  |  |  |  | 0.0966 | -0.0674 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| Log enrollment (FTE) | 3.091 | 2024 | 3.4 | -1.96 | 0.0797 | -0.1561 | Reported on the scored row. Not imputed. |
+
+### 47. Columbia International University (SC)
+
+Residential rank 47. Watch-list rank 602. Published risk score 0.255. Federal composite score 2.40 (year 2025.0).
 
 Endowment $5.1 million in 2023 ($2,399 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 217925. Fall headcount 2,914 in 2024 (undergraduate 965; graduate 1,949). FTE 2,136 in 2024. Fall headcount 1,649 in 2019 versus 2,914 in 2024 (+77%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2802,9 +2926,9 @@ Five-year FTE change is +72%, an outlier against a typical campus.
 | Yield rate | 0.3511 | 2024 | 49.3 | -0.33 | 0.0418 | -0.0531 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1984 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 46. Christian Brothers University (TN)
+### 48. Christian Brothers University (TN)
 
-Residential rank 46. Watch-list rank 605. Published risk score 0.254. Federal composite score 2.70 (year 2025.0).
+Residential rank 48. Watch-list rank 605. Published risk score 0.254. Federal composite score 2.70 (year 2025.0).
 
 Endowment $44.3 million in 2023 ($30,405 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 219833. Fall headcount 1,772 in 2024 (undergraduate 1,155; graduate 617). FTE 1,458 in 2024. Fall headcount 1,968 in 2019 versus 1,772 in 2024 (-10%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2864,9 +2988,9 @@ None.
 | Enrollment change, 1 year | -0.2346 | 2024 | 6.9 | -1.09 | 0.0388 | -0.0624 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.2079 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 47. Upper Iowa University (IA)
+### 49. Upper Iowa University (IA)
 
-Residential rank 47. Watch-list rank 609. Published risk score 0.252. Federal composite score 2.10 (year 2025.0).
+Residential rank 49. Watch-list rank 609. Published risk score 0.252. Federal composite score 2.10 (year 2025.0).
 
 Endowment $21.8 million in 2023 ($7,541 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 154493. Fall headcount 3,941 in 2024 (undergraduate 3,054; graduate 887). FTE 2,892 in 2024. Fall headcount 4,279 in 2019 versus 3,941 in 2024 (-8%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
@@ -2926,189 +3050,65 @@ None.
 | Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.0890 | Reported on the scored row. Not imputed. |
 | Composite score is carried forward | 1 | 2025 | 100.0 | 0.50 | 0.0026 | -0.1973 | Carried forward from the last official composite year. composite_is_lagged is true. |
 
-### 48. Fairleigh Dickinson University-Florham Campus (NJ)
+### 50. Urshan University (MO)
 
-Residential rank 48. Watch-list rank 949. Published risk score 0.160. Federal composite score missing.
+Residential rank 50. Watch-list rank 612. Published risk score 0.251. Federal composite score missing.
 
-Endowment $100.2 million in 2023 ($37,374 per FTE). Scope: parent filing. Source: IPEDS finance F2H02/F1H02 for UNITID 184603 (Fairleigh Dickinson University-Metropolitan Campus), the campus that files in this extract. Fall headcount 2,885 in 2024 (undergraduate 2,012; graduate 873). FTE 2,682 in 2024. Fall headcount 3,366 in 2019 versus 2,885 in 2024 (-14%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract. finance from parent UNITID 184603. The figure is the Fairleigh Dickinson University-Metropolitan Campus filing, not a separate endowment measured for this campus alone. Enrollment on this card is this campus's own headcount and FTE.
+Endowment not reported in 2023. Scope: not reported. Source: IPEDS finance 2023 for UNITID 494685; endowment_end (F2H02/F1H02) is blank. Fall headcount 474 in 2024 (undergraduate 474; graduate not reported). FTE 453 in 2024. Fall headcount 309 in 2019 versus 474 in 2024 (+53%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
 
 Top drivers:
 
-- net assets cover 1.1 years of expenses (2023)
-- enrollment is about 2,682 FTE (2024)
-- endowment covers 0.4 years of expenses, $38,084 per FTE (2023)
+- net assets cover 0.2 years of expenses (2023)
+- yield is 84% (2024)
+- the operating margin is +11% (2023)
 
 Missing or imputed:
 
-Net assets per dollar of expense: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Endowment per FTE: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Operating-margin change, 5 years: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Operating margin: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Discount rate: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Tuition is at least 70% of revenue: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Tuition share of revenue: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Federal composite score: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Discount-rate change, 5 years: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. | Negative-margin years in the last 5: Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count.
+Enrollment change, 10 years: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Endowment per FTE: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. | Federal composite score: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank.
 
 Data-quality flags:
 
-finance from parent UNITID 184603
+Five-year FTE change is +59%, an outlier against a typical campus. | This nonprofit filed IPEDS finance and left endowment assets blank. No confirmed Form 990 endowment was substituted.
 
 | Feature | Raw value | Year | Percentile | Z-score | Weight | Contribution | How the model saw it |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Net assets per dollar of expense | 1.106 | 2023 | 42.5 | -0.41 | 0.1840 | +0.0948 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Log enrollment (FTE) | 7.894 | 2024 | 84.4 | 0.93 | 0.0797 | +0.0735 | Reported on the scored row. Not imputed. |
-| Endowment per FTE | 3.808e+04 | 2023 | 49.2 | -0.39 | 0.1018 | +0.0713 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Sector | 2 | 2025 | 65.3 | -0.61 | 0.0331 | +0.0244 | Reported on the scored row. Not imputed. |
-| Enrollment change, 1 year | 0.019 | 2024 | 52.6 | -0.07 | 0.0388 | +0.0163 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Operating-margin change, 5 years | -0.1166 | 2023 | 19.6 | -0.51 | 0.0075 | +0.0163 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Yield-rate change, 5 years | -0.1039 | 2024 | 19.2 | -0.51 | 0.0192 | +0.0147 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Staff change, 5 years | -0.1504 | 2024 | 25.9 | -0.37 | 0.0103 | +0.0143 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| FTE under 1,000 | 0 | 2024 | 38.9 | -1.25 | 0.0115 | +0.0133 | Reported on the scored row. Not imputed. |
-| Operating margin | -0.04043 | 2023 | 24.8 | -0.30 | 0.0479 | +0.0119 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| First-time enrollment change, 1 year | 0.1035 | 2024 | 69.6 | 0.06 | 0.0119 | +0.0092 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Admit-rate change, 5 years | 0.01383 | 2024 | 50.4 | -0.06 | 0.0148 | +0.0068 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Discount rate | 0.3334 | 2023 | 62.4 | 0.37 | 0.0204 | +0.0045 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Student-staff ratio change, 1 year | 0.7005 | 2024 | 74.2 | 0.09 | 0.0080 | +0.0034 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Staff change, 1 year | -0.07123 | 2024 | 21.2 | -0.40 | 0.0212 | +0.0032 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Urban locale | 0 | 2025 | 44.6 | -1.11 | 0.0050 | +0.0032 | Reported on the scored row. Not imputed. |
-| Control (2 nonprofit, 3 for-profit) | 2 | 2025 | 68.7 | -0.68 | 0.0010 | +0.0020 | Reported on the scored row. Not imputed. |
-| Composite score is carried forward | 0 | 2025 | 20.2 | -1.99 | 0.0026 | +0.0006 | Reported on the scored row. Not imputed. |
-| Finance missing on the scored row | 0 | 2023 | 97.8 | -0.15 | 0.0036 | +0.0005 | Reported on the scored row. Not imputed. |
-| Enrollment down more than 30% in 5 years | 0 | 2024 | 82.8 | -0.46 | 0.0033 | +0.0005 | Reported on the scored row. Not imputed. |
-| Years in the composite zone | 0 | 2025 | 96.7 | -0.18 | 0.0023 | +0.0004 | Reported on the scored row. Not imputed. |
-| Enrollment change, 10 years | -0.02579 | 2024 | 51.5 | -0.23 | 0.0046 | +0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Net assets per dollar of expense | 0.2076 | 2023 | 23.0 | -0.80 | 0.1840 | +0.1213 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Yield rate | 0.8387 | 2024 | 80.9 | 1.18 | 0.0418 | +0.0804 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Operating margin | 0.1092 | 2023 | 62.0 | 0.27 | 0.0479 | +0.0768 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Sector | 2 | 2025 | 65.3 | -0.61 | 0.0331 | +0.0577 | Reported on the scored row. Not imputed. |
+| Students per staff member | 32.36 | 2024 | 96.1 | 1.64 | 0.0347 | +0.0406 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Tuition share of revenue | 0.8944 | 2023 | 71.4 | 0.91 | 0.0405 | +0.0379 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Admit-rate change, 5 years | 0.001299 | 2024 | 46.8 | -0.13 | 0.0148 | +0.0109 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Staff change, 1 year | 0.5556 | 2024 | 98.5 | 2.36 | 0.0212 | +0.0097 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Operating-margin change, 5 years | 0.03408 | 2023 | 52.1 | 0.04 | 0.0075 | +0.0089 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Student-staff ratio change, 1 year | -22.2 | 2024 | 0.3 | -4.34 | 0.0080 | +0.0081 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Urban locale | 0 | 2025 | 44.6 | -1.11 | 0.0050 | +0.0070 | Reported on the scored row. Not imputed. |
+| Enrollment change, 5 years | 0.5895 | 2024 | 87.5 | 0.60 | 0.0125 | +0.0055 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Control (2 nonprofit, 3 for-profit) | 2 | 2025 | 68.7 | -0.68 | 0.0010 | +0.0051 | Reported on the scored row. Not imputed. |
+| Finance copied from a parent campus | 0 | 2023 | 95.6 | -0.22 | 0.0031 | +0.0036 | Reported on the scored row. Not imputed. |
+| Four-year institution | 1 | 2025 | 100.0 | 0.52 | 0.0032 | +0.0029 | Reported on the scored row. Not imputed. |
+| Enrollment down more than 30% in 5 years | 0 | 2024 | 82.8 | -0.46 | 0.0033 | +0.0020 | Reported on the scored row. Not imputed. |
+| Finance missing on the scored row | 0 | 2023 | 97.8 | -0.15 | 0.0036 | +0.0013 | Reported on the scored row. Not imputed. |
+| Enrollment change, 10 years |  | 2024 |  |  | 0.0046 | +0.0012 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| First-time enrollment change, 1 year | -0.1875 | 2024 | 17.2 | -0.55 | 0.0119 | +0.0007 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Years in the composite zone | 0 | 2025 | 96.7 | -0.18 | 0.0023 | +0.0006 | Reported on the scored row. Not imputed. |
+| Composite score is carried forward | 0 | 2025 | 20.2 | -1.99 | 0.0026 | +0.0004 | Reported on the scored row. Not imputed. |
 | Faith-related Carnegie class | 0 | 2025 | 87.8 | -0.37 | 0.0001 | +0.0000 | Reported on the scored row. Not imputed. |
 | Composite below 1.0 |  |  |  |  | 0.0000 | -0.0000 | Reported on the scored row. Not imputed. |
-| Tuition is at least 70% of revenue | 1 | 2023 | 100.0 | 1.12 | 0.0001 | -0.0000 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Tuition share of revenue | 0.7282 | 2023 | 58.6 | 0.35 | 0.0405 | -0.0002 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Rural locale | 0 | 2025 | 93.9 | -0.26 | 0.0030 | -0.0004 | Reported on the scored row. Not imputed. |
-| Composite in the 1.0–1.5 zone |  |  |  |  | 0.0009 | -0.0010 | Reported on the scored row. Not imputed. |
-| Four-year institution | 1 | 2025 | 100.0 | 0.52 | 0.0032 | -0.0019 | Reported on the scored row. Not imputed. |
-| Enrollment change, 5 years | -0.1033 | 2024 | 37.7 | -0.33 | 0.0125 | -0.0026 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Composite score missing | 1 | 2025 | 100.0 | 0.00 | 0.0158 | -0.0044 | Reported on the scored row. Not imputed. |
-| Students per staff member | 7.912 | 2024 | 54.8 | -0.25 | 0.0347 | -0.0074 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Federal composite score |  |  |  |  | 0.0966 | -0.0132 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
-| State high-school graduates, 5-year change | 0.01811 | 2025 | 52.6 | -0.03 | 0.0364 | -0.0155 | Reported on the scored row. Not imputed. |
-| Admit rate | 0.9519 | 2024 | 82.1 | 0.98 | 0.0252 | -0.0170 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Yield rate | 0.105 | 2024 | 9.3 | -1.08 | 0.0418 | -0.0170 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Discount-rate change, 5 years | -0.06397 | 2023 | 8.7 | -0.92 | 0.0198 | -0.0204 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Negative-margin years in the last 5 | 4 | 2023 | 95.6 | 1.64 | 0.0338 | -0.0375 | Copied from the parent campus finance row UNITID 184603, then winsorized with the rest of the panel. Enrollment is this campus's own count. |
-| Finance copied from a parent campus | 1 | 2023 | 100.0 | 4.64 | 0.0031 | -0.1107 | Reported on the scored row. Not imputed. |
-
-### 49. Principia College (IL)
-
-Residential rank 49. Watch-list rank 1860. Published risk score 0.046. Federal composite score missing.
-
-Endowment $592.9 million in 2023 ($1.8 million per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 148016. Fall headcount 339 in 2024 (undergraduate 339; graduate not reported). FTE 335 in 2024. Fall headcount 407 in 2019 versus 339 in 2024 (-17%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract. IPEDS finance 2023 endowment_end for Principia College is $592,903,744 (F2H02). Data USA reports the same figure, about $593 million at the end of fiscal 2024, with a $77.5 million investment return. https://datausa.io/profile/university/principia-college. A Principia College news article calls it "the College's $1.1 billion endowment" and says enrollment is about 300. https://www.principiacollege.edu/article/principia-college-students-manage-six-figure-investment-fund. The Principia Corporation Form 990 (EIN 43-0652667) covers the college and the Principia School together. CauseIQ shows about $111.3 million of revenue for the year ending June 2024, and a 990 summary reports about $1.2 billion of assets. https://www.causeiq.com/organizations/the-principia-corporation,430652667/ https://philanthropy.org/990/report/430652667/the-principia-corporation/2023. The card keeps the college IPEDS line. It does not substitute the corporation total. The published score used none of these figures.
-
-Top drivers:
-
-- endowment covers 12.3 years of expenses, $1.2 million per FTE (2023)
-- net assets cover 10.5 years of expenses (2023)
-- tuition is 2% of revenue (2023)
-
-Missing or imputed:
-
-Federal composite score: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank.
-
-Data-quality flags:
-
-Investment return ($77.5 million) is more than half of reported revenue ($97.0 million). The IPEDS operating margin is not a tuition operating result. | Net tuition ($738,933) is under 5% of revenue ($97.0 million). Tuition dependence near zero can be a reporting form, not a pricing collapse.
-
-| Feature | Raw value | Year | Percentile | Z-score | Weight | Contribution | How the model saw it |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Endowment per FTE | 1.193e+06 | 2023 | 100.0 | 3.91 | 0.1018 | +0.0079 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Net assets per dollar of expense | 10.51 | 2023 | 100.0 | 3.72 | 0.1840 | +0.0056 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Tuition share of revenue | 0.01854 | 2023 | 1.2 | -2.03 | 0.0405 | +0.0049 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Students per staff member | 1.298 | 2024 | 3.0 | -0.76 | 0.0347 | +0.0036 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Admit rate | 0.444 | 2023 | 14.2 | -1.17 | 0.0252 | +0.0029 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Yield rate | 0.7059 | 2023 | 73.4 | 0.77 | 0.0418 | +0.0026 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Sector | 2 | 2025 | 65.3 | -0.61 | 0.0331 | +0.0020 | Reported on the scored row. Not imputed. |
-| Enrollment change, 1 year | 0.006006 | 2024 | 46.0 | -0.12 | 0.0388 | +0.0017 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Rural locale | 1 | 2025 | 100.0 | 3.91 | 0.0030 | +0.0009 | Reported on the scored row. Not imputed. |
-| Discount rate | 0.8221 | 2023 | 100.0 | 2.45 | 0.0204 | +0.0008 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Yield-rate change, 5 years | -0.02404 | 2023 | 53.8 | -0.00 | 0.0192 | +0.0007 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Staff change, 5 years | -0.04667 | 2024 | 42.7 | -0.21 | 0.0103 | +0.0006 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Urban locale | 0 | 2025 | 44.6 | -1.11 | 0.0050 | +0.0004 | Reported on the scored row. Not imputed. |
-| Enrollment change, 10 years | -0.3313 | 2024 | 23.8 | -0.53 | 0.0046 | +0.0002 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Finance copied from a parent campus | 0 | 2023 | 95.6 | -0.22 | 0.0031 | +0.0001 | Reported on the scored row. Not imputed. |
-| Years in the composite zone | 0 | 2025 | 96.7 | -0.18 | 0.0023 | +0.0001 | Reported on the scored row. Not imputed. |
-| Enrollment down more than 30% in 5 years | 0 | 2024 | 82.8 | -0.46 | 0.0033 | +0.0001 | Reported on the scored row. Not imputed. |
-| Staff change, 1 year | 0.003509 | 2024 | 51.8 | -0.07 | 0.0212 | +0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Finance missing on the scored row | 0 | 2023 | 97.8 | -0.15 | 0.0036 | +0.0000 | Reported on the scored row. Not imputed. |
-| Control (2 nonprofit, 3 for-profit) | 2 | 2025 | 68.7 | -0.68 | 0.0010 | +0.0000 | Reported on the scored row. Not imputed. |
-| Tuition is at least 70% of revenue | 0 | 2023 | 55.7 | -0.89 | 0.0001 | +0.0000 | Reported on the scored row. Not imputed. |
-| Enrollment change, 5 years | -0.141 | 2024 | 32.8 | -0.38 | 0.0125 | +0.0000 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Four-year institution | 1 | 2025 | 100.0 | 0.52 | 0.0032 | +0.0000 | Reported on the scored row. Not imputed. |
-| Composite score is carried forward | 0 | 2025 | 20.2 | -1.99 | 0.0026 | +0.0000 | Reported on the scored row. Not imputed. |
-| Faith-related Carnegie class | 0 | 2025 | 87.8 | -0.37 | 0.0001 | +0.0000 | Reported on the scored row. Not imputed. |
-| Composite below 1.0 |  |  |  |  | 0.0000 | -0.0000 | Reported on the scored row. Not imputed. |
-| Student-staff ratio change, 1 year | 0.002908 | 2024 | 46.9 | -0.05 | 0.0080 | -0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Composite in the 1.0–1.5 zone |  |  |  |  | 0.0009 | -0.0002 | Reported on the scored row. Not imputed. |
-| Operating-margin change, 5 years | 0.7159 | 2023 | 98.2 | 2.55 | 0.0075 | -0.0002 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Admit-rate change, 5 years | -0.4754 | 2023 | 1.8 | -2.58 | 0.0148 | -0.0003 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Composite score missing | 1 | 2025 | 100.0 | 0.00 | 0.0158 | -0.0003 | Reported on the scored row. Not imputed. |
-| FTE under 1,000 | 1 | 2024 | 100.0 | 0.80 | 0.0115 | -0.0006 | Reported on the scored row. Not imputed. |
-| First-time enrollment change, 1 year | 0.377 | 2023 | 88.2 | 0.62 | 0.0119 | -0.0007 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Log enrollment (FTE) | 5.814 | 2024 | 34.4 | -0.32 | 0.0797 | -0.0009 | Reported on the scored row. Not imputed. |
-| Discount-rate change, 5 years | 0.155 | 2023 | 93.4 | 1.21 | 0.0198 | -0.0010 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Negative-margin years in the last 5 | 1 | 2023 | 52.2 | -0.44 | 0.0338 | -0.0015 | Reported on the scored row. Not imputed. |
-| Federal composite score |  |  |  |  | 0.0966 | -0.0018 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
-| State high-school graduates, 5-year change | -0.0394 | 2025 | 14.2 | -0.84 | 0.0364 | -0.0023 | Reported on the scored row. Not imputed. |
-| Operating margin | 0.5026 | 2023 | 98.1 | 1.76 | 0.0479 | -0.0024 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-
-### 50. New Orleans Baptist Theological Seminary (LA)
-
-Residential rank 50. Watch-list rank 2408. Published risk score 0.011. Federal composite score missing.
-
-Endowment $82.1 million in 2023 ($55,592 per FTE). Scope: this campus. Source: IPEDS finance 2023 endowment_end (FASB F2H02 or GASB F1H02) for UNITID 159948. Fall headcount 2,349 in 2024 (undergraduate 865; graduate 1,484). FTE 1,476 in 2024. Fall headcount 2,593 in 2019 versus 2,349 in 2024 (-9%). Enrollment source: IPEDS fall enrollment and 12-month enrollment FTE, Urban extract.
-
-Top drivers:
-
-- Federal composite score is missing on the scored row
-- state high-school graduates, 5-year change is +2% (2025)
-- there are 7.5 students per staff member (2024)
-
-Missing or imputed:
-
-Federal composite score: Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank.
-
-Data-quality flags:
-
-None.
-
-| Feature | Raw value | Year | Percentile | Z-score | Weight | Contribution | How the model saw it |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Federal composite score |  |  |  |  | 0.0966 | +0.0006 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
-| State high-school graduates, 5-year change | 0.01529 | 2025 | 49.5 | -0.07 | 0.0364 | +0.0005 | Reported on the scored row. Not imputed. |
-| Students per staff member | 7.492 | 2024 | 52.6 | -0.28 | 0.0347 | +0.0005 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Negative-margin years in the last 5 | 1 | 2023 | 52.2 | -0.44 | 0.0338 | +0.0004 | Reported on the scored row. Not imputed. |
-| Discount-rate change, 5 years | 0.02322 | 2023 | 51.4 | -0.07 | 0.0198 | +0.0003 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Composite score missing | 1 | 2025 | 100.0 | 0.00 | 0.0158 | +0.0002 | Reported on the scored row. Not imputed. |
-| Urban locale | 1 | 2025 | 100.0 | 0.90 | 0.0050 | +0.0001 | Reported on the scored row. Not imputed. |
-| Admit rate | 0.6532 | 2012 | 31.7 | -0.28 | 0.0252 | +0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Composite in the 1.0–1.5 zone |  |  |  |  | 0.0009 | +0.0001 | Reported on the scored row. Not imputed. |
-| Four-year institution | 1 | 2025 | 100.0 | 0.52 | 0.0032 | +0.0001 | Reported on the scored row. Not imputed. |
-| Rural locale | 0 | 2025 | 93.9 | -0.26 | 0.0030 | +0.0000 | Reported on the scored row. Not imputed. |
-| Faith-related Carnegie class | 1 | 2025 | 100.0 | 2.68 | 0.0001 | +0.0000 | Reported on the scored row. Not imputed. |
-| Composite below 1.0 |  |  |  |  | 0.0000 | +0.0000 | Reported on the scored row. Not imputed. |
-| Tuition is at least 70% of revenue | 0 | 2023 | 55.7 | -0.89 | 0.0001 | -0.0000 | Reported on the scored row. Not imputed. |
-| Finance missing on the scored row | 0 | 2023 | 97.8 | -0.15 | 0.0036 | -0.0000 | Reported on the scored row. Not imputed. |
-| Enrollment down more than 30% in 5 years | 0 | 2024 | 82.8 | -0.46 | 0.0033 | -0.0000 | Reported on the scored row. Not imputed. |
-| Composite score is carried forward | 0 | 2025 | 20.2 | -1.99 | 0.0026 | -0.0000 | Reported on the scored row. Not imputed. |
-| Control (2 nonprofit, 3 for-profit) | 2 | 2025 | 68.7 | -0.68 | 0.0010 | -0.0000 | Reported on the scored row. Not imputed. |
-| Finance copied from a parent campus | 0 | 2023 | 95.6 | -0.22 | 0.0031 | -0.0000 | Reported on the scored row. Not imputed. |
-| Years in the composite zone | 0 | 2025 | 96.7 | -0.18 | 0.0023 | -0.0000 | Reported on the scored row. Not imputed. |
-| Student-staff ratio change, 1 year | 0.4874 | 2024 | 69.0 | 0.05 | 0.0080 | -0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Admit-rate change, 5 years | 0.1097 | 2009 | 73.7 | 0.43 | 0.0148 | -0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Operating-margin change, 5 years | -0.01626 | 2023 | 39.2 | -0.14 | 0.0075 | -0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Enrollment change, 10 years | -0.04651 | 2024 | 49.5 | -0.25 | 0.0046 | -0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Enrollment change, 5 years | -0.06167 | 2024 | 43.3 | -0.28 | 0.0125 | -0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| First-time enrollment change, 1 year | -0.0553 | 2012 | 37.8 | -0.27 | 0.0119 | -0.0001 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Staff change, 5 years | 0.2236 | 2024 | 81.4 | 0.23 | 0.0103 | -0.0002 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Staff change, 1 year | -0.015 | 2024 | 36.3 | -0.15 | 0.0212 | -0.0003 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| FTE under 1,000 | 0 | 2024 | 38.9 | -1.25 | 0.0115 | -0.0003 | Reported on the scored row. Not imputed. |
-| Yield-rate change, 5 years | -0.04501 | 2009 | 42.7 | -0.14 | 0.0192 | -0.0003 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Enrollment change, 1 year | 0.05353 | 2024 | 65.3 | 0.07 | 0.0388 | -0.0004 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Discount rate | 0.2637 | 2023 | 55.7 | 0.08 | 0.0204 | -0.0004 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Operating margin | 0.07763 | 2023 | 53.3 | 0.15 | 0.0479 | -0.0006 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Yield rate | 0.9071 | 2012 | 83.9 | 1.39 | 0.0418 | -0.0009 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Sector | 2 | 2025 | 65.3 | -0.61 | 0.0331 | -0.0009 | Reported on the scored row. Not imputed. |
-| Tuition share of revenue | 0.2662 | 2023 | 14.7 | -1.20 | 0.0405 | -0.0012 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Log enrollment (FTE) | 7.297 | 2024 | 70.9 | 0.57 | 0.0797 | -0.0024 | Reported on the scored row. Not imputed. |
-| Net assets per dollar of expense | 3.038 | 2023 | 77.9 | 0.44 | 0.1840 | -0.0031 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
-| Endowment per FTE | 5.857e+04 | 2023 | 60.1 | -0.32 | 0.1018 | -0.0036 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Tuition is at least 70% of revenue | 1 | 2023 | 100.0 | 1.12 | 0.0001 | -0.0000 | Reported on the scored row. Not imputed. |
+| Rural locale | 0 | 2025 | 93.9 | -0.26 | 0.0030 | -0.0008 | Reported on the scored row. Not imputed. |
+| Staff change, 5 years | 1 | 2024 | 96.2 | 1.48 | 0.0103 | -0.0048 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Composite in the 1.0–1.5 zone |  |  |  |  | 0.0009 | -0.0054 | Reported on the scored row. Not imputed. |
+| Admit rate | 0.8378 | 2024 | 62.6 | 0.50 | 0.0252 | -0.0066 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| FTE under 1,000 | 1 | 2024 | 100.0 | 0.80 | 0.0115 | -0.0074 | Reported on the scored row. Not imputed. |
+| Log enrollment (FTE) | 6.116 | 2024 | 40.2 | -0.14 | 0.0797 | -0.0106 | Reported on the scored row. Not imputed. |
+| Enrollment change, 1 year | -0.07739 | 2024 | 20.8 | -0.45 | 0.0388 | -0.0109 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Yield-rate change, 5 years | 0.06859 | 2024 | 81.3 | 0.58 | 0.0192 | -0.0128 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Discount rate | 0.04915 | 2023 | 35.6 | -0.83 | 0.0204 | -0.0152 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Composite score missing | 1 | 2025 | 100.0 | 0.00 | 0.0158 | -0.0189 | Reported on the scored row. Not imputed. |
+| Negative-margin years in the last 5 | 1 | 2023 | 52.2 | -0.44 | 0.0338 | -0.0263 | Reported on the scored row. Not imputed. |
+| Endowment per FTE |  | 2023 |  |  | 0.1018 | -0.0274 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
+| State high-school graduates, 5-year change | 0.02616 | 2025 | 57.1 | 0.09 | 0.0364 | -0.0294 | Reported on the scored row. Not imputed. |
+| Discount-rate change, 5 years | -0.1121 | 2023 | 5.1 | -1.39 | 0.0198 | -0.0341 | Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring. |
+| Federal composite score |  |  |  |  | 0.0966 | -0.0440 | Left missing. The published XGBoost score follows the missing branch. It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank. |
 

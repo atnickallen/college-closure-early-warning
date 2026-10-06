@@ -666,7 +666,11 @@ def measure_facts(
     for unitid in unitids:
         facts = _one_measure(unitid, finance, fall, fte, names)
         filer = (parents or {}).get(unitid) or SYSTEM_FINANCE_FILER.get(unitid)
-        if filer and not facts.get("extract_has_finance"):
+        # A parent pointer from the scored row means the published ratios are the
+        # parent's. An older extract row (the Institute's last own filing is 2008)
+        # is not the finance the score used.
+        scored_from_parent = unitid in (parents or {})
+        if filer and (scored_from_parent or not facts.get("extract_has_finance")):
             parent = _one_measure(filer, finance, fall, fte, names)
             if parent.get("extract_has_finance"):
                 facts["finance_from_parent"] = True
@@ -810,16 +814,12 @@ def annotate_known_filings(facts: dict) -> dict:
 
 
 def residential_top50(settings) -> pd.DataFrame:
-    """The 50 operating, residential, own-campus schools, in report order."""
-    from college_closure.campus import extend_ranked_universe, load_ranked_universe, partition_acquisition, ranked_universe_path
-    from college_closure.report import _with_status
+    """The 50 operating, residential, own-campus schools, in score order."""
+    from college_closure.campus import _flag_true, acquisition_universe, partition_acquisition
 
-    ranked = load_ranked_universe(ranked_universe_path(settings))
-    scored_path = settings.processed_dir / "scored.parquet"
-    scored = pd.read_parquet(scored_path) if scored_path.exists() else None
-    extended = extend_ranked_universe(ranked, scored)
-    status = pd.read_csv(settings.outputs_dir / "status_current.csv", dtype=str, keep_default_na=False)
-    merged = _with_status(extended, status)
+    merged = acquisition_universe(settings)
+    if "insufficient_data" in merged.columns:
+        merged = merged.loc[~merged["insufficient_data"].map(_flag_true)].copy()
     open_df, _, _, _, _ = partition_acquisition(merged, 50)
     open_df = open_df.copy()
     open_df["residential_rank"] = range(1, len(open_df) + 1)
@@ -987,9 +987,14 @@ def build_score_explanations(settings) -> tuple[pd.DataFrame, dict]:
                 }
             )
     frame = pd.DataFrame.from_records(records)
+    principia_score = None
+    principia_rows = snapshot.loc[snapshot["unitid"] == 148016]
+    if not principia_rows.empty and "risk_score" in principia_rows.columns:
+        principia_score = _num(principia_rows.iloc[0]["risk_score"])
     meta = {
         "booster": booster_name,
         "n_features": len(features),
+        "principia_score": principia_score,
         "max_abs_score_gap": float(np.nanmax(np.abs(frame.groupby("unitid")["risk_score"].first() - frame.groupby("unitid")["refit_risk_score"].first()))) if len(frame) else None,
         "artifacts": artifact_notes,
         "model": booster,
@@ -1126,10 +1131,14 @@ def _principia_section(frame: pd.DataFrame, meta: dict) -> str:
         "The Principia Corporation 990 (EIN 43-0652667) covers the college and the Principia School; the card keeps the college IPEDS line."
     )
     if school.empty:
+        score = meta.get("principia_score")
+        score_txt = f" The published score on that filing is {float(score):.3f}." if score is not None else ""
         return (
-            "Principia College is not in this residential top 50. "
-            "Title IV code 3 had dropped its 2015–2024 directory years, so the old snapshot scored a stub with blank finance. "
-            "Those extract years are now on the scored row, and the same booster uses the real filing. "
+            "Principia College left the residential top 50 after the extract-year repair. "
+            "The scored row uses the college's own finance and enrollment years, including the years when title_iv_indicator was 3. "
+            "That score sits below the 50th school that is still operating, has on-campus housing, and has its own campus."
+            + score_txt
+            + " "
             + filing
         )
     first = school.iloc[0]

@@ -568,7 +568,77 @@ def _load_json(path: Path) -> dict:
     return payload if isinstance(payload, dict) else {}
 
 
-def _movement_blocks(report_path, open_df: pd.DataFrame, baseline: pd.DataFrame) -> str:
+def left_after_data_fix_html(
+    open_df: pd.DataFrame,
+    ranked: pd.DataFrame,
+    baseline: pd.DataFrame,
+) -> str:
+    """Schools on the previous 2023 list whose new score is below the residential cutoff."""
+    if open_df is None or open_df.empty or baseline is None or baseline.empty:
+        return ""
+    if "unitid" not in open_df.columns or "unitid" not in baseline.columns:
+        return ""
+    current: set[int] = set()
+    for _, row in open_df.iterrows():
+        try:
+            current.add(int(float(row.get("unitid"))))
+        except (TypeError, ValueError):
+            continue
+    scores: dict[int, float] = {}
+    if ranked is not None and not ranked.empty and "unitid" in ranked.columns and "risk_score" in ranked.columns:
+        for _, row in ranked.iterrows():
+            try:
+                uid = int(float(row.get("unitid")))
+                scores[uid] = float(row.get("risk_score"))
+            except (TypeError, ValueError):
+                continue
+    left = []
+    for _, row in baseline.iterrows():
+        try:
+            uid = int(float(row.get("unitid")))
+            rank = int(float(row.get("old_rank")))
+        except (TypeError, ValueError):
+            continue
+        if uid in current:
+            continue
+        left.append(
+            (
+                rank,
+                uid,
+                _text(row.get("inst_name")) or "—",
+                _text(row.get("state_abbr")) or "—",
+                scores.get(uid),
+            )
+        )
+    if not left:
+        return ""
+    left.sort(key=lambda item: item[0])
+    body = []
+    for rank, uid, name, state, score in left:
+        score_txt = "—" if score is None else f"{score:.6f}"
+        body.append(
+            "<tr>"
+            f"<td>{rank}</td>"
+            f"<td>{html.escape(name)}</td>"
+            f"<td>{html.escape(state)}</td>"
+            f"<td>{score_txt}</td>"
+            f"<td>{uid}</td>"
+            "</tr>"
+        )
+    return (
+        "<h2>Left the list after data fix</h2>"
+        "<p>These schools were on the previous 2023 residential top 50. "
+        "The new list is the first 50 schools in the rescored universe that are still operating, "
+        "report on-campus housing, and have their own campus. "
+        "Their new scores are below that cutoff.</p>"
+        '<table class="roster"><tr><th>Previous 2023 rank</th><th>School</th><th>State</th>'
+        "<th>New score</th><th>UNITID</th></tr>"
+        + "".join(body)
+        + "</table>"
+    )
+
+
+def _movement_blocks(report_path, open_df: pd.DataFrame, baseline: pd.DataFrame, ranked: pd.DataFrame | None = None) -> str:
     blocks = [movement_section_html(open_df, baseline)]
     prior = _baseline_frame(report_path, "top50_2023_main_baseline.csv")
     if not prior.empty:
@@ -581,6 +651,7 @@ def _movement_blocks(report_path, open_df: pd.DataFrame, baseline: pd.DataFrame)
                 comparison="versus the 2023 residential list on main before extract-year matching",
             )
         )
+        blocks.append(left_after_data_fix_html(open_df, ranked if ranked is not None else open_df, prior))
     return "\n".join(block for block in blocks if block)
 
 
@@ -1031,7 +1102,7 @@ def write_operating_report(
             excluded=excluded_section_html(excluded_df, score_year=score_year),
             depth=depth,
             vintage_note=vintage_note_html(_load_json(Path(path).resolve().parent / "vintage_years.json")),
-            movement=_movement_blocks(path, open_df, baseline),
+            movement=_movement_blocks(path, open_df, baseline, merged),
             insufficient=insufficient_section_html(
                 insuff_residential,
                 score_year=score_year,
