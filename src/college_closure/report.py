@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 from college_closure.config import Settings
+from college_closure.explain import WHY_CSS, facts_html, why_panel_html
 from college_closure.features import MODEL_FEATURE_COLUMNS
 from college_closure.campus import (
     exclusion_reason,
@@ -134,7 +135,28 @@ def _row_shap_fallback(row: pd.Series, shap_global: list[dict], n: int = 6) -> l
     return out
 
 
-def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
+def _explanation_index(path) -> dict[int, dict]:
+    """School-level explanation rows written beside the report, keyed by UNITID."""
+    csv_path = Path(path).resolve().parent / "score_explanations.csv"
+    if not csv_path.exists():
+        return {}
+    frame = pd.read_csv(csv_path)
+    if frame.empty or "unitid" not in frame.columns:
+        return {}
+    out = {}
+    for unitid, rows in frame.groupby("unitid"):
+        summary = rows.iloc[0].to_dict()
+        summary["endowment_per_fte_display"] = summary.get("endowment_per_fte")
+        features = rows.sort_values("contribution", ascending=False).to_dict("records")
+        try:
+            key = int(float(unitid))
+        except (TypeError, ValueError):
+            continue
+        out[key] = {"summary": summary, "features": features}
+    return out
+
+
+def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int, explanation: dict | None = None) -> str:
     name = html.escape(str(row.get("inst_name") or f"UNITID {row.get('unitid')}"))
     state = html.escape(str(row.get("state_abbr") or "—"))
     sector = html.escape(_control_label(row.get("inst_control")))
@@ -156,6 +178,15 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
             shap_rows += f"<li><code>{feat}</code> (mean |SHAP| {_fmt(s.get('mean_abs_shap'), 3)})</li>"
     if not shap_rows:
         shap_rows = "<li>SHAP unavailable for this row</li>"
+    facts = ""
+    why = ""
+    driver_block = f"""
+      <h3>Top drivers (SHAP / global importance)</h3>
+      <ul>{shap_rows}</ul>"""
+    if explanation:
+        facts = facts_html(explanation["summary"])
+        why = why_panel_html(explanation["summary"], explanation["features"])
+        driver_block = why
 
     def _flag(v) -> bool:
         if isinstance(v, str):
@@ -217,6 +248,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
       {_prior_rank_html(row)}
       <p class="score">Watch-list score: <strong>{_fmt(row.get("risk_score"), 3)}</strong>
       — elevated-risk indicator, not a closure verdict.</p>
+      {facts}
       {_feature_years_html(row)}
       {status_block_html(row)}
       <table>
@@ -235,8 +267,7 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int) -> str:
         <tr><th>Scorecard operating</th><td>{html.escape(op_txt)}</td>
             <th>Enrichment flags</th><td>{html.escape(enrich_txt)}</td></tr>
       </table>
-      <h3>Top drivers (SHAP / global importance)</h3>
-      <ul>{shap_rows}</ul>
+      {driver_block}
       {library_section_html(row)}
       <h3>Campus</h3>
       <table>
@@ -310,6 +341,7 @@ def _html_page(
     table.roster td {{ vertical-align: top; }}
     code {{ font-size: 0.9rem; }}
     {STATUS_CSS}
+    {WHY_CSS}
   </style>
 </head>
 <body>
@@ -885,9 +917,22 @@ def write_operating_report(
                 shap_global = json.loads(metrics_path.read_text(encoding="utf-8")).get("shap_global") or []
             except (OSError, json.JSONDecodeError):
                 shap_global = []
+    explanations = _explanation_index(path)
     cards = []
     for i, (_, row) in enumerate(open_df.iterrows(), start=1):
-        cards.append(_evidence_card(row, _row_shap_fallback(row, shap_global), i))
+        key = None
+        try:
+            key = int(float(row.get("unitid")))
+        except (TypeError, ValueError):
+            key = None
+        cards.append(
+            _evidence_card(
+                row,
+                _row_shap_fallback(row, shap_global),
+                i,
+                explanations.get(key) if key is not None else None,
+            )
+        )
     if caveats is None:
         caveats = (
             "Watch list only. Scores come from the score-year federal snapshot and are "
