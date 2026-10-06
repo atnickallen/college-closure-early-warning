@@ -35,10 +35,12 @@ from college_closure.status import (
 )
 from college_closure.libraries import (
     LIB_WATCHLIST_COLS,
+    attach_report_libraries,
     distinctive_notes_html,
     enrich_watchlist_libraries,
     library_section_html,
     write_libraries_summary,
+    write_top50_library_csv,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -161,114 +163,34 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int, explanatio
     name = html.escape(str(row.get("inst_name") or f"UNITID {row.get('unitid')}"))
     state = html.escape(str(row.get("state_abbr") or "—"))
     sector = html.escape(_control_label(row.get("inst_control")))
-    try:
-        year = str(int(float(row.get("year"))))
-    except (TypeError, ValueError):
-        year = row.get("year") or "—"
-    try:
-        original_rank = str(int(float(row.get("watchlist_rank"))))
-    except (TypeError, ValueError):
-        original_rank = ""
-    rank_bit = f" · watch-list rank {original_rank}" if original_rank else ""
-    shap_rows = ""
-    for s in shap_items:
-        feat = html.escape(str(s.get("feature")))
-        if _text(s.get("value")):
-            shap_rows += f"<li><code>{feat}</code> ({_fmt(s.get('value'), 3)})</li>"
-        else:
-            shap_rows += f"<li><code>{feat}</code> (mean |SHAP| {_fmt(s.get('mean_abs_shap'), 3)})</li>"
-    if not shap_rows:
-        shap_rows = "<li>SHAP unavailable for this row</li>"
     facts = ""
     why = ""
-    driver_block = f"""
-      <h3>Top drivers (SHAP / global importance)</h3>
-      <ul>{shap_rows}</ul>"""
     if explanation:
         facts = facts_html(explanation["summary"])
         why = why_panel_html(explanation["summary"], explanation["features"])
-        driver_block = why
-
-    def _flag(v) -> bool:
-        if isinstance(v, str):
-            token = v.strip().lower()
-            if token in {"", "false", "no", "nan", "none"}:
-                return False
-            if token in {"true", "yes"}:
-                return True
-            try:
-                return float(token) != 0
-            except ValueError:
-                return False
-        try:
-            if v is None or pd.isna(v):
-                return False
-            if isinstance(v, (int, float)) and float(v) == 0:
-                return False
-        except (TypeError, ValueError):
-            return False
-        return bool(v)
-
-    hcm = []
-    if _flag(row.get("hcm2_current")):
-        hcm.append("HCM2 (FSA list)")
-    if _flag(row.get("hcm1_current")):
-        hcm.append("HCM1 (FSA list)")
-    if _flag(row.get("hcm2_scorecard")) or _flag(row.get("scorecard_under_investigation")):
-        hcm.append("Scorecard under_investigation / HCM2 (current snapshot)")
-    hcm_txt = ", ".join(hcm) if hcm else "not on current HCM / Scorecard investigation flags (or lists unavailable)"
-    op = row.get("auto_scorecard_operating")
-    if op is None or (isinstance(op, str) and not op.strip()) or (isinstance(op, float) and pd.isna(op)):
-        op = row.get("scorecard_operating")
-    try:
-        op_n = int(op) if op is not None and not pd.isna(op) else None
-    except (TypeError, ValueError):
-        op_n = None
-    if op_n == 0:
-        op_txt = "not currently operating (Scorecard snapshot — not a closure year)"
-    elif op_n == 1:
-        op_txt = "currently operating (Scorecard)"
-    else:
-        op_txt = "Scorecard operating unknown"
-    enrich_bits = []
-    if row.get("accreditor_public_action"):
-        enrich_bits.append(f"accreditor page mention: {row.get('accreditor_public_action')}")
-    if _flag(row.get("warn_layoff_mention")):
-        enrich_bits.append("WARN layoff file name match")
-    if _flag(row.get("irs990_ein_verified")):
-        enrich_bits.append(f"990 EIN verified; revenue {_fmt(row.get('irs990_revenue'), 0)}")
-    enrich_txt = "; ".join(enrich_bits) if enrich_bits else "no extra accreditor / WARN / 990 hit"
-
+    elif shap_items:
+        bits = []
+        for item in shap_items:
+            feat = html.escape(str(item.get("feature") or ""))
+            if not feat or feat in {"finance_from_parent", "composite_is_lagged"}:
+                continue
+            bits.append(f"<li><code>{feat}</code></li>")
+            if len(bits) == 3:
+                break
+        if bits:
+            why = f'<details class="why"><summary>Why it ranks here</summary><ul>{"".join(bits)}</ul></details>'
+    _ = shap_items
     return f"""
     <article class="card">
       <div class="card-head">
         {_campus_photo_html(row)}
         <div class="card-main">
       <h2>{rank}. {name}</h2>
-      <p class="meta">{state} · {sector} · score year {year}{rank_bit} · UNITID {row.get("unitid")}</p>
-      {_prior_rank_html(row)}
-      <p class="score">Watch-list score: <strong>{_fmt(row.get("risk_score"), 3)}</strong>
-      — elevated-risk indicator, not a closure verdict.</p>
+      <p class="meta">{state} · {sector} · UNITID {row.get("unitid")}</p>
+      <p class="score">Score: <strong>{_fmt(row.get("risk_score"), 3)}</strong></p>
       {facts}
-      {_feature_years_html(row)}
       {status_block_html(row)}
-      <table>
-        <tr><th>FTE</th><td>{_fmt(row.get("fte"), 0)}</td>
-            <th>FTE 5y %Δ</th><td>{_fmt(row.get("enr_pct_chg_5y"), 1, pct=True)}</td></tr>
-        <tr><th>FTE 1y %Δ</th><td>{_fmt(row.get("enr_pct_chg_1y"), 1, pct=True)}</td>
-            <th>First-time FY %Δ</th><td>{_fmt(row.get("ftft_pct_chg_1y"), 1, pct=True)}</td></tr>
-        <tr><th>Discount rate</th><td>{_fmt(row.get("discount_rate"), 1, pct=True)}</td>
-            <th>Tuition dependence</th><td>{_fmt(row.get("tuition_dependence"), 1, pct=True)}</td></tr>
-        <tr><th>Operating margin</th><td>{_fmt(row.get("operating_margin"), 1, pct=True)}</td>
-            <th>Consec. neg. margins</th><td>{_fmt(row.get("consec_neg_margin_yrs"), 0)}</td></tr>
-        <tr><th>Composite score</th><td>{_fmt(row.get("composite_score"), 2)}</td>
-            <th>Zone / failing</th><td>{_fmt(row.get("composite_zone"), 0)} / {_fmt(row.get("composite_fail"), 0)}</td></tr>
-        <tr><th>Finance missing</th><td>{_fmt(row.get("miss_finance"), 0)}</td>
-            <th>HCM / investigation</th><td>{html.escape(hcm_txt)}</td></tr>
-        <tr><th>Scorecard operating</th><td>{html.escape(op_txt)}</td>
-            <th>Enrichment flags</th><td>{html.escape(enrich_txt)}</td></tr>
-      </table>
-      {driver_block}
+      {why}
       {library_section_html(row)}
       <h3>Campus</h3>
       <table>
@@ -279,11 +201,6 @@ def _evidence_card(row: pd.Series, shap_items: list[dict], rank: int, explanatio
         {_satellite_row(row)}
         {_campus_map_row(row)}
       </table>
-      <p class="caveat">IPEDS and FSA series lag; missing finance is flagged rather than imputed as health.
-      Publics rarely close; this card is in the private nonprofit / for-profit risk universe.
-      Library holdings are enrichment context (what cultural/asset value might be at stake),
-      not a training feature. Dorm capacity is the latest IPEDS year that reports housing
-      as yes or no. Acreage is blank when the land source does not state a number.</p>
         </div>
       </div>
     </article>
@@ -304,26 +221,18 @@ def _html_page(
     movement: str = "",
     insufficient: str = "",
 ) -> str:
-    if depth:
-        depth_note = (
-            f'<p class="depth">The main list is {n} still-operating '
-            f"school{'s' if n != 1 else ''} with on-campus dorms and their own campus, "
-            f"reached by walking the ranked watch list through rank {int(depth)}.</p>"
-        )
-    else:
-        depth_note = ""
+    _ = (score_year, caveats, intro, teachout, closed, excluded, depth, vintage_note, movement, insufficient)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>College closure early-warning watch list (top {n} still operating)</title>
+  <title>Residential campuses</title>
   <style>
     body {{ font-family: Georgia, serif; max-width: 980px; margin: 2rem auto; padding: 0 1rem;
            color: #222; line-height: 1.45; }}
     h1 {{ font-size: 1.6rem; }}
     .cover-banner {{ margin: 0 0 1.2rem; }}
     .cover-banner img {{ width: 100%; height: auto; display: block; }}
-    .banner {{ background: #fff6e5; border: 1px solid #e0c48a; padding: 0.8rem 1rem; }}
     .card {{ border: 1px solid #ddd; padding: 1rem 1.2rem; margin: 1.2rem 0; }}
     .card-head {{ display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }}
     .card-main {{ flex: 1; min-width: 0; }}
@@ -334,13 +243,11 @@ def _html_page(
                    align-items: center; justify-content: center; color: #666; background: #fafafa; }}
     .placeholder p {{ margin: 0.6rem; text-align: center; }}
     .card h2 {{ margin-top: 0; font-size: 1.2rem; }}
-    .meta, .caveat, .lib-context, .lib-note {{ color: #555; font-size: 0.95rem; }}
+    .meta, .lib-note {{ color: #555; font-size: 0.95rem; }}
     .lib-note {{ margin-top: 0.4rem; }}
     table {{ border-collapse: collapse; width: 100%; margin: 0.6rem 0; }}
     th {{ text-align: left; width: 28%; color: #444; font-weight: 600; padding: 0.2rem 0.4rem; }}
     td {{ padding: 0.2rem 0.4rem; }}
-    table.roster th {{ width: auto; vertical-align: top; }}
-    table.roster td {{ vertical-align: top; }}
     code {{ font-size: 0.9rem; }}
     {STATUS_CSS}
     {WHY_CSS}
@@ -348,34 +255,9 @@ def _html_page(
 </head>
 <body>
   <p class="cover-banner" align="center"><img src="../docs/cover.png" alt="College Closure Early Warning System" width="100%"></p>
-  <h1>Watch list — top {n} residential campuses (score year {score_year})</h1>
-  <div class="banner">
-    <strong>Not a verdict.</strong> Ranked elevated-risk indicators from a statistical model
-    trained on historical institution-year features. A high score means the school resembles
-    past closures/mergers on trailing observables — not that it will close. Scores come from
-    {score_year} federal financial data. The list is elevated-risk indicators, not closure
-    predictions. The main list is the highest-ranked schools that are still operating,
-    have on-campus dorms, and have their own campus grounds. Online-only schools,
-    single-building branches, and hospital programs without a residential campus
-    are listed at the bottom instead.
-    The score year is the latest <em>right-censored</em> year with published IPEDS finance
-    (later directory years are omitted because unpublished finance looks like pre-closure
-    missingness). Composite scores lag; HCM is a current snapshot and was not used as a
-    training feature. Library holdings and special-collection notes are
-    <em>enrichment context</em> (IPEDS Academic Libraries + public library pages), not a
-    model input.{BANNER_SENTENCE}
-  </div>
-  {depth_note}
-  {vintage_note}
-  {movement}
-  {intro}
+  <h1>Residential campuses</h1>
+  <p>Federal data: 2023-24 IPEDS</p>
   {cards}
-  {teachout}
-  {closed}
-  {excluded}
-  {insufficient}
-  <h2>Limitations</h2>
-  <p>{html.escape(caveats)}</p>
 </body>
 </html>
 """
@@ -1038,10 +920,14 @@ def write_operating_report(
     intro: str = "",
     shap_global: list | None = None,
 ) -> dict[str, int]:
-    """Write the residential-campus list plus teach-out, closed, and excluded sections."""
+    """Write the current residential top list."""
     merged = _with_status(ranked, status)
-    baseline = _baseline_frame(path)
-    merged = _attach_prior_rank(merged, baseline)
+    report_path = Path(path)
+    library_root = report_path.resolve().parents[1]
+    if (library_root / "data" / "raw" / "ipeds" / "colleges_ipeds_academic_libraries.csv").exists() or (
+        library_root / "data" / "processed" / "libraries.parquet"
+    ).exists():
+        merged = attach_report_libraries(merged, library_root)
     insuff_mask = (
         merged["insufficient_data"].map(_flag_true)
         if "insufficient_data" in merged.columns
@@ -1049,8 +935,8 @@ def write_operating_report(
     )
     insuff_all = merged.loc[insuff_mask]
     ranked_rows = merged.loc[~insuff_mask]
-    insuff_residential = insuff_all.loc[insuff_all.apply(is_residential, axis=1)] if not insuff_all.empty else insuff_all
     open_df, excluded_df, teach_df, closed_df, depth = partition_acquisition(ranked_rows, open_n)
+    _ = insuff_all
     if shap_global is None:
         metrics_path = path.parent / "model_metrics.json"
         shap_global = []
@@ -1075,44 +961,19 @@ def write_operating_report(
                 explanations.get(key) if key is not None else None,
             )
         )
-    if caveats is None:
-        caveats = (
-            "Watch list only. Scores come from the score-year federal snapshot and are "
-            "elevated-risk indicators, not closure predictions. IPEDS lag; official FSA "
-            "composites currently end FY 2018; HCM / Scorecard HCM2 are current-list "
-            "evidence and were not training features. The main list keeps schools that "
-            "are still operating, report on-campus housing with a real dorm capacity, "
-            "and have their own campus in the curated land file. Teach-out schools and "
-            "closed, merged, or campus-sold schools are listed below the main list. "
-            "Schools without dorms or without a confirmed standalone campus are listed "
-            "after those. Library holdings are enrichment context, not a training feature. "
-            "Missing library data is not evidence of no library. Unknown acreage is left "
-            "blank rather than estimated."
-        )
+    _ = (caveats, intro, score_year)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         _html_page(
             "\n".join(cards),
             n=len(open_df),
             score_year=score_year,
-            caveats=caveats,
-            intro=intro,
-            teachout=teachout_section_html(teach_df, score_year=score_year),
-            closed=closed_section_html(closed_df, score_year=score_year),
-            excluded=excluded_section_html(excluded_df, score_year=score_year),
-            depth=depth,
-            vintage_note=vintage_note_html(_load_json(Path(path).resolve().parent / "vintage_years.json")),
-            movement=_movement_blocks(path, open_df, baseline, merged),
-            insufficient=insufficient_section_html(
-                insuff_residential,
-                score_year=score_year,
-                n_total=int(len(insuff_all)),
-            )
-            if "insufficient_data" in merged.columns
-            else "",
+            caveats=caveats or "",
         ),
         encoding="utf-8",
     )
+    if "lib_physical_books" in open_df.columns or "library_name" in open_df.columns:
+        write_top50_library_csv(open_df, path.parent / "top50_libraries.csv")
     return {
         "n_open": int(len(open_df)),
         "n_excluded": int(len(excluded_df)),

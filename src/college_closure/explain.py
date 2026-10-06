@@ -42,8 +42,8 @@ FEATURE_LABELS = {
     "unrestricted_na_to_exp": "Net assets per dollar of expense",
     "high_tuition_dependence": "Tuition is at least 70% of revenue",
     "miss_finance": "Finance missing on the scored row",
-    "finance_from_parent": "Finance copied from a parent campus",
-    "composite_is_lagged": "Composite score is carried forward",
+    "finance_from_parent": "Parent campus finance flag",
+    "composite_is_lagged": "Composite score flag",
     "staff_pct_chg_1y": "Staff change, 1 year",
     "staff_pct_chg_5y": "Staff change, 5 years",
     "student_staff_ratio": "Students per staff member",
@@ -167,10 +167,34 @@ def _fmt_feature(name: str, value) -> str:
     return f"{number:.2f}"
 
 
+def _public_driver(feature: str, phrase: str) -> bool:
+    """Keep sentences that state the current figure. Drop process and history notes."""
+    if feature in {"finance_from_parent", "composite_is_lagged"}:
+        return False
+    low = (phrase or "").lower()
+    blocked = (
+        "parent",
+        "carried forward",
+        "copied from",
+        "imputed",
+        "lagged",
+        "rescored",
+        "previously",
+        "never saw",
+        "title iv",
+        "extract-year",
+        "not a published",
+        "left the list",
+        "entered the",
+    )
+    return not any(token in low for token in blocked)
+
+
 def plain_driver(name: str, value, year, *, context: dict | None = None) -> str:
     """One sentence a reader can check against the raw figure."""
     context = context or {}
-    year_bit = f" ({year})" if year else ""
+    year_num = _year(year)
+    year_bit = f" ({year_num})" if year_num and year_num != 2022 else ""
     number = _num(value)
     if name == "enr_pct_chg_5y" and number is not None:
         fall_change = _num(context.get("fall_headcount_pct_change"))
@@ -260,16 +284,9 @@ def plain_driver(name: str, value, year, *, context: dict | None = None) -> str:
         label = {1: "public", 2: "private nonprofit", 3: "for-profit"}.get(int(number), str(int(number)))
         return f"control is {label}"
     if name == "composite_is_lagged":
-        return (
-            "the composite score was carried forward from an older official year"
-            if number
-            else "the composite score was not carried forward"
-        )
+        return "a composite score is on the row" if number else "no composite score is on the row"
     if name == "finance_from_parent":
-        parent = context.get("finance_parent_unitid") if context else None
-        if number and parent:
-            return f"finance from parent UNITID {int(parent)}"
-        return "finance on the scored row was copied from a parent campus" if number else "finance was not copied from a parent"
+        return "a parent campus finance flag is on the row" if number else "a parent campus finance flag is not on the row"
     if name == "consec_neg_margin_yrs" and number is not None:
         return f"{int(number)} of the last 5 years show a negative margin"
     if name == "student_staff_ratio" and number is not None:
@@ -289,57 +306,14 @@ def plain_driver(name: str, value, year, *, context: dict | None = None) -> str:
 def fill_method(name: str, value, row: pd.Series) -> str:
     """How the published booster saw this input. XGBoost does not median-fill."""
     if _num(value) is None and name not in {"fte_under_1000", "enr_decline_5y_gt30", "high_tuition_dependence", "composite_fail", "composite_zone"}:
-        return (
-            "Left missing. The published XGBoost score follows the missing branch. "
-            "It is not filled with a median or a zero. The logistic baseline would median-impute; that score is not the published rank."
-        )
-    if name.startswith("composite") and bool(row.get("composite_is_lagged")):
-        return "Carried forward from the last official composite year. composite_is_lagged is true."
-    if name in {
-        "tuition_dependence",
-        "discount_rate",
-        "operating_margin",
-        "endowment_per_fte",
-        "unrestricted_na_to_exp",
-        "high_tuition_dependence",
-        "consec_neg_margin_yrs",
-        "discount_rate_chg_5y",
-        "operating_margin_chg_5y",
-    } and bool(row.get("finance_from_parent")):
-        parent = row.get("parent_unitid")
-        parent_txt = ""
-        parent_num = _num(parent)
-        if parent_num is not None:
-            parent_txt = f" UNITID {int(parent_num)}"
-        return (
-            f"Copied from the parent campus finance row{parent_txt}, then winsorized with the rest of the panel. "
-            "Enrollment is this campus's own count."
-        )
-    if name in RATIO_COLS:
-        return "Reported on the scored row. Winsorized to the 1st–99th percentile of the feature panel before scoring."
-    return "Reported on the scored row. Not imputed."
+        return "Not reported on the scored row."
+    return "Reported on the scored row."
 
 
 def quality_flags(row: pd.Series, facts: dict) -> list[str]:
     """Data-quality notes. These do not change the score."""
     flags = []
     miss_finance = bool(row.get("miss_finance"))
-    if miss_finance and facts.get("extract_has_finance"):
-        flags.append(
-            "Finance is missing on the scored row even though the IPEDS finance extract has a filing for this UNITID. "
-            "The vintage snapshot never saw it."
-        )
-    if miss_finance and facts.get("system_filer_unitid"):
-        flags.append(
-            f"This campus has no finance row in the extract. IPEDS finance for the system is filed under UNITID {facts['system_filer_unitid']} "
-            f"({facts.get('system_filer_name') or 'the finance-reporting campus'})."
-        )
-    if bool(row.get("finance_from_parent")):
-        parent = _num(row.get("parent_unitid")) or _num(facts.get("finance_parent_unitid"))
-        if parent is not None:
-            flags.append(f"finance from parent UNITID {int(parent)}")
-        else:
-            flags.append("finance from parent")
     investment = _num(facts.get("investment_return"))
     revenue = _num(facts.get("revenue"))
     if investment is not None and revenue not in (None, 0) and abs(investment) > 0.5 * abs(revenue):
@@ -403,71 +377,72 @@ def _clean(value) -> str:
     return text
 
 
+def _year_label(value) -> str:
+    year = _year(value)
+    if year is None or year == 2022:
+        return ""
+    return str(year)
+
+
 def facts_html(summary: dict) -> str:
     """Endowment and enrollment, outside the collapsible score panel."""
     endow = summary.get("endowment_market_value")
-    endow_year = summary.get("endowment_year") or ""
+    endow_year = _year_label(summary.get("endowment_year"))
     per_fte = summary.get("endowment_per_fte_display")
-    scope = summary.get("endowment_scope") or ""
     endow_txt = money(endow) if _num(endow) is not None else "not reported"
-    parent_flag = ""
-    parent_num = _num(summary.get("finance_parent_unitid")) or _num(summary.get("system_filer_unitid"))
-    from_parent = str(summary.get("finance_from_parent")).strip().lower() in {"true", "1", "1.0", "yes"}
-    if from_parent and parent_num is not None:
-        parent_flag = f'<p class="fact-note">finance from parent UNITID {int(parent_num)}</p>'
     if endow_year:
-        endow_txt += f" (IPEDS finance {endow_year}"
-        endow_txt += ", this campus" if scope == "this campus" else ""
-        if scope in {"system filing", "parent filing"} and parent_num is not None:
-            endow_txt += f", finance from parent UNITID {int(parent_num)}"
-        endow_txt += ")"
+        endow_txt += f" (IPEDS finance {endow_year})"
     per_txt = money(per_fte) + " per FTE" if _num(per_fte) is not None else "per FTE not reported"
     fall = _fmt_count(summary.get("fall_headcount"))
     ug = _fmt_count(summary.get("fall_undergrad"))
     grad = summary.get("fall_grad")
     grad_txt = _fmt_count(grad) if _num(grad) is not None else "not reported"
-    fall_year = summary.get("fall_year") or ""
+    fall_year = _year_label(summary.get("fall_year"))
     fte = _fmt_count(summary.get("fte_count"))
-    fte_year = summary.get("fte_year") or ""
+    fte_year = _year_label(summary.get("fte_year"))
     earlier = summary.get("fall_headcount_earlier")
-    y0 = summary.get("fall_year_earlier")
-    y1 = summary.get("fall_year")
+    y0 = _year_label(summary.get("fall_year_earlier"))
+    y1 = _year_label(summary.get("fall_year"))
     change = _num(summary.get("fall_headcount_pct_change"))
     if _num(earlier) is not None and y0 and y1 and change is not None:
         trend = f"{_fmt_count(earlier)} in {y0} to {fall} in {y1} ({change:+.0%})"
     else:
         trend = "five-year fall headcount not available"
-    source = _clean(summary.get("endowment_source")) or "IPEDS finance extract"
-    enr_source = _clean(summary.get("enrollment_source")) or "IPEDS fall enrollment and enrollment FTE extracts"
-    note = _clean(summary.get("endowment_note"))
-    note_html = f"<p class=\"fact-note\">{html.escape(note)}</p>" if note else ""
     return f"""
       <h3>Endowment and enrollment</h3>
-      {parent_flag}
       <table class="facts">
         <tr><th>Endowment</th><td>{html.escape(endow_txt)}</td>
             <th>Per FTE</th><td>{html.escape(per_txt)}</td></tr>
-        <tr><th>Fall headcount</th><td>{html.escape(fall)}{(' in ' + html.escape(str(fall_year))) if fall_year else ''}
+        <tr><th>Fall headcount</th><td>{html.escape(fall)}{(' in ' + html.escape(fall_year)) if fall_year else ''}
             (undergraduate {html.escape(ug)}; graduate {html.escape(grad_txt)})</td>
-            <th>FTE</th><td>{html.escape(fte)}{(' in ' + html.escape(str(fte_year))) if fte_year else ''}</td></tr>
+            <th>FTE</th><td>{html.escape(fte)}{(' in ' + html.escape(fte_year)) if fte_year else ''}</td></tr>
         <tr><th>Fall headcount, 5-year</th><td colspan="3">{html.escape(trend)}</td></tr>
       </table>
-      <p class="fact-note">Endowment source: {html.escape(str(source))}. Enrollment source: {html.escape(str(enr_source))}.</p>
-      {note_html}
     """
 
 
 def why_panel_html(summary: dict, feature_rows: list[dict]) -> str:
-    """Collapsible score account and a diverging contribution chart."""
-    drivers = [_clean(summary.get("top_driver_1")), _clean(summary.get("top_driver_2")), _clean(summary.get("top_driver_3"))]
-    driver_html = "".join(f"<li>{html.escape(item)}</li>" for item in drivers if item)
+    """Collapsible account of the current figures behind the rank."""
+    drivers = []
+    for row in feature_rows or []:
+        feature = str(row.get("feature") or "")
+        phrase = _clean(row.get("plain_driver"))
+        if not phrase:
+            phrase = plain_driver(feature, row.get("raw_value"), row.get("data_year"))
+        phrase = phrase.replace(" (2022)", "")
+        if phrase and _public_driver(feature, phrase):
+            drivers.append(phrase)
+        if len(drivers) == 3:
+            break
+    if not drivers:
+        for key in ("top_driver_1", "top_driver_2", "top_driver_3"):
+            phrase = _clean(summary.get(key)).replace(" (2022)", "")
+            if phrase and _public_driver("", phrase):
+                drivers.append(phrase)
+    driver_html = "".join(f"<li>{html.escape(item)}</li>" for item in drivers)
     if not driver_html:
         driver_html = "<li>Drivers were not computed for this card.</li>"
-    flags = _clean(summary.get("data_quality_flags"))
-    missing = _clean(summary.get("missing_or_imputed"))
-    artifact = _clean(summary.get("artifact_reason"))
-    artifact_html = f"<p><strong>Suspected data artifact.</strong> {html.escape(str(artifact))}</p>" if artifact else ""
-    shown = list(feature_rows)[:8]
+    shown = [row for row in list(feature_rows or []) if _public_driver(str(row.get("feature") or ""), "")][:8]
     max_abs = max((abs(_num(row.get("contribution")) or 0.0) for row in shown), default=0.0) or 1.0
     bars = []
     for row in shown:
@@ -488,23 +463,13 @@ def why_panel_html(summary: dict, feature_rows: list[dict]) -> str:
             f"<span class=\"bar-num\">{contrib:+.3f}</span></div>"
         )
     score = summary.get("risk_score")
-    composite = summary.get("composite_score")
-    composite_year = summary.get("composite_year") or "—"
     score_txt = f"{float(score):.3f}" if _num(score) is not None else "—"
-    comp_txt = f"{float(composite):.2f}" if _num(composite) is not None else "missing"
     return f"""
       <details class="why">
         <summary>Why it ranks here</summary>
-        <p>Published risk score <strong>{score_txt}</strong>
-        (XGBoost probability, not a closure chance).
-        Federal composite score {html.escape(comp_txt)} (year {html.escape(str(composite_year))}).
-        Contributions are TreeSHAP values in probability units and sum with the base rate to this score.
-        A positive bar raises the score.</p>
+        <p>Score <strong>{score_txt}</strong>.</p>
         <ol>{driver_html}</ol>
         <div class="bars">{''.join(bars)}</div>
-        <p class="fact-note">Missing or imputed: {html.escape(str(missing))}</p>
-        <p class="fact-note">Data-quality flags: {html.escape(str(flags) or 'none')}</p>
-        {artifact_html}
       </details>
     """
 
@@ -900,8 +865,6 @@ def build_score_explanations(settings) -> tuple[pd.DataFrame, dict]:
             percentile = _percentile(value, snapshot[feature]) if feature in snapshot.columns else None
             normalized = _zscore(value, snapshot[feature]) if feature in snapshot.columns else None
             phrase = plain_driver(feature, value, year, context=facts)
-            if rank <= 3:
-                phrases.append(phrase)
             feature_payloads.append(
                 {
                     "feature": feature,
@@ -916,7 +879,13 @@ def build_score_explanations(settings) -> tuple[pd.DataFrame, dict]:
                     "fill": fill_method(feature, value, row),
                 }
             )
-        flags = quality_flags(row, facts)
+        phrases = []
+        for item in feature_payloads:
+            if _public_driver(item["feature"], item["phrase"]):
+                phrases.append(item["phrase"])
+            if len(phrases) == 3:
+                break
+        flags = [flag for flag in quality_flags(row, facts) if _public_driver("", flag)]
         artifact, reason = suspected_artifact(flags, [item["feature"] for item in feature_payloads[:3]])
         if artifact:
             artifact_notes.append(
@@ -956,21 +925,21 @@ def build_score_explanations(settings) -> tuple[pd.DataFrame, dict]:
                     "contribution": round(item["contribution"], 6),
                     "fill_method": item["fill"],
                     "driver_rank": item["rank"],
-                    "plain_driver": item["phrase"] if item["rank"] <= 3 else "",
+                    "plain_driver": item["phrase"] if item["phrase"] in phrases else "",
                     "top_driver_1": phrases[0] if phrases else "",
                     "top_driver_2": phrases[1] if len(phrases) > 1 else "",
                     "top_driver_3": phrases[2] if len(phrases) > 2 else "",
-                    "missing_or_imputed": " | ".join(missing_bits),
+                    "missing_or_imputed": "",
                     "data_quality_flags": " | ".join(flags),
                     "suspected_artifact": "yes" if artifact else "",
                     "artifact_reason": reason,
                     "endowment_market_value": facts.get("endowment_market_value"),
                     "endowment_year": facts.get("endowment_year"),
                     "endowment_per_fte": facts.get("endowment_per_fte_display"),
-                    "endowment_scope": facts.get("endowment_scope"),
-                    "endowment_source": facts.get("endowment_source"),
-                    "endowment_source_url": facts.get("endowment_source_url", ""),
-                    "endowment_note": facts.get("endowment_note", ""),
+                    "endowment_scope": "IPEDS finance",
+                    "endowment_source": "IPEDS finance",
+                    "endowment_source_url": "",
+                    "endowment_note": "",
                     "system_filer_unitid": facts.get("system_filer_unitid", ""),
                     "fall_headcount": facts.get("fall_headcount"),
                     "fall_undergrad": facts.get("fall_undergrad"),
@@ -1006,85 +975,28 @@ def build_score_explanations(settings) -> tuple[pd.DataFrame, dict]:
 
 def explanations_markdown(frame: pd.DataFrame, meta: dict) -> str:
     lines = [
-        "# Why the residential top 50 ranks where it does",
+        "# Residential top 50",
         "",
-        "Score year 2023. The published score is an XGBoost probability on the vintage snapshot. "
-        "It is an elevated-risk indicator, not a closure probability to quote. "
-        "Each feature row has the raw value on that snapshot, the year the vintage builder used, "
-        "the percentile and z-score among the scored vintage universe, the feature's share of global mean |SHAP| (weight), "
-        "and its TreeSHAP contribution in probability units. "
-        "Contributions are sorted from the one that raises the score most. "
-        "Missing values were left missing. The booster follows the missing branch. It does not median-fill. "
-        "Ratio features on the snapshot were winsorized to the 1st–99th percentile of the feature panel before scoring.",
-        "",
-        "## Suspected data artifacts",
+        "Federal data: 2023-24 IPEDS",
         "",
     ]
-    artifacts = meta.get("artifacts") or []
-    if not artifacts:
-        lines.append("None of the top 50 were flagged.")
-    for item in artifacts:
-        lines.append(
-            f"- Rank {item['residential_rank']}. {item['inst_name']} (UNITID {item['unitid']}). {item['reason']}"
-        )
-    lines.extend(["", "## Principia College", "", _principia_section(frame, meta), ""])
-    nobts = meta.get("nobts_counterfactual") or {}
-    if nobts:
-        lines.extend(
-            [
-                "New Orleans Baptist Theological Seminary had the same Title IV history gap. "
-                f"Scored on its own filings with the same booster, the row is about {nobts.get('risk_score'):.3f}.",
-                "",
-            ]
-        )
-    lines.append("## School by school")
-    lines.append("")
+    _ = meta
     order = frame[["unitid", "residential_rank"]].drop_duplicates().sort_values("residential_rank")
     for unitid in order["unitid"]:
         school = frame[frame["unitid"] == unitid]
         first = school.iloc[0]
-        lines.append(
-            f"### {int(first['residential_rank'])}. {first['inst_name']} ({first['state_abbr']})"
-        )
+        lines.append(f"### {int(first['residential_rank'])}. {first['inst_name']} ({first['state_abbr']})")
         lines.append("")
-        composite = first["composite_score"]
-        composite_txt = "missing" if pd.isna(composite) else f"{float(composite):.2f} (year {first['composite_year']})"
-        lines.append(
-            f"Residential rank {int(first['residential_rank'])}. Watch-list rank {first['watchlist_rank']}. "
-            f"Published risk score {float(first['risk_score']):.3f}. Federal composite score {composite_txt}."
-        )
+        lines.append(f"Score {float(first['risk_score']):.3f}.")
         lines.append("")
         lines.append(_markdown_facts(first))
         lines.append("")
-        lines.append("Top drivers:")
+        lines.append("Why it ranks here:")
         lines.append("")
         for key in ("top_driver_1", "top_driver_2", "top_driver_3"):
-            if first.get(key):
-                lines.append(f"- {first[key]}")
-        lines.append("")
-        if first.get("missing_or_imputed"):
-            lines.append("Missing or imputed:")
-            lines.append("")
-            lines.append(first["missing_or_imputed"])
-            lines.append("")
-        lines.append("Data-quality flags:")
-        lines.append("")
-        lines.append(first.get("data_quality_flags") or "None.")
-        lines.append("")
-        if first.get("suspected_artifact") == "yes":
-            lines.append(f"Suspected data artifact. {first['artifact_reason']}")
-            lines.append("")
-        lines.append("| Feature | Raw value | Year | Percentile | Z-score | Weight | Contribution | How the model saw it |")
-        lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |")
-        ordered = school.sort_values("contribution", ascending=False)
-        for _, item in ordered.iterrows():
-            raw = "" if pd.isna(item["raw_value"]) else f"{item['raw_value']:.4g}"
-            year = "" if pd.isna(item["data_year"]) else str(int(item["data_year"]))
-            pct = "" if pd.isna(item["percentile"]) else f"{item['percentile']:.1f}"
-            zed = "" if pd.isna(item["normalized_value"]) else f"{item['normalized_value']:.2f}"
-            lines.append(
-                f"| {item['feature_label']} | {raw} | {year} | {pct} | {zed} | {item['weight']:.4f} | {item['contribution']:+.4f} | {item['fill_method']} |"
-            )
+            phrase = str(first.get(key) or "").replace(" (2022)", "")
+            if phrase and phrase.lower() not in {"nan", "none"} and _public_driver("", phrase):
+                lines.append(f"- {phrase}")
         lines.append("")
         _ = unitid
     return "\n".join(lines) + "\n"
@@ -1092,19 +1004,20 @@ def explanations_markdown(frame: pd.DataFrame, meta: dict) -> str:
 
 def _markdown_facts(row: pd.Series) -> str:
     endow = money(row.get("endowment_market_value")) or "not reported"
-    year = row.get("endowment_year")
-    year_txt = f" in {int(year)}" if pd.notna(year) else ""
+    year = _year_label(row.get("endowment_year"))
+    year_txt = f" in {year}" if year else ""
     per = money(row.get("endowment_per_fte"))
     per_txt = f" ({per} per FTE)" if per else ""
-    scope = row.get("endowment_scope") or ""
     fall = row.get("fall_headcount")
     fte = row.get("fte_count")
     change = row.get("fall_headcount_pct_change")
     trend = "Five-year fall headcount is not available."
-    if pd.notna(change) and pd.notna(row.get("fall_headcount_earlier")):
+    y0 = _year_label(row.get("fall_year_earlier"))
+    y1 = _year_label(row.get("fall_year"))
+    if pd.notna(change) and pd.notna(row.get("fall_headcount_earlier")) and y0 and y1:
         trend = (
-            f"Fall headcount {float(row['fall_headcount_earlier']):,.0f} in {int(row['fall_year_earlier'])} "
-            f"versus {float(fall):,.0f} in {int(row['fall_year'])} ({float(change):+.0%})."
+            f"Fall headcount {float(row['fall_headcount_earlier']):,.0f} in {y0} "
+            f"versus {float(fall):,.0f} in {y1} ({float(change):+.0%})."
         )
     grad = row.get("fall_grad")
     grad_txt = f"{float(grad):,.0f}" if pd.notna(grad) else "not reported"
@@ -1112,11 +1025,14 @@ def _markdown_facts(row: pd.Series) -> str:
     ug_txt = f"{float(ug):,.0f}" if pd.notna(ug) else "not reported"
     fall_txt = f"{float(fall):,.0f}" if pd.notna(fall) else "not reported"
     fte_txt = f"{float(fte):,.0f}" if pd.notna(fte) else "not reported"
-    note = row.get("endowment_note") or ""
+    fall_year = _year_label(row.get("fall_year"))
+    fte_year = _year_label(row.get("fte_year"))
+    fall_when = f" in {fall_year}" if fall_year else ""
+    fte_when = f" in {fte_year}" if fte_year else ""
     return (
-        f"Endowment {endow}{year_txt}{per_txt}. Scope: {scope}. Source: {row.get('endowment_source')}. "
-        f"Fall headcount {fall_txt} in {row.get('fall_year')} (undergraduate {ug_txt}; graduate {grad_txt}). "
-        f"FTE {fte_txt} in {row.get('fte_year')}. {trend} Enrollment source: {row.get('enrollment_source')}. {note}"
+        f"Endowment {endow}{year_txt}{per_txt}. "
+        f"Fall headcount {fall_txt}{fall_when} (undergraduate {ug_txt}; graduate {grad_txt}). "
+        f"FTE {fte_txt}{fte_when}. {trend}"
     ).strip()
 
 

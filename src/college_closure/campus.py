@@ -579,6 +579,19 @@ def prepare_acquisition_universe(
         }
         piece = piece.rename(columns={k: v for k, v in rename.items() if k in piece.columns})
         frame = _fill_columns(frame, piece, _LAND_FILL)
+        # The land file is the campus-map source. A status snapshot can hold an older link.
+        if "campus_map_url" in piece.columns and "unitid" in frame.columns:
+            maps = piece[["unitid", "campus_map_url"]].copy()
+            maps["unitid"] = pd.to_numeric(maps["unitid"], errors="coerce")
+            maps = maps.dropna(subset=["unitid"]).drop_duplicates("unitid")
+            mapped = pd.to_numeric(frame["unitid"], errors="coerce").map(
+                maps.set_index("unitid")["campus_map_url"]
+            )
+            has = ~mapped.map(_is_blank)
+            if "campus_map_url" not in frame.columns:
+                frame["campus_map_url"] = pd.Series(pd.NA, index=frame.index, dtype=object)
+            frame["campus_map_url"] = frame["campus_map_url"].astype(object)
+            frame.loc[has, "campus_map_url"] = mapped.loc[has].to_numpy()
     return frame
 
 

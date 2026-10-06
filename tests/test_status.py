@@ -494,12 +494,10 @@ def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
 def test_report_template_mentions_status_without_treating_it_as_a_score():
     from college_closure.report import _html_page
 
-    page = _html_page("", n=1, score_year=2022, caveats="Watch list only.")
+    page = _html_page("", n=1, score_year=2023, caveats="Watch list only.")
     assert ".badge-closed" in page
-    assert "not closure predictions" in page
-    assert "do not report them" in page
-    assert "2022 federal financial data" in page
-    assert "still operating" in page
+    assert "Federal data: 2023-24 IPEDS" in page
+    assert "2022" not in page
 
 
 def _ranked_status_rows() -> pd.DataFrame:
@@ -794,33 +792,21 @@ def test_operating_report_sections_list_rank_score_and_sources(tmp_path):
     page = path.read_text(encoding="utf-8")
     assert stats["n_open"] == 3
     assert stats["depth"] == 10
-    assert "Teach-out / not enrolling" in page
-    assert "Closed or defunct since the 2022 data" in page
-    assert "Excluded: no on-campus dorms or no standalone campus" in page
-    assert "2022 federal financial data" in page
-    assert "not closure predictions" in page
-    assert "through rank 10" in page
-    assert "watch-list rank 10" in page
+    assert "Federal data: 2023-24 IPEDS" in page
+    assert "Teach-out / not enrolling" not in page
+    assert "Closed or defunct" not in page
+    assert "Excluded: no on-campus dorms" not in page
+    assert "Insufficient data" not in page
     assert 'src="../docs/cover.png"' in page
     assert "No photo found" in page
     assert "Example Photographer" in page
     assert "CC BY 4.0" in page
     assert "12 acres" in page
     assert "small housing" in page
-    main, _, after_teach = page.partition("Teach-out / not enrolling")
-    assert "<h2>1. Still Open</h2>" in main
-    assert "Teach Out" not in main
-    assert "DeVry-like" not in main
-    assert "Later Open" not in main
-    teach_body, _, closed_body = after_teach.partition("Closed or defunct since the 2022 data")
-    assert "Teach Out" in teach_body
-    assert "DeVry-like" in closed_body
-    assert "Original rank" in closed_body
-    assert "0.900" in closed_body
-    assert "https://example.edu/devry" in closed_body
-    _closed, _, excluded_body = closed_body.partition("Excluded: no on-campus dorms or no standalone campus")
-    assert "Later Open" in excluded_body
-    assert "no on-campus dorms" in excluded_body
+    assert "<h2>1. Still Open</h2>" in page
+    assert "Teach Out" not in page
+    assert "DeVry-like" not in page
+    assert "Later Open" not in page
     still = (
         "https://www.google.com/maps/@?api=1&amp;map_action=map"
         "&amp;center=30.25,-97.75&amp;zoom=17&amp;basemap=satellite"
@@ -833,15 +819,11 @@ def test_operating_report_sections_list_rank_score_and_sources(tmp_path):
         "https://www.google.com/maps/@?api=1&amp;map_action=map"
         "&amp;center=36.17,-115.14&amp;zoom=17&amp;basemap=satellite"
     )
-    assert still in main
-    assert "Satellite view" in main
-    assert later not in main
-    assert devry not in main
-    assert devry in closed_body
-    assert later in excluded_body
-    assert "Sold Campus" in closed_body
-    sold_row = closed_body.split("Sold Campus", 1)[1].split("</tr>", 1)[0]
-    assert "Satellite view" not in sold_row
+    assert still in page
+    assert "Satellite view" in page
+    assert later not in page
+    assert devry not in page
+    assert "Sold Campus" not in page
 
 
 def test_status_refresh_workflow_survives_pr_creation_refusal():

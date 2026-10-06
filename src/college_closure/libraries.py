@@ -1188,95 +1188,358 @@ def _md_money(v: Any) -> str:
         return "unknown"
 
 
-def library_section_html(row: pd.Series) -> str:
-    """Evidence-card block. Framing: enrichment context, not a verdict."""
-
-    def _esc(s: Any) -> str:
-        if s is None or (isinstance(s, float) and pd.isna(s)) or str(s).strip() == "":
-            return "—"
-        try:
-            if pd.isna(s):
-                return "—"
-        except (TypeError, ValueError):
-            pass
-        return html_mod.escape(str(s))
-
-    def _count(v: Any) -> str:
-        if v is None:
-            return "—"
-        try:
-            if pd.isna(v):
-                return "—"
-            return f"{int(round(float(v))):,}"
-        except (TypeError, ValueError):
-            return "—"
-
-    def _money(v: Any) -> str:
-        if v is None:
-            return "—"
-        try:
-            if pd.isna(v):
-                return "—"
-            return f"${int(round(float(v))):,}"
-        except (TypeError, ValueError):
-            return "—"
-
-    def _fte(v: Any) -> str:
-        if v is None:
-            return "—"
-        try:
-            if pd.isna(v):
-                return "—"
-            return f"{float(v):.1f}"
-        except (TypeError, ValueError):
-            return "—"
-
-    year = row.get("lib_year")
-    year_txt = "—"
+def _cell(value: Any) -> str:
+    if value is None:
+        return ""
     try:
-        if year is not None and not pd.isna(year) and str(year).strip() != "":
-            year_txt = str(int(float(year)))
+        if pd.isna(value):
+            return ""
     except (TypeError, ValueError):
-        year_txt = _esc(year)
-    def _truthy(v: Any) -> bool:
-        if isinstance(v, str):
-            token = v.strip().lower()
-            if token in {"", "0", "false", "no", "nan", "none"}:
-                return False
-            if token in {"1", "true", "yes"}:
-                return True
-        try:
-            if v is None or pd.isna(v):
-                return False
-            if isinstance(v, (int, float)) and float(v) == 0:
-                return False
-        except (TypeError, ValueError):
-            return False
-        return bool(v)
+        pass
+    text = str(value).strip()
+    if text.lower() in {"", "nan", "none", "<na>", "—"}:
+        return ""
+    if text in {UNKNOWN_NOTE, OUTSIDE_SHORTLIST_NOTE, NOTHING_DISTINCTIVE_NOTE}:
+        return ""
+    return text
 
-    arl = "yes (public ARL list)" if _truthy(row.get("lib_arl_member")) else "no / not listed"
-    note = row.get("lib_special_collections_note")
-    if note is None or (isinstance(note, float) and pd.isna(note)) or str(note).strip() == "":
-        note_html = UNKNOWN_NOTE
+
+def _truthy_flag(value: Any) -> bool:
+    if isinstance(value, str):
+        token = value.strip().lower()
+        if token in {"", "0", "false", "no", "nan", "none"}:
+            return False
+        if token in {"1", "true", "yes"}:
+            return True
+    try:
+        if value is None or pd.isna(value):
+            return False
+        if isinstance(value, (int, float)) and float(value) == 0:
+            return False
+    except (TypeError, ValueError):
+        return False
+    return bool(value)
+
+
+def _count_or_missing(value: Any) -> str:
+    if value is None:
+        return "not reported"
+    try:
+        if pd.isna(value):
+            return "not reported"
+        return f"{int(round(float(value))):,}"
+    except (TypeError, ValueError):
+        return "not reported"
+
+
+def _money_or_missing(value: Any) -> str:
+    if value is None:
+        return "not reported"
+    try:
+        if pd.isna(value):
+            return "not reported"
+        return f"${int(round(float(value))):,}"
+    except (TypeError, ValueError):
+        return "not reported"
+
+
+def _fte_or_missing(value: Any) -> str:
+    if value is None:
+        return "not reported"
+    try:
+        if pd.isna(value):
+            return "not reported"
+        return f"{float(value):.1f}"
+    except (TypeError, ValueError):
+        return "not reported"
+
+
+def _survey_year(value: Any) -> int | None:
+    try:
+        if value is None or pd.isna(value) or str(value).strip() == "":
+            return None
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def library_section_html(row: pd.Series) -> str:
+    """Library block for one residential card."""
+
+    def _esc(text: str) -> str:
+        return html_mod.escape(text, quote=True)
+
+    name = _cell(row.get("library_name"))
+    url = _cell(row.get("library_url"))
+    if name and url:
+        name_html = f'<a href="{_esc(url)}">{_esc(name)}</a>'
+    elif name:
+        name_html = _esc(name)
+    elif url:
+        name_html = f'<a href="{_esc(url)}">{_esc(url)}</a>'
     else:
-        note_html = html_mod.escape(str(note))
-    unique = "yes" if _truthy(row.get("lib_unique_flag")) else "no"
+        name_html = "not reported"
+
+    year = _survey_year(row.get("lib_year"))
+    from_parent = _truthy_flag(row.get("lib_from_parent"))
+    parent_name = _cell(row.get("lib_parent_name"))
+    survey = "not reported"
+    if year is not None or from_parent or _cell(row.get("lib_physical_books")) or _count_or_missing(row.get("lib_physical_books")) != "not reported":
+        # A blank survey still says not reported. A real count or parent row names the survey.
+        has_figure = any(
+            _count_or_missing(row.get(col)) != "not reported"
+            for col in ("lib_physical_books", "lib_electronic_books", "lib_total_circulation", "lib_expenditures", "lib_staff_fte")
+        )
+        if has_figure or from_parent:
+            survey = "IPEDS Academic Libraries"
+            if year is not None and year != 2022:
+                survey += f" {year}"
+            if from_parent:
+                who = parent_name or "the parent campus"
+                survey += f", parent's figures ({who})"
+
+    note = _cell(row.get("lib_special_collections")) or _cell(row.get("lib_special_collections_note"))
+    note_url = _cell(row.get("lib_special_collections_url")) or _cell(row.get("lib_note_url"))
+    if note and note_url:
+        note_html = f'{_esc(note)} (<a href="{_esc(note_url)}">source</a>)'
+    elif note:
+        note_html = _esc(note)
+    else:
+        note_html = "not reported"
+
+    contact_bits = []
+    contact_name = _cell(row.get("lib_contact_name"))
+    contact_role = _cell(row.get("lib_contact_role"))
+    contact_email = _cell(row.get("lib_contact_email"))
+    contact_phone = _cell(row.get("lib_contact_phone"))
+    if contact_name:
+        contact_bits.append(_esc(contact_name))
+    if contact_role:
+        contact_bits.append(_esc(contact_role))
+    if contact_email:
+        contact_bits.append(f'<a href="mailto:{_esc(contact_email)}">{_esc(contact_email)}</a>')
+    if contact_phone:
+        contact_bits.append(_esc(contact_phone))
+    contact_html = ", ".join(contact_bits) if contact_bits else "not reported"
+    parent_line = ""
+    if from_parent:
+        who = _esc(parent_name) if parent_name else "the parent campus"
+        parent_line = f'<p class="lib-note">Parent\'s IPEDS Academic Libraries figures ({who}).</p>'
+
     return f"""
-      <h3>Libraries &amp; collections</h3>
-      <p class="lib-context">Enrichment context — cultural / asset value that may be at
-      stake, not a model feature and not a closure verdict. IPEDS Academic Libraries
-      counts are unknown when the survey cell is missing; that is not evidence the
-      school has no library. Notes use campus pages plus WorldCat/public
-      identifiers (libraries.org NCES LIBID) and cited transfer notices.</p>
+      <h3>Library</h3>
       <table>
-        <tr><th>Physical books</th><td>{_count(row.get("lib_physical_books"))}</td>
-            <th>Digital items</th><td>{_count(row.get("lib_digital_items"))}</td></tr>
-        <tr><th>Library expenditures</th><td>{_money(row.get("lib_expenditures"))}</td>
-            <th>Librarian FTE</th><td>{_fte(row.get("lib_fte"))}</td></tr>
-        <tr><th>AL year / source</th><td>{year_txt} / {_esc(row.get("lib_source"))}</td>
-            <th>ARL member</th><td>{_esc(arl)}</td></tr>
-        <tr><th>Unique / notable</th><td>{unique}</td>
-            <th>OCLC symbol</th><td>{_esc(row.get("lib_oclc_symbol"))}</td></tr>
+        <tr><th>Library</th><td>{name_html}</td>
+            <th>Survey</th><td>{_esc(survey)}</td></tr>
+        <tr><th>Physical books</th><td>{_count_or_missing(row.get("lib_physical_books"))}</td>
+            <th>E-books</th><td>{_count_or_missing(row.get("lib_electronic_books"))}</td></tr>
+        <tr><th>Total circulation</th><td>{_count_or_missing(row.get("lib_total_circulation"))}</td>
+            <th>Library staff FTE</th><td>{_fte_or_missing(row.get("lib_staff_fte"))}</td></tr>
+        <tr><th>Library expenses</th><td>{_money_or_missing(row.get("lib_expenditures"))}</td>
+            <th>Contact</th><td>{contact_html}</td></tr>
+        <tr><th>Special collections</th><td colspan="3">{note_html}</td></tr>
       </table>
-      <p class="lib-note">{note_html}</p>
+      {parent_line}
     """
+
+
+_AL_NUMERIC = (
+    "lib_physical_books",
+    "lib_electronic_books",
+    "lib_total_circulation",
+    "lib_staff_fte",
+    "lib_expenditures",
+)
+
+PROFILE_COLUMNS = (
+    "unitid",
+    "library_name",
+    "library_url",
+    "special_collections",
+    "special_collections_url",
+    "contact_name",
+    "contact_role",
+    "contact_email",
+    "contact_phone",
+    "contact_url",
+)
+
+
+def _blank_sentinels(frame: pd.DataFrame) -> pd.DataFrame:
+    out = frame.copy()
+    for col in [c for c in _AL_NUMERIC + ("year",) if c in out.columns]:
+        out[col] = pd.to_numeric(out[col], errors="coerce")
+        out.loc[out[col].isin([-1, -2, -3]), col] = pd.NA
+    return out
+
+
+def load_al_latest(root: Path) -> pd.DataFrame:
+    """Latest Academic Libraries row per UNITID, including circulation when the raw file has it."""
+    raw = root / "data" / "raw" / "ipeds" / "colleges_ipeds_academic_libraries.csv"
+    parquet = root / "data" / "processed" / "libraries.parquet"
+    if raw.exists():
+        frame = pd.read_csv(
+            raw,
+            usecols=[
+                "unitid",
+                "year",
+                "physical_books",
+                "electronic_books",
+                "total_circulations",
+                "total_lib_staff_fte",
+                "exp_total",
+            ],
+        )
+        frame = frame.rename(
+            columns={
+                "physical_books": "lib_physical_books",
+                "electronic_books": "lib_electronic_books",
+                "total_circulations": "lib_total_circulation",
+                "total_lib_staff_fte": "lib_staff_fte",
+                "exp_total": "lib_expenditures",
+            }
+        )
+    elif parquet.exists():
+        frame = pd.read_parquet(parquet)
+        if "lib_total_circulation" not in frame.columns:
+            frame["lib_total_circulation"] = pd.NA
+        if "lib_electronic_books" not in frame.columns:
+            frame["lib_electronic_books"] = pd.NA
+        frame = frame.rename(columns={"year": "year"})
+        if "lib_year" in frame.columns and "year" not in frame.columns:
+            frame = frame.rename(columns={"lib_year": "year"})
+    else:
+        return pd.DataFrame()
+    frame = _blank_sentinels(frame)
+    frame = frame.dropna(subset=["unitid", "year"])
+    frame = frame.loc[frame["year"] <= 2023]
+    latest = frame.sort_values(["unitid", "year"]).groupby("unitid", as_index=False).tail(1)
+    return latest.reset_index(drop=True)
+
+
+def _parent_names(root: Path, unitids: set[int]) -> dict[int, str]:
+    path = root / "data" / "processed" / "directory.parquet"
+    if not path.exists() or not unitids:
+        return {}
+    frame = pd.read_parquet(path, columns=["unitid", "year", "inst_name"])
+    frame["unitid"] = pd.to_numeric(frame["unitid"], errors="coerce")
+    frame = frame.loc[frame["unitid"].isin(unitids)].sort_values("year").groupby("unitid", as_index=False).tail(1)
+    return {int(row.unitid): str(row.inst_name) for _, row in frame.iterrows()}
+
+
+def _optional_id(value: Any) -> int | None:
+    try:
+        if value is None or pd.isna(value):
+            return None
+        number = int(float(value))
+    except (TypeError, ValueError):
+        return None
+    if number <= 0:
+        return None
+    return number
+
+
+def attach_report_libraries(frame: pd.DataFrame, root: Path) -> pd.DataFrame:
+    """Add IPEDS library figures and curated profile fields. Parent figures only when this UNITID has no survey row."""
+    if frame is None or frame.empty or "unitid" not in frame.columns:
+        return frame
+    latest = load_al_latest(root)
+    by_id: dict[int, pd.Series] = {}
+    if not latest.empty:
+        for _, row in latest.iterrows():
+            by_id[int(row["unitid"])] = row
+    profiles = root / "data" / "external" / "top50_library_profiles.csv"
+    prof: dict[int, pd.Series] = {}
+    if profiles.exists():
+        table = pd.read_csv(profiles)
+        if "unitid" in table.columns:
+            for _, row in table.iterrows():
+                uid = _optional_id(row.get("unitid"))
+                if uid is not None:
+                    prof[uid] = row
+    parent_ids = set()
+    for _, row in frame.iterrows():
+        parent = _optional_id(row.get("parent_unitid"))
+        if parent is not None:
+            parent_ids.add(parent)
+    names = _parent_names(root, parent_ids)
+    built = []
+    for _, row in frame.iterrows():
+        uid = _optional_id(row.get("unitid"))
+        own = by_id.get(uid) if uid is not None else None
+        used = own
+        from_parent = False
+        parent_id = None
+        parent_name = ""
+        if own is None and uid is not None:
+            parent_id = _optional_id(row.get("parent_unitid"))
+            if parent_id is not None and parent_id != uid:
+                parent_row = by_id.get(parent_id)
+                if parent_row is not None:
+                    used = parent_row
+                    from_parent = True
+                    parent_name = names.get(parent_id, "")
+        profile = prof.get(uid) if uid is not None else None
+
+        def _profile(column: str) -> str:
+            if profile is None or column not in profile.index:
+                return ""
+            return _cell(profile.get(column))
+
+        item = {
+            "lib_from_parent": from_parent,
+            "lib_parent_unitid": parent_id if from_parent else pd.NA,
+            "lib_parent_name": parent_name if from_parent else "",
+            "lib_year": used["year"] if used is not None else pd.NA,
+            "library_name": _profile("library_name"),
+            "library_url": _profile("library_url"),
+            "lib_special_collections": _profile("special_collections"),
+            "lib_special_collections_url": _profile("special_collections_url"),
+            "lib_contact_name": _profile("contact_name"),
+            "lib_contact_role": _profile("contact_role"),
+            "lib_contact_email": _profile("contact_email"),
+            "lib_contact_phone": _profile("contact_phone"),
+            "lib_contact_url": _profile("contact_url"),
+        }
+        for col in _AL_NUMERIC:
+            item[col] = used[col] if used is not None and col in used.index else pd.NA
+        built.append(item)
+    extra = pd.DataFrame(built, index=frame.index)
+    out = frame.drop(columns=[c for c in extra.columns if c in frame.columns])
+    return pd.concat([out, extra], axis=1)
+
+
+def write_top50_library_csv(open_df: pd.DataFrame, dest: Path) -> Path:
+    """One row per residential card, in rank order."""
+    rows = []
+    for rank, (_, row) in enumerate(open_df.iterrows(), start=1):
+        year = _survey_year(row.get("lib_year"))
+        rows.append(
+            {
+                "residential_rank": rank,
+                "unitid": _optional_id(row.get("unitid")) or "",
+                "inst_name": _cell(row.get("inst_name")),
+                "state_abbr": _cell(row.get("state_abbr")),
+                "library_name": _cell(row.get("library_name")),
+                "library_url": _cell(row.get("library_url")),
+                "physical_books": _count_or_missing(row.get("lib_physical_books")),
+                "ebooks": _count_or_missing(row.get("lib_electronic_books")),
+                "total_circulation": _count_or_missing(row.get("lib_total_circulation")),
+                "library_staff_fte": _fte_or_missing(row.get("lib_staff_fte")),
+                "library_expenses": _money_or_missing(row.get("lib_expenditures")),
+                "survey_year": "" if year in (None, 2022) else year,
+                "figures_from_parent": "yes" if _truthy_flag(row.get("lib_from_parent")) else "",
+                "parent_unitid": _optional_id(row.get("lib_parent_unitid")) or "",
+                "parent_name": _cell(row.get("lib_parent_name")),
+                "special_collections": _cell(row.get("lib_special_collections")),
+                "special_collections_url": _cell(row.get("lib_special_collections_url")),
+                "contact_name": _cell(row.get("lib_contact_name")),
+                "contact_role": _cell(row.get("lib_contact_role")),
+                "contact_email": _cell(row.get("lib_contact_email")),
+                "contact_phone": _cell(row.get("lib_contact_phone")),
+                "contact_url": _cell(row.get("lib_contact_url")),
+            }
+        )
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows).to_csv(dest, index=False)
+    return dest
