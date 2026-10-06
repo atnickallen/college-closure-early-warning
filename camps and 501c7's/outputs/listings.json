@@ -175,8 +175,8 @@
     "housing_evidence": "Beautiful lodge with 5 bedrooms 4.5 baths",
     "source_name": "Fay Ranches",
     "source_url": "https://fayranches.com/property/three-rivers-rod-and-gun-club-lodge-parcel/",
-    "image_url": "",
-    "image_credit": "",
+    "image_url": "https://fayranches.com/wp-content/uploads/2019/11/montana-property-for-sale-three-rivers-rod-gun-club-lodge-three-forks-mt.jpg",
+    "image_credit": "Fay Ranches",
     "lat": "",
     "lon": "",
     "listing_date": "",
@@ -184,12 +184,25 @@
     "notes": "About 5 miles west of Three Forks. A separate 224-acre river parcel is listed at $2,250,000 and is not included here because the lodge description is for this parcel.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://www2.dnr.state.mi.us/publications/pdfs/huntingwildlifehabitat/sga/Three_Rivers_SGA_map.pdf|https://fayranches.com/properties-site-map/",
+    "map_type": "property_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://www2.dnr.state.mi.us/publications/pdfs/huntingwildlifehabitat/sga/Three_Rivers_SGA_map.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://fayranches.com/properties-site-map/",
+        "map_type": "site_map",
+        "is_pdf": false,
+        "source": "page"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -407,12 +420,30 @@
     "notes": "",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "https://id.land/maps/33a6423939dcd66d2da1f49d7692c794/share",
-    "map_type": "property_map",
-    "map_is_pdf": "false",
-    "map_source": "page",
+    "map_urls": "https://www.latech.edu/documents/campus-map-july-2025.pdf|https://www.openspace.org/sites/default/files/maps/map_FO.pdf|https://www.7springs.com/-/aemasset/sitecore/seven-springs/trail-base-maps/20221122_SN_base-area_map_001.pdf|https://id.land/maps/33a6423939dcd66d2da1f49d7692c794/share",
+    "map_type": "campus_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
     "maps": [
+      {
+        "url": "https://www.latech.edu/documents/campus-map-july-2025.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.openspace.org/sites/default/files/maps/map_FO.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.7springs.com/-/aemasset/sitecore/seven-springs/trail-base-maps/20221122_SN_base-area_map_001.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
       {
         "url": "https://id.land/maps/33a6423939dcd66d2da1f49d7692c794/share",
         "map_type": "property_map",
@@ -450,14 +481,14 @@
     "map_urls": "https://lodgeatwhitehawk.com/pages/resort-map|https://id.land/maps/5763cc7598293d89882be63827325611/share?preview=true",
     "map_type": "property_map",
     "map_is_pdf": "false",
-    "map_source": "duckduckgo",
+    "map_source": "firecrawl",
     "origin": "curated",
     "maps": [
       {
         "url": "https://lodgeatwhitehawk.com/pages/resort-map",
         "map_type": "property_map",
         "is_pdf": false,
-        "source": "duckduckgo"
+        "source": "firecrawl"
       },
       {
         "url": "https://id.land/maps/5763cc7598293d89882be63827325611/share?preview=true",
@@ -493,12 +524,25 @@
     "notes": "Page title says +/- 125 acres. Dining hall and main lodge capacity is up to 200 people, which is seating rather than beds.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://campkupugani.com/wp-content/uploads/2015/12/Camp-Kupugani-Directions-Map.pdf|https://campkupugani.com/interactive-map/",
+    "map_type": "property_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://campkupugani.com/wp-content/uploads/2015/12/Camp-Kupugani-Directions-Map.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://campkupugani.com/interactive-map/",
+        "map_type": "property_map",
+        "is_pdf": false,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -592,12 +636,25 @@
     "notes": "The description also says 29+ deeded acres. The listing acres field is 30.00.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://www2.dnr.state.mi.us/publications/pdfs/huntingwildlifehabitat/sga/Port_Huron_SGA_map.pdf|https://www.michigandnr.com/publications/pdfs/huntingwildlifehabitat/SGA/Rogue_River_SGA_map.pdf",
+    "map_type": "property_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://www2.dnr.state.mi.us/publications/pdfs/huntingwildlifehabitat/sga/Port_Huron_SGA_map.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.michigandnr.com/publications/pdfs/huntingwildlifehabitat/SGA/Rogue_River_SGA_map.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": "https://www.google.com/maps/@?api=1&map_action=map&center=46.352738,-89.488405&zoom=17&basemap=satellite"
   },
   {
@@ -677,28 +734,22 @@
     "notes": "Also an RV campground of about 29 spaces and tent areas. Crawford County.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "https://files.realstack.com/uploads/user/2087/listing-topo-map/4FGvSGvv91C2aLhIT2rl5d6IGXN0J7cyO10LlFVJ/6dcf9b10e9f6d547.pdf|https://id.land/maps/854b9099f3ca82d73612dd390b57f56a/share|https://llapp2.arissainternational.com/storage/maps/pBCOqSzBNOG2GQIj4ED74YoBTGIv4QIRy8ydAVns.pdf|https://llapp2.arissainternational.com/storage/maps/6dYOUtIkP2LlKmB4o4lO6tgSNf66CLqVOzJgTMoS.pdf",
+    "map_urls": "https://llapp2.arissainternational.com/storage/maps/pBCOqSzBNOG2GQIj4ED74YoBTGIv4QIRy8ydAVns.pdf|https://id.land/maps/854b9099f3ca82d73612dd390b57f56a/share|https://llapp2.arissainternational.com/storage/maps/6dYOUtIkP2LlKmB4o4lO6tgSNf66CLqVOzJgTMoS.pdf",
     "map_type": "property_map",
     "map_is_pdf": "true",
-    "map_source": "duckduckgo",
+    "map_source": "page",
     "origin": "curated",
     "maps": [
       {
-        "url": "https://files.realstack.com/uploads/user/2087/listing-topo-map/4FGvSGvv91C2aLhIT2rl5d6IGXN0J7cyO10LlFVJ/6dcf9b10e9f6d547.pdf",
+        "url": "https://llapp2.arissainternational.com/storage/maps/pBCOqSzBNOG2GQIj4ED74YoBTGIv4QIRy8ydAVns.pdf",
         "map_type": "property_map",
         "is_pdf": true,
-        "source": "duckduckgo"
+        "source": "page"
       },
       {
         "url": "https://id.land/maps/854b9099f3ca82d73612dd390b57f56a/share",
         "map_type": "property_map",
         "is_pdf": false,
-        "source": "page"
-      },
-      {
-        "url": "https://llapp2.arissainternational.com/storage/maps/pBCOqSzBNOG2GQIj4ED74YoBTGIv4QIRy8ydAVns.pdf",
-        "map_type": "property_map",
-        "is_pdf": true,
         "source": "page"
       },
       {
@@ -735,22 +786,28 @@
     "notes": "Cedar County. No bedroom count was stated.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "https://llapp2.arissainternational.com/storage/maps/Xf98DzCg17un3K1lonNF3bB7Jkr8eVXeWQA747mS.pdf|https://id.land/ranching/maps/0b9427b924c4f22118138042ad51c89d/share|https://llapp2.arissainternational.com/storage/maps/YN88coQLeu8VnXopbel5Go3TNpEaDLRcvi1EFmw3.pdf",
+    "map_urls": "https://www.stonecreeklodge.net/wp-content/uploads/sites/43/2023/06/usda-monument-map.jpg-1000%C3%971364-copy.pdf|https://id.land/ranching/maps/0b9427b924c4f22118138042ad51c89d/share|https://llapp2.arissainternational.com/storage/maps/Xf98DzCg17un3K1lonNF3bB7Jkr8eVXeWQA747mS.pdf|https://llapp2.arissainternational.com/storage/maps/YN88coQLeu8VnXopbel5Go3TNpEaDLRcvi1EFmw3.pdf",
     "map_type": "property_map",
     "map_is_pdf": "true",
-    "map_source": "page",
+    "map_source": "firecrawl",
     "origin": "curated",
     "maps": [
       {
-        "url": "https://llapp2.arissainternational.com/storage/maps/Xf98DzCg17un3K1lonNF3bB7Jkr8eVXeWQA747mS.pdf",
+        "url": "https://www.stonecreeklodge.net/wp-content/uploads/sites/43/2023/06/usda-monument-map.jpg-1000%C3%971364-copy.pdf",
         "map_type": "property_map",
         "is_pdf": true,
-        "source": "page"
+        "source": "firecrawl"
       },
       {
         "url": "https://id.land/ranching/maps/0b9427b924c4f22118138042ad51c89d/share",
         "map_type": "property_map",
         "is_pdf": false,
+        "source": "page"
+      },
+      {
+        "url": "https://llapp2.arissainternational.com/storage/maps/Xf98DzCg17un3K1lonNF3bB7Jkr8eVXeWQA747mS.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
         "source": "page"
       },
       {
@@ -787,7 +844,7 @@
     "notes": "Former 4-H camp in the Town of Orangeville, Wyoming County. 18 cabins are the 11 girls cabins plus 7 boys cabins stated on the page.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "https://llapp2.arissainternational.com/storage/aerial_map/20250401_015221_67eb46d584404.pdf|https://id.land/maps/8224f53f74a9ae1d2c19b291d6668c0d/embed|https://llapp2.arissainternational.com/storage/topo_map/20250401_015221_67eb46d5bd3d6.pdf",
+    "map_urls": "https://llapp2.arissainternational.com/storage/aerial_map/20250401_015221_67eb46d584404.pdf|http://wyomoco.cce.cornell.edu/map|https://id.land/maps/8224f53f74a9ae1d2c19b291d6668c0d/embed|https://llapp2.arissainternational.com/storage/topo_map/20250401_015221_67eb46d5bd3d6.pdf",
     "map_type": "property_map",
     "map_is_pdf": "true",
     "map_source": "page",
@@ -798,6 +855,12 @@
         "map_type": "property_map",
         "is_pdf": true,
         "source": "page"
+      },
+      {
+        "url": "http://wyomoco.cce.cornell.edu/map",
+        "map_type": "property_map",
+        "is_pdf": false,
+        "source": "firecrawl"
       },
       {
         "url": "https://id.land/maps/8224f53f74a9ae1d2c19b291d6668c0d/embed",
@@ -839,12 +902,19 @@
     "notes": "The page says the camp is certified by the New York State Department of Health and that capacity could potentially increase to 250. 105 is the stated current maximum.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Maps/USTopo/Current/PDF/MT/MT_Ruby_Mountain.pdf",
+    "map_type": "property_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Maps/USTopo/Current/PDF/MT/MT_Ruby_Mountain.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -872,12 +942,19 @@
     "notes": "The brokerage page does not give a street address. City is the Oswego / Binghamton area named on the page. 215 is the stated guest sleep count, not a sum of every building.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://ww1.oswego.edu/sites/default/files/OH_2022_July_23_PM_Map_REM.pdf",
+    "map_type": "property_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://ww1.oswego.edu/sites/default/files/OH_2022_July_23_PM_Map_REM.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -905,12 +982,25 @@
     "notes": "The six additional cabins are hookups, not existing cabins. Former Girl Scout camp in Carroll County.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://blueridgecouncil.org/wp-content/uploads/2022/05/Old_Indian_CampMap_2020-Proof-Nov.pdf|https://lecbsa.org/s/Final-Stig-Map.pdf",
+    "map_type": "property_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://blueridgecouncil.org/wp-content/uploads/2022/05/Old_Indian_CampMap_2020-Proof-Nov.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://lecbsa.org/s/Final-Stig-Map.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -938,18 +1028,12 @@
     "notes": "15 beds are the Galice Lodge figure. The page also describes two other lodges and seven cabins.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "https://www.galice.com/map.html|https://id.land/ranching/maps/ebc65b4cd066e409ec3b085f07b903ba/share",
+    "map_urls": "https://id.land/ranching/maps/ebc65b4cd066e409ec3b085f07b903ba/share",
     "map_type": "property_map",
     "map_is_pdf": "false",
-    "map_source": "duckduckgo",
+    "map_source": "page",
     "origin": "curated",
     "maps": [
-      {
-        "url": "https://www.galice.com/map.html",
-        "map_type": "property_map",
-        "is_pdf": false,
-        "source": "duckduckgo"
-      },
       {
         "url": "https://id.land/ranching/maps/ebc65b4cd066e409ec3b085f07b903ba/share",
         "map_type": "property_map",
@@ -1048,12 +1132,42 @@
     "notes": "",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "https://id.land/maps/2b31893623d5125b69996b1c31f1d8d8/embed",
-    "map_type": "property_map",
-    "map_is_pdf": "false",
-    "map_source": "page",
+    "map_urls": "https://www.smcm.edu/app/uploads/2026/04/Campus_Map_6-25-FINAL-ua.pdf|https://scottcampus.com/wp-content/uploads/2014/04/Map.pdf|https://map.harvard.edu/pdf/8.5x11%20campus%20map.pdf|https://www.chesapeakebay.net/channel_files/25674/smcm-campus-map.pdf|https://www.princeton.edu/sites/default/files/documents/2024/08/2024-08-27-campus-map.pdf|https://id.land/maps/2b31893623d5125b69996b1c31f1d8d8/embed",
+    "map_type": "campus_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
     "maps": [
+      {
+        "url": "https://www.smcm.edu/app/uploads/2026/04/Campus_Map_6-25-FINAL-ua.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://scottcampus.com/wp-content/uploads/2014/04/Map.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://map.harvard.edu/pdf/8.5x11%20campus%20map.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.chesapeakebay.net/channel_files/25674/smcm-campus-map.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.princeton.edu/sites/default/files/documents/2024/08/2024-08-27-campus-map.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
       {
         "url": "https://id.land/maps/2b31893623d5125b69996b1c31f1d8d8/embed",
         "map_type": "property_map",
@@ -1088,12 +1202,19 @@
     "notes": "The page says 167+ acres are leased to the Army Corps of Engineers for $1 a year until October 30, 2042. Owned acreage was not stated.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://www.centerhillmarina.com/wp-content/uploads/2024/07/center-hill-lake-map.pdf",
+    "map_type": "property_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://www.centerhillmarina.com/wp-content/uploads/2024/07/center-hill-lake-map.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -1154,12 +1275,25 @@
     "notes": "Status ACT. Sale or Lease is For Sale. The page says inquire for price. Additional land is in Hadley, MA.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://www.hampshire.edu/admissions/visit-hampshire/campus-map|https://mapformation.com/maps/hampshire-college-2d-perspective-campus-map/",
+    "map_type": "campus_map",
+    "map_is_pdf": "false",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://www.hampshire.edu/admissions/visit-hampshire/campus-map",
+        "map_type": "campus_map",
+        "is_pdf": false,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://mapformation.com/maps/hampshire-college-2d-perspective-campus-map/",
+        "map_type": "campus_map",
+        "is_pdf": false,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -1187,12 +1321,43 @@
     "notes": "About 48 acres and 10 buildings totaling about 472,537 square feet. No asking price was stated on the page.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://assets.simpleviewinc.com/simpleview/image/upload/v1/clients/southbend/vsbm_nd_campusMap_2025_398d3a8d-70f6-43ec-a256-3bbe0bd18211.pdf|https://www.kamatlab.com/documents/campus-map.pdf|https://www.ndnu.edu/CampusMap-as-of-10-23-25-V4.pdf|https://asccc.org/sites/default/files/2025-03/ButteCollege_map%20with%20highlight.pdf|https://athenainaction2024.weebly.com/uploads/3/0/8/6/30868985/ndcampus-map.pdf",
+    "map_type": "campus_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://assets.simpleviewinc.com/simpleview/image/upload/v1/clients/southbend/vsbm_nd_campusMap_2025_398d3a8d-70f6-43ec-a256-3bbe0bd18211.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.kamatlab.com/documents/campus-map.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.ndnu.edu/CampusMap-as-of-10-23-25-V4.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://asccc.org/sites/default/files/2025-03/ButteCollege_map%20with%20highlight.pdf",
+        "map_type": "property_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://athenainaction2024.weebly.com/uploads/3/0/8/6/30868985/ndcampus-map.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   },
   {
@@ -1220,12 +1385,37 @@
     "notes": "Bid deadline October 30; auction November 4. The page does not print a year next to those dates. About 552,207+ square feet. The dollar figure is the minimum overbid, not an asking price.",
     "eo_ein": "",
     "eo_name": "",
-    "map_urls": "",
-    "map_type": "",
-    "map_is_pdf": "",
-    "map_source": "",
+    "map_urls": "https://wp.stolaf.edu/dance/files/2023/08/campus-map.pdf|https://www.monmouthcollege.edu/live/files/347-campus-map|https://www.limestone.edu/campus-map|https://www.limestone.edu/campus-map/keyboard-accessible",
+    "map_type": "campus_map",
+    "map_is_pdf": "true",
+    "map_source": "firecrawl",
     "origin": "curated",
-    "maps": [],
+    "maps": [
+      {
+        "url": "https://wp.stolaf.edu/dance/files/2023/08/campus-map.pdf",
+        "map_type": "campus_map",
+        "is_pdf": true,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.monmouthcollege.edu/live/files/347-campus-map",
+        "map_type": "campus_map",
+        "is_pdf": false,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.limestone.edu/campus-map",
+        "map_type": "campus_map",
+        "is_pdf": false,
+        "source": "firecrawl"
+      },
+      {
+        "url": "https://www.limestone.edu/campus-map/keyboard-accessible",
+        "map_type": "campus_map",
+        "is_pdf": false,
+        "source": "firecrawl"
+      }
+    ],
     "satellite_url": ""
   }
 ]

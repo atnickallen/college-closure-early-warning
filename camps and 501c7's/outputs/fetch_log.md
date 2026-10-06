@@ -19,23 +19,6 @@
 - EO BMF https://www.irs.gov/pub/irs-soi/eo3.csv: 19565 subsection 07 rows
 - EO BMF https://www.irs.gov/pub/irs-soi/eo4.csv: 26 subsection 07 rows
 - EO BMF subsection 07 rows loaded: 46492
-- maps off-grid-hunting-camp-mi: DuckDuckGo search skipped: URLError
-- maps antioch-duck-club-ca: DuckDuckGo search skipped: URLError
-- maps camp-kupugani-leaf-river-il: DuckDuckGo search skipped: URLError
-- maps camp-nelson-lodge-ca: DuckDuckGo search skipped: URLError
-- maps camp-redwing-pa: DuckDuckGo search skipped: URLError
-- maps camp-tuolumne-trails-ca: DuckDuckGo search skipped: URLError
-- maps camp-wyomoco-ny: DuckDuckGo search skipped: URLError
-- maps cedar-crest-resort-ca: DuckDuckGo search skipped: URLError
-- maps east-branch-camp-ny: DuckDuckGo search skipped: URLError
-- maps camp-sandoneida-malvern-oh: DuckDuckGo search skipped: URLError
-- maps notre-dame-college-south-euclid-oh: DuckDuckGo search skipped: URLError
-- maps golden-hills-equine-resort-mo: DuckDuckGo search skipped: URLError
-- maps hampshire-college-amherst-ma: DuckDuckGo search skipped: URLError
-- maps michigan-hunt-fish-cabins-mi: DuckDuckGo search skipped: URLError
-- maps mount-vernon-camp-me: DuckDuckGo search skipped: URLError
-- maps three-rivers-rod-gun-club-mt: Map crawl skipped https://fayranches.com/property/three-rivers-rod-and-gun-club-lodge-parcel/: HTTP 403
-- Published 30 listings (3 college, 21 camp, 6 501c7)
-- Map links on 17 listings; PDF maps on 6 listings
-- No listing name and city matched a single IRS subsection 07 row.
 - Geocoding skipped: Nominatim robots.txt disallows /search. Coordinates are kept only when a listing page stated them.
+- maps hampshire-college-amherst-ma: Map crawl skipped https://www.regionco.com/listing/Hampshire/893-west-street-amherst-ma/: HTTP 403
+- Published 30 listings (3 college, 21 camp, 6 501c7)
