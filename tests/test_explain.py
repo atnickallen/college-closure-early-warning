@@ -161,6 +161,23 @@ def test_committed_explanations_cover_the_residential_top_50():
     assert len(libraries) == 50
     assert set(libraries["physical_books"].astype(str)) != {""}
     assert ((libraries["physical_books"].astype(str) != "")).all()
+    assert (libraries["physical_books"].astype(str) != "not reported").all()
+    filled = libraries.fillna("").astype(str).apply(lambda col: col.str.strip())
+    assert filled["special_collections"].ne("").all()
+    has_contact = (
+        filled["contact_name"].ne("")
+        | filled["contact_email"].ne("")
+        | filled["contact_phone"].ne("")
+        | filled["fallback_name"].ne("")
+        | filled["fallback_email"].ne("")
+        | filled["fallback_phone"].ne("")
+    )
+    assert has_contact.all()
+    seminary_books = libraries.loc[libraries["unitid"].astype(int) == 167677].iloc[0]
+    assert "172,000" in str(seminary_books["physical_books"])
+    davenport = libraries.loc[libraries["unitid"].astype(int) == 169479].iloc[0]
+    assert "16,504" in str(davenport["physical_books"])
+    assert "2021" in str(davenport["physical_books_source"])
     notes = (root / "outputs" / "score_explanations.md").read_text(encoding="utf-8")
     assert "Saint Vincent Seminary" in notes
     assert "left the residential top 50" not in notes
