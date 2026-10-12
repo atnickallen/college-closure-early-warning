@@ -6,8 +6,9 @@ Residential own-campus schools in the main list: 50
 The main list keeps schools that are still operating, have on-campus dorms, and have their own campus. Scores remain 2023 federal financial data.
 Ranked rows walked to fill that list: 666
 Curated rows with a disagreement flag: 11
-Curated campus-sold rows: 2
-Curated campus-listed rows: 0
+Curated campus-sold rows: 3
+Curated campus-listed rows: 1
+Residential top 50 checked 2026-10-12. Every school on that list has a status row.
 
 ## Sources this run
 

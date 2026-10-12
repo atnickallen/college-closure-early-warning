@@ -178,6 +178,17 @@ def test_committed_explanations_cover_the_residential_top_50():
     davenport = libraries.loc[libraries["unitid"].astype(int) == 169479].iloc[0]
     assert "16,504" in str(davenport["physical_books"])
     assert "2021" in str(davenport["physical_books_source"])
+    status = pd.read_csv(root / "outputs" / "status_current.csv")
+    assert set(libraries["unitid"].astype(int)) <= set(status["unitid"].astype(int))
+    top_status = status[status["unitid"].astype(int).isin(set(libraries["unitid"].astype(int)))]
+    assert top_status["checked_at"].astype(str).str.startswith("2026-10-12").all()
+    assert top_status["source_url"].astype(str).str.contains("http").all()
+    assert "$52.5M" in page
+    assert "Luhr Library" in page
+    assert "Indigenous Bible College" in page
+    assert "Urshan University" in page
+    assert "state financial-aid" in page
+    assert "about 17 downtown acres" in page
     notes = (root / "outputs" / "score_explanations.md").read_text(encoding="utf-8")
     assert "Saint Vincent Seminary" in notes
     assert "left the residential top 50" not in notes
