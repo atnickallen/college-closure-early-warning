@@ -690,6 +690,22 @@ def test_operating_partition_keeps_only_schools_still_operating():
         )
         == "closed"
     )
+    assert operating_bucket(
+        {
+            "status": "operating",
+            "property_disposition": "sold",
+            "auto_ipeds_status": "1",
+            "auto_scorecard_operating": "1",
+        }
+    ) == "open"
+    assert operating_bucket(
+        {
+            "status": "closed",
+            "property_disposition": "sold",
+            "auto_ipeds_status": "1",
+            "auto_scorecard_operating": "1",
+        }
+    ) == "closed"
     assert (
         operating_bucket(
             {

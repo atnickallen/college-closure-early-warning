@@ -1028,9 +1028,10 @@ def stamp_report_html(html_text: str, status: pd.DataFrame) -> str:
 def operating_bucket(row: pd.Series | dict[str, Any]) -> str:
     """Place one ranked row: open, teach-out, closed, or unknown.
 
-    A curated ``closed`` row or a recorded campus sale stays closed even when
-    IPEDS or Scorecard still shows the parent system as operating (a closed
-    DeVry or Strayer location, for example). A curated ``merged_acquired``
+    A curated ``closed`` row stays closed even when IPEDS or Scorecard still
+    shows the parent system as operating (a closed DeVry or Strayer location,
+    for example). A campus sale keeps that result unless the curated status
+    is still ``operating``. A curated ``merged_acquired``
     row stays off the open list unless it is an ``institutional_sale`` that
     leaves the same school operating. IPEDS ``inst_status`` closed or
     merged, or a real close date, also counts as closed. ``not_enrolling``
@@ -1044,7 +1045,7 @@ def operating_bucket(row: pd.Series | dict[str, Any]) -> str:
     )
     scorecard = _blank(row.get("auto_scorecard_operating"))
     federal_closed = ipeds in {"closed", "merged"} or scorecard == "0"
-    if status == STATUS_CLOSED or prop == PROP_SOLD:
+    if status == STATUS_CLOSED or (prop == PROP_SOLD and status != STATUS_OPEN):
         return CLOSED_BUCKET
     if status == STATUS_MERGED and prop != PROP_INSTITUTIONAL:
         return CLOSED_BUCKET
