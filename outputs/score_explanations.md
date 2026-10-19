@@ -110,19 +110,7 @@ Why it ranks here:
 - endowment covers 0.3 years of expenses, $10,314 per FTE (2023)
 - the federal composite score is 2.50 (2025)
 
-### 10. San Diego Christian College (CA)
-
-Score 0.452.
-
-Endowment $694,522 in 2023 ($6,945 per FTE). Fall headcount 96 in 2024 (undergraduate 89; graduate 7). FTE 100 in 2024. Fall headcount 551 in 2019 versus 96 in 2024 (-83%).
-
-Why it ranks here:
-
-- endowment covers 0.1 years of expenses, $8,171 per FTE (2023)
-- FTE enrollment changed +18% in one year (2024)
-- the federal composite score is 0.50 (2025)
-
-### 11. Roosevelt University (IL)
+### 10. Roosevelt University (IL)
 
 Score 0.447.
 
@@ -134,11 +122,11 @@ Why it ranks here:
 - net assets cover 1.0 years of expenses (2023)
 - sector is 2 (2025)
 
-### 12. Middlebury Institute of International Studies at Monterey (CA)
+### 11. Middlebury Institute of International Studies at Monterey (CA)
 
 Score 0.443.
 
-Endowment $1.60 billion in 2023 ($2.9 million per FTE). Fall headcount 526 in 2024 (undergraduate 12; graduate 514). FTE 555 in 2024. Fall headcount 688 in 2019 versus 526 in 2024 (-24%).
+Endowment $1598.0 million in 2023 ($2.9 million per FTE). Fall headcount 526 in 2024 (undergraduate 12; graduate 514). FTE 555 in 2024. Fall headcount 688 in 2019 versus 526 in 2024 (-24%).
 
 Why it ranks here:
 
@@ -146,7 +134,7 @@ Why it ranks here:
 - net assets cover 5.2 years of expenses (2023)
 - sector is 2 (2025)
 
-### 13. Niagara University (NY)
+### 12. Niagara University (NY)
 
 Score 0.430.
 
@@ -158,7 +146,7 @@ Why it ranks here:
 - the federal composite score is 2.50 (2025)
 - endowment covers 0.9 years of expenses, $23,811 per FTE (2023)
 
-### 14. Monroe University (NY)
+### 13. Monroe University (NY)
 
 Score 0.426.
 
@@ -170,7 +158,7 @@ Why it ranks here:
 - the federal composite score is 2.40 (2025)
 - the operating margin is +6% (2023)
 
-### 15. Salem University (WV)
+### 14. Salem University (WV)
 
 Score 0.406.
 
@@ -182,7 +170,7 @@ Why it ranks here:
 - enrollment is about 1,007 FTE (2024)
 - tuition is 90% of revenue (2023)
 
-### 16. Hawaii Pacific University (HI)
+### 15. Hawaii Pacific University (HI)
 
 Score 0.403.
 
@@ -194,7 +182,7 @@ Why it ranks here:
 - endowment covers 0.5 years of expenses, $15,131 per FTE (2023)
 - the operating margin is -1% (2023)
 
-### 17. Davenport University (MI)
+### 16. Davenport University (MI)
 
 Score 0.400.
 
@@ -206,7 +194,7 @@ Why it ranks here:
 - endowment covers 0.4 years of expenses, $9,142 per FTE (2023)
 - the federal composite score is 2.30 (2025)
 
-### 18. Post University (CT)
+### 17. Post University (CT)
 
 Score 0.399.
 
@@ -218,7 +206,7 @@ Why it ranks here:
 - the operating margin is +3% (2023)
 - 0 of the last 5 years show a negative margin
 
-### 19. Wheeling University (WV)
+### 18. Wheeling University (WV)
 
 Score 0.398.
 
@@ -230,7 +218,7 @@ Why it ranks here:
 - endowment covers 0.2 years of expenses, $6,972 per FTE (2023)
 - tuition is 42% of revenue (2023)
 
-### 20. Talladega College (AL)
+### 19. Talladega College (AL)
 
 Score 0.382.
 
@@ -242,7 +230,7 @@ Why it ranks here:
 - the federal composite score is 3.00 (2025)
 - endowment covers 0.1 years of expenses, $3,032 per FTE (2023)
 
-### 21. Utica University (NY)
+### 20. Utica University (NY)
 
 Score 0.376.
 
@@ -254,7 +242,7 @@ Why it ranks here:
 - endowment covers 0.4 years of expenses, $10,407 per FTE (2023)
 - the federal composite score is 2.70 (2025)
 
-### 22. Saint John's Seminary (MA)
+### 21. Saint John's Seminary (MA)
 
 Score 0.366.
 
@@ -266,7 +254,7 @@ Why it ranks here:
 - yield is 100% (2013)
 - endowment covers 6.0 years of expenses, $376,360 per FTE (2023)
 
-### 23. Concordia University-Chicago (IL)
+### 22. Concordia University-Chicago (IL)
 
 Score 0.358.
 
@@ -278,7 +266,7 @@ Why it ranks here:
 - endowment covers 0.5 years of expenses, $8,884 per FTE (2023)
 - the federal composite score is 2.10 (2025)
 
-### 24. Arkansas Baptist College (AR)
+### 23. Arkansas Baptist College (AR)
 
 Score 0.355.
 
@@ -290,7 +278,7 @@ Why it ranks here:
 - tuition is 6% of revenue (2023)
 - the operating margin is +2% (2023)
 
-### 25. Keystone College (PA)
+### 24. Keystone College (PA)
 
 Score 0.349.
 
@@ -302,7 +290,7 @@ Why it ranks here:
 - enrollment is about 905 FTE (2024)
 - the federal composite score is 0.40 (2025)
 
-### 26. Southwestern Christian College (TX)
+### 25. Southwestern Christian College (TX)
 
 Score 0.345.
 
@@ -314,7 +302,7 @@ Why it ranks here:
 - tuition is 19% of revenue (2023)
 - sector is 2 (2025)
 
-### 27. Carolina University (NC)
+### 26. Carolina University (NC)
 
 Score 0.340.
 
@@ -326,7 +314,7 @@ Why it ranks here:
 - FTE enrollment changed +36% in one year (2024)
 - enrollment is about 899 FTE (2024)
 
-### 28. Hilbert College (NY)
+### 27. Hilbert College (NY)
 
 Score 0.334.
 
@@ -338,7 +326,7 @@ Why it ranks here:
 - endowment covers 0.2 years of expenses, $3,376 per FTE (2023)
 - enrollment is about 1,022 FTE (2024)
 
-### 29. Mid-Atlantic Christian University (NC)
+### 28. Mid-Atlantic Christian University (NC)
 
 Score 0.333.
 
@@ -350,7 +338,7 @@ Why it ranks here:
 - endowment covers 0.8 years of expenses, $37,076 per FTE (2023)
 - tuition is 13% of revenue (2023)
 
-### 30. Fairleigh Dickinson University-Metropolitan Campus (NJ)
+### 29. Fairleigh Dickinson University-Metropolitan Campus (NJ)
 
 Score 0.333.
 
@@ -362,7 +350,7 @@ Why it ranks here:
 - the federal composite score is 3.00 (2025)
 - endowment covers 0.4 years of expenses, $24,306 per FTE (2023)
 
-### 31. Yeshiva Ohr Elchonon Chabad West Coast Talmudical Seminary (CA)
+### 30. Yeshiva Ohr Elchonon Chabad West Coast Talmudical Seminary (CA)
 
 Score 0.332.
 
@@ -374,7 +362,7 @@ Why it ranks here:
 - yield is 100% (2024)
 - tuition is 38% of revenue (2023)
 
-### 32. Maharishi International University (IA)
+### 31. Maharishi International University (IA)
 
 Score 0.329.
 
@@ -386,7 +374,7 @@ Why it ranks here:
 - endowment covers 0.2 years of expenses, $5,001 per FTE (2023)
 - enrollment is about 2,219 FTE (2024)
 
-### 33. Huston-Tillotson University (TX)
+### 32. Huston-Tillotson University (TX)
 
 Score 0.327.
 
@@ -398,7 +386,7 @@ Why it ranks here:
 - endowment covers 0.4 years of expenses, $20,782 per FTE (2023)
 - tuition is 42% of revenue (2023)
 
-### 34. Grace Christian University (MI)
+### 33. Grace Christian University (MI)
 
 Score 0.325.
 
@@ -410,7 +398,7 @@ Why it ranks here:
 - tuition is 48% of revenue (2023)
 - sector is 2 (2025)
 
-### 35. University of Advancing Technology (AZ)
+### 34. University of Advancing Technology (AZ)
 
 Score 0.308.
 
@@ -422,7 +410,7 @@ Why it ranks here:
 - the federal composite score is 2.60 (2025)
 - the operating margin is +8% (2023)
 
-### 36. Ohio Dominican University (OH)
+### 35. Ohio Dominican University (OH)
 
 Score 0.308.
 
@@ -434,7 +422,7 @@ Why it ranks here:
 - endowment covers 0.6 years of expenses, $16,811 per FTE (2023)
 - enrollment is about 1,127 FTE (2024)
 
-### 37. Benedictine University (IL)
+### 36. Benedictine University (IL)
 
 Score 0.306.
 
@@ -446,7 +434,7 @@ Why it ranks here:
 - enrollment is about 2,864 FTE (2024)
 - the federal composite score is 2.70 (2025)
 
-### 38. Life Pacific University (CA)
+### 37. Life Pacific University (CA)
 
 Score 0.298.
 
@@ -458,7 +446,7 @@ Why it ranks here:
 - the federal composite score is 2.50 (2025)
 - endowment covers 0.3 years of expenses, $10,910 per FTE (2023)
 
-### 39. Shaw University (NC)
+### 38. Shaw University (NC)
 
 Score 0.291.
 
@@ -470,7 +458,7 @@ Why it ranks here:
 - enrollment is about 867 FTE (2024)
 - endowment covers 0.4 years of expenses, $16,549 per FTE (2023)
 
-### 40. Ottawa University-Surprise (AZ)
+### 39. Ottawa University-Surprise (AZ)
 
 Score 0.286.
 
@@ -482,7 +470,7 @@ Why it ranks here:
 - net assets cover 0.4 years of expenses (2023)
 - enrollment is about 833 FTE (2024)
 
-### 41. Inter American University of Puerto Rico-Metro (PR)
+### 40. Inter American University of Puerto Rico-Metro (PR)
 
 Score 0.277.
 
@@ -494,7 +482,7 @@ Why it ranks here:
 - tuition is 54% of revenue (2023)
 - State high-school graduates, 5-year change is missing on the scored row
 
-### 42. La Roche University (PA)
+### 41. La Roche University (PA)
 
 Score 0.271.
 
@@ -506,7 +494,7 @@ Why it ranks here:
 - endowment covers 0.4 years of expenses, $10,106 per FTE (2023)
 - enrollment is about 1,146 FTE (2024)
 
-### 43. Shasta Bible College and Graduate School (CA)
+### 42. Shasta Bible College and Graduate School (CA)
 
 Score 0.263.
 
@@ -518,7 +506,7 @@ Why it ranks here:
 - tuition is 22% of revenue (2023)
 - the federal composite score is 2.20 (2025)
 
-### 44. Greenville University (IL)
+### 43. Greenville University (IL)
 
 Score 0.262.
 
@@ -530,7 +518,7 @@ Why it ranks here:
 - enrollment is about 1,069 FTE (2024)
 - endowment covers 0.9 years of expenses, $28,082 per FTE (2023)
 
-### 45. Paine College (GA)
+### 44. Paine College (GA)
 
 Score 0.258.
 
@@ -542,7 +530,7 @@ Why it ranks here:
 - net assets cover 1.1 years of expenses (2023)
 - tuition is 31% of revenue (2023)
 
-### 46. Indian Bible College (AZ)
+### 45. Indian Bible College (AZ)
 
 Score 0.258.
 
@@ -554,7 +542,7 @@ Why it ranks here:
 - tuition is 12% of revenue (2023)
 - 0 of the last 5 years show a negative margin
 
-### 47. Columbia International University (SC)
+### 46. Columbia International University (SC)
 
 Score 0.255.
 
@@ -566,7 +554,7 @@ Why it ranks here:
 - tuition is 38% of revenue (2023)
 - enrollment is about 2,136 FTE (2024)
 
-### 48. Christian Brothers University (TN)
+### 47. Christian Brothers University (TN)
 
 Score 0.254.
 
@@ -578,7 +566,7 @@ Why it ranks here:
 - enrollment is about 1,458 FTE (2024)
 - the federal composite score is 2.70 (2025)
 
-### 49. Upper Iowa University (IA)
+### 48. Upper Iowa University (IA)
 
 Score 0.252.
 
@@ -590,7 +578,7 @@ Why it ranks here:
 - enrollment is about 2,892 FTE (2024)
 - FTE enrollment changed +22% in one year (2024)
 
-### 50. Urshan University (MO)
+### 49. Urshan University (MO)
 
 Score 0.251.
 
@@ -601,4 +589,16 @@ Why it ranks here:
 - net assets cover 0.2 years of expenses (2023)
 - yield is 84% (2024)
 - the operating margin is +11% (2023)
+
+### 50. La Salle University (PA)
+
+Score 0.247.
+
+Endowment $64.7 million in 2023 ($26,476 per FTE). Fall headcount 3,153 in 2024 (undergraduate 2,080; graduate 1,073). FTE 2,443 in 2024. Fall headcount 4,933 in 2019 versus 3,153 in 2024 (-36%).
+
+Why it ranks here:
+
+- FTE moved from 4,470 in 2019 to 2,443 in 2024 (-45%)
+- the operating margin is -16% (2023)
+- tuition is 53% of revenue (2023)
 

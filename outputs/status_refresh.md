@@ -8,7 +8,7 @@ Ranked rows walked to fill that list: 666
 Curated rows with a disagreement flag: 11
 Curated campus-sold rows: 3
 Curated campus-listed rows: 1
-Residential top 50 checked 2026-10-12. Every school on that list has a status row.
+Residential top 50 checked 2026-10-19. Every school on that list has a status row.
 
 ## Sources this run
 
