@@ -140,7 +140,8 @@ def test_committed_explanations_cover_the_residential_top_50():
     assert frame["residential_rank"].nunique() == 50
     assert frame["feature"].nunique() == 39
     assert 148016 not in set(frame["unitid"].astype(int))
-    assert {119058, 495280, 494685} <= set(frame["unitid"].astype(int))
+    assert {119058, 495280, 494685, 213367} <= set(frame["unitid"].astype(int))
+    assert 112084 not in set(frame["unitid"].astype(int))
     seminary = frame[frame["unitid"] == 215813].iloc[0]
     assert str(seminary["finance_from_parent"]).lower() in {"true", "yes", "1"}
     assert int(seminary["finance_parent_unitid"]) == 215798
@@ -181,7 +182,7 @@ def test_committed_explanations_cover_the_residential_top_50():
     status = pd.read_csv(root / "outputs" / "status_current.csv")
     assert set(libraries["unitid"].astype(int)) <= set(status["unitid"].astype(int))
     top_status = status[status["unitid"].astype(int).isin(set(libraries["unitid"].astype(int)))]
-    assert top_status["checked_at"].astype(str).str.startswith("2026-10-12").all()
+    assert top_status["checked_at"].astype(str).str.startswith("2026-10-19").all()
     assert top_status["source_url"].astype(str).str.contains("http").all()
     assert "$52.5M" in page
     assert "Luhr Library" in page
@@ -189,6 +190,10 @@ def test_committed_explanations_cover_the_residential_top_50():
     assert "Urshan University" in page
     assert "state financial-aid" in page
     assert "about 17 downtown acres" in page
+    assert "San Diego Christian" not in page
+    assert "La Salle University" in page
+    assert "Carol Brigham" in page
+    assert "Savoy Properties" in page
     notes = (root / "outputs" / "score_explanations.md").read_text(encoding="utf-8")
     assert "Saint Vincent Seminary" in notes
     assert "left the residential top 50" not in notes
