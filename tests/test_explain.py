@@ -182,10 +182,15 @@ def test_committed_explanations_cover_the_residential_top_50():
     status = pd.read_csv(root / "outputs" / "status_current.csv")
     assert set(libraries["unitid"].astype(int)) <= set(status["unitid"].astype(int))
     top_status = status[status["unitid"].astype(int).isin(set(libraries["unitid"].astype(int)))]
-    assert top_status["checked_at"].astype(str).str.startswith("2026-10-19").all()
+    webster = top_status[top_status["unitid"].astype(int) == 179894]
+    rest = top_status[top_status["unitid"].astype(int) != 179894]
+    assert webster["checked_at"].astype(str).str.startswith("2026-10-26").all()
+    assert rest["checked_at"].astype(str).str.startswith("2026-10-19").all()
     assert top_status["source_url"].astype(str).str.contains("http").all()
     assert "$52.5M" in page
     assert "Luhr Library" in page
+    assert "5.25 acres" in page
+    assert "letter-from-keane-to-webster-groves.php" in page
     assert "Indigenous Bible College" in page
     assert "Urshan University" in page
     assert "state financial-aid" in page
@@ -193,7 +198,7 @@ def test_committed_explanations_cover_the_residential_top_50():
     assert "San Diego Christian" not in page
     assert "La Salle University" in page
     assert "Carol Brigham" in page
-    assert "Savoy Properties" in page
+    assert "Savoy Properties" not in page
     notes = (root / "outputs" / "score_explanations.md").read_text(encoding="utf-8")
     assert "Saint Vincent Seminary" in notes
     assert "left the residential top 50" not in notes
