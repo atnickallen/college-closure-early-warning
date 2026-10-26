@@ -453,6 +453,96 @@ def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
     assert seed_priced == {30, 36, 37, 48}
 
 
+def test_oct26_status_facts_keep_the_residential_ranking():
+    """Oct 26 sale notes stay on the curated rows and do not change who is ranked 1-50."""
+    current = pd.read_csv(ROOT / "outputs" / "status_current.csv", dtype=str).fillna("")
+    libraries = pd.read_csv(ROOT / "outputs" / "top50_libraries.csv", dtype=str)
+    assert list(libraries["residential_rank"].astype(int)) == list(range(1, 51))
+    assert int(libraries.loc[libraries["residential_rank"].astype(int) == 8, "unitid"].iloc[0]) == 179894
+    by_id = current.set_index(current["unitid"].astype(int))
+
+    webster = by_id.loc[179894]
+    webster_text = " ".join(
+        webster[["status_detail", "sold_listed_details", "source_url", "buyer_or_broker"]].astype(str)
+    )
+    assert webster["status"] == "operating"
+    assert webster["property_disposition"] == "listed"
+    assert webster["sale_price_published"] == ""
+    assert "5.25 acres" in webster_text
+    assert "Luhr Library" in webster_text
+    assert "letter-from-keane-to-webster-groves.php" in webster_text
+    assert "Savoy" not in webster_text
+    assert "Weiler" not in webster_text
+    assert "demolition" not in webster_text.lower()
+
+    anna = by_id.loc[164492]
+    anna_text = " ".join(anna[["status_detail", "sold_listed_details", "source_url"]].astype(str))
+    assert "260 acres" in anna_text
+    assert "2.4-acre" in anna_text
+    assert "833522" in anna_text
+    assert "Kelleher" not in anna_text
+
+    enc = by_id.loc[165644]
+    assert enc["sale_price_published"] == "$21M"
+    assert enc["property_disposition"] == "sold"
+    assert "Quincy Housing Authority" in enc["buyer_or_broker"]
+    assert "$21M" in enc["status_detail"]
+    assert "11792523964149" in enc["source_url"]
+
+    laboure = by_id.loc[165264]
+    assert laboure["sale_price_published"] == "$11.75M"
+    assert "168-45" in laboure["status_detail"]
+    assert "4.7 acres" in laboure["status_detail"]
+    assert "Dec 15" in laboure["status_detail"]
+    assert "mvknh6i5" in laboure["source_url"]
+
+    andrews = by_id.loc[199698]
+    andrews_text = andrews["status_detail"] + " " + andrews["sold_listed_details"]
+    assert "Scotland Development" in andrews_text
+    assert "scotland-development" in andrews["source_url"]
+    assert "Oct 2" not in andrews_text
+    assert "October 2" not in andrews_text
+
+    landing = by_id.loc[161208]
+    landing_text = landing["status_detail"] + " " + landing["sold_listed_details"]
+    assert landing["status"] == "closed"
+    assert "Nov 10, 2026" in landing_text
+    assert "286 River Road" in landing_text
+    assert "Nov 1-16" in landing_text
+    assert "arundel-boatbuilding-school" in landing["source_url"]
+    assert "acre" not in landing_text.lower()
+    assert "sq" not in landing_text.lower()
+
+    spoon = by_id.loc[148991]
+    spoon_text = spoon["status_detail"] + " " + spoon["sold_listed_details"]
+    assert "Nov 3, 2026" in spoon_text
+    assert "1.44 acres" in spoon_text
+    assert "Dec 2" in spoon_text
+    assert "Sullivan Auctioneers" in spoon_text
+    assert "spoon-river-11-3-2026" in spoon["source_url"]
+    assert "1914" not in spoon_text
+    assert "minimum" not in spoon_text.lower()
+
+    unlv = by_id.loc[182281]
+    assert unlv["sale_price_published"] == "$39.91M"
+    assert "10.18 acres" in unlv["status_detail"]
+    assert "$39.91M" in unlv["status_detail"]
+    assert "unlv-paradise-campus-land-market" in unlv["source_url"]
+
+    uhsp = by_id.loc[179265]
+    assert uhsp["property_disposition"] == "institutional_sale"
+    assert "Washington University in St. Louis" in uhsp["buyer_or_broker"]
+    assert uhsp["sale_price_published"] == ""
+    assert "a-new-chapter-for-uhsp" in uhsp["source_url"]
+
+    limestone = by_id.loc[218238]
+    assert limestone["sale_price_published"] == "$11,315,000"
+    assert "$11,315,000" in limestone["status_detail"]
+    assert "Oct 30" in limestone["status_detail"]
+    assert "Nov 4" in limestone["status_detail"]
+    assert "auction-scheduled-for-limestones-core-campus" in limestone["source_url"]
+
+
 def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
     curated_src = (ROOT / "data" / "status" / "status_curated.csv").read_bytes()
     dest_dir = tmp_path / "data" / "status"
