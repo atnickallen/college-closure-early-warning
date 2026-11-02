@@ -477,9 +477,7 @@ def test_oct26_status_facts_keep_the_residential_ranking():
 
     anna = by_id.loc[164492]
     anna_text = " ".join(anna[["status_detail", "sold_listed_details", "source_url"]].astype(str))
-    assert "260 acres" in anna_text
     assert "2.4-acre" in anna_text
-    assert "833522" in anna_text
     assert "Kelleher" not in anna_text
 
     enc = by_id.loc[165644]
@@ -506,12 +504,11 @@ def test_oct26_status_facts_keep_the_residential_ranking():
     landing = by_id.loc[161208]
     landing_text = landing["status_detail"] + " " + landing["sold_listed_details"]
     assert landing["status"] == "closed"
-    assert "Nov 10, 2026" in landing_text
-    assert "286 River Road" in landing_text
-    assert "Nov 1-16" in landing_text
-    assert "arundel-boatbuilding-school" in landing["source_url"]
-    assert "acre" not in landing_text.lower()
-    assert "sq" not in landing_text.lower()
+    assert "landingschool.edu" in landing["source_url"]
+    assert landing["sale_price_published"] == ""
+    assert "$" not in landing_text
+    assert "Nov 10" not in landing_text
+    assert "biddefordbuzz" not in landing["source_url"].lower()
 
     spoon = by_id.loc[148991]
     spoon_text = spoon["status_detail"] + " " + spoon["sold_listed_details"]
@@ -540,7 +537,112 @@ def test_oct26_status_facts_keep_the_residential_ranking():
     assert "$11,315,000" in limestone["status_detail"]
     assert "Oct 30" in limestone["status_detail"]
     assert "Nov 4" in limestone["status_detail"]
-    assert "auction-scheduled-for-limestones-core-campus" in limestone["source_url"]
+    assert "keen-summit.com/project/receivership-sale-former-campus-of-limestone-university" in limestone["source_url"]
+    assert "10.5" not in (limestone["status_detail"] + limestone["sold_listed_details"])
+    assert "HTC" not in (limestone["status_detail"] + limestone["sold_listed_details"])
+
+
+def test_nov2_status_and_listings_omit_unverified_details():
+    """Nov 2 notes keep the published top 50 and leave out details that were not verified."""
+    current = pd.read_csv(ROOT / "outputs" / "status_current.csv", dtype=str).fillna("")
+    libraries = pd.read_csv(ROOT / "outputs" / "top50_libraries.csv", dtype=str)
+    page = (ROOT / "outputs" / "top50_report.html").read_text(encoding="utf-8")
+    assert list(libraries["residential_rank"].astype(int)) == list(range(1, 51))
+    assert int(libraries.loc[libraries["residential_rank"].astype(int) == 50, "unitid"].iloc[0]) == 213367
+    assert 180258 not in set(libraries["unitid"].astype(int))
+    assert "University of Providence" not in page
+    by_id = current.set_index(current["unitid"].astype(int))
+
+    providence = by_id.loc[180258]
+    providence_text = providence["status_detail"] + " " + providence["source_url"]
+    assert providence["status"] == "operating"
+    assert providence["property_disposition"] == "not_applicable"
+    assert providence["oncampus_housing"] == "1"
+    assert providence["dormitory_capacity"] == "310"
+    assert providence["own_campus"] == "yes"
+    assert "Aug 20, 2027" in providence_text
+    assert "Oct 27, 2026" in providence_text
+    assert "uprovidence.edu/about/news/university-of-providence-announces-closure" in providence_text
+    assert "insidehighered.com" not in providence_text.lower()
+
+    anna = by_id.loc[164492]
+    anna_text = anna["status_detail"] + " " + anna["sold_listed_details"]
+    assert "Oct 29, 2026" in anna_text
+    assert "Lot 2" in anna_text
+    assert "Nov 5, 2026" in anna_text
+    assert anna["sale_price_published"] == ""
+    assert anna["buyer_or_broker"] == ""
+    assert "4:26-bk-40758" in anna["source_url"]
+
+    landing = by_id.loc[161208]
+    landing_text = landing["status_detail"] + " " + landing["sold_listed_details"] + " " + landing["source_url"]
+    assert "Oct 30, 2026" in landing_text
+    assert "Biddeford Regional Center of Technology" in landing_text
+    assert "postponed" in landing_text.lower()
+    assert "biddefordbuzz" not in landing_text.lower()
+    assert "$" not in (landing["status_detail"] + landing["sold_listed_details"])
+
+    claremont = by_id.loc[112251]
+    claremont_text = claremont["status_detail"] + " " + claremont["sold_listed_details"] + " " + claremont["source_url"]
+    assert claremont["property_disposition"] == "not_applicable"
+    assert "not for sale" in claremont_text.lower()
+    assert "Pomona College" in claremont_text
+    assert "June 2027" in claremont_text
+    assert "pomona.edu/news/2026/10/26" in claremont_text
+    assert "insidehighered.com" not in claremont_text.lower()
+
+    augustine = by_id.loc[199582]
+    augustine_text = augustine["status_detail"] + " " + augustine["sold_listed_details"]
+    assert "$6.5M" in augustine_text
+    assert "$7.5M" in augustine_text
+    assert "Nov 9" in augustine_text
+    assert "Nov 10, 2026" in augustine_text
+    assert "Avison Young" in augustine_text
+    assert augustine["sale_price_published"] == ""
+    assert "where-does-st-augs-real-estate-deal-stand" in augustine["source_url"]
+
+    andrews = by_id.loc[199698]
+    andrews_text = " ".join(
+        andrews[["status_detail", "sold_listed_details", "source_url", "sale_price_published"]].astype(str)
+    )
+    assert "4.8" not in andrews_text
+    assert "landwatch" not in andrews_text.lower()
+
+    unity = by_id.loc[161572]
+    unity_text = unity["status_detail"] + " " + unity["sold_listed_details"]
+    assert unity["sale_price_published"] == "$6M"
+    assert "225 acres" in unity_text
+    assert "June 2026" in unity_text
+    assert "summer camp" in unity_text.lower()
+    assert "24 buildings" not in unity_text.lower()
+    assert "600 beds" not in unity_text.lower()
+    assert "boulos.com/former-unity-environmental-university-campus-sells-for-6-million" in unity["source_url"]
+
+    listings = pd.read_csv(ROOT / "camps and 501c7's" / "outputs" / "listings.csv", dtype=str).fillna("")
+    seminary = listings[listings["listing_id"] == "former-seminary-kansas-city-mo"].iloc[0]
+    seminary_text = " ".join(seminary.astype(str))
+    assert "2015 E 72nd St" in seminary_text
+    assert "10" == seminary["acreage"]
+    assert "80,000" in seminary_text
+    assert "Reagan O'Toole" in seminary_text
+    assert "Pat Coppinger" in seminary_text
+    assert "commercialsearch.com/commercial-property/us/mo/kansas-city/2015-e-72nd-st" in seminary_text
+    assert "St. John" not in seminary_text
+
+    unity_listing = listings[listings["listing_id"] == "unity-environmental-university-unity-me"].iloc[0]
+    unity_listing_text = unity_listing["notes"] + " " + unity_listing["housing_evidence"] + " " + unity_listing["name"]
+    assert unity_listing["price_text"] == "$6M"
+    assert unity_listing["acreage"] == "225"
+    assert "600 beds" not in unity_listing_text.lower()
+    assert "24 buildings" not in unity_listing_text.lower()
+
+    limestone = listings[listings["listing_id"] == "limestone-university-gaffney-sc"].iloc[0]
+    limestone_text = limestone["notes"] + " " + limestone["price_text"] + " " + limestone["source_url"]
+    assert "11,315,000" in limestone_text
+    assert "keen-summit.com/project/receivership-sale-former-campus-of-limestone-university" in limestone_text
+    assert "10.5" not in limestone_text
+    assert "HTC" not in limestone_text
+    assert "stalking" not in limestone_text.lower()
 
 
 def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
