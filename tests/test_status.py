@@ -533,13 +533,10 @@ def test_oct26_status_facts_keep_the_residential_ranking():
     assert "a-new-chapter-for-uhsp" in uhsp["source_url"]
 
     limestone = by_id.loc[218238]
-    assert limestone["sale_price_published"] == "$11,315,000"
-    assert "$11,315,000" in limestone["status_detail"]
-    assert "Oct 30" in limestone["status_detail"]
-    assert "Nov 4" in limestone["status_detail"]
-    assert "keen-summit.com/project/receivership-sale-former-campus-of-limestone-university" in limestone["source_url"]
-    assert "10.5" not in (limestone["status_detail"] + limestone["sold_listed_details"])
-    assert "HTC" not in (limestone["status_detail"] + limestone["sold_listed_details"])
+    assert limestone["sale_price_published"] == "$10.5M"
+    assert "$10.5M" in limestone["status_detail"]
+    assert "HTC Global Services" in limestone["status_detail"]
+    assert "wyff4.com/article/limestone-university-campus-offer-made/74346608" in limestone["source_url"]
 
 
 def test_nov2_status_and_listings_omit_unverified_details():
@@ -567,12 +564,12 @@ def test_nov2_status_and_listings_omit_unverified_details():
 
     anna = by_id.loc[164492]
     anna_text = anna["status_detail"] + " " + anna["sold_listed_details"]
-    assert "Oct 29, 2026" in anna_text
     assert "Lot 2" in anna_text
-    assert "Nov 5, 2026" in anna_text
-    assert anna["sale_price_published"] == ""
-    assert anna["buyer_or_broker"] == ""
-    assert "4:26-bk-40758" in anna["source_url"]
+    assert "David Roy" in anna_text
+    assert "$175,000" in anna_text
+    assert anna["sale_price_published"] == "$175,000"
+    assert "258" not in anna_text
+    assert "92640505007" in anna["source_url"]
 
     landing = by_id.loc[161208]
     landing_text = landing["status_detail"] + " " + landing["sold_listed_details"] + " " + landing["source_url"]
@@ -643,6 +640,49 @@ def test_nov2_status_and_listings_omit_unverified_details():
     assert "10.5" not in limestone_text
     assert "HTC" not in limestone_text
     assert "stalking" not in limestone_text.lower()
+
+
+def test_nov9_limestone_and_anna_maria_are_current_and_the_top_50_is_unchanged():
+    """Nov 9 notes are the two verified items, and neither school enters the top 50."""
+    current = pd.read_csv(ROOT / "outputs" / "status_current.csv", dtype=str).fillna("")
+    libraries = pd.read_csv(ROOT / "outputs" / "top50_libraries.csv", dtype=str)
+    assert list(libraries["residential_rank"].astype(int)) == list(range(1, 51))
+    assert int(libraries.loc[libraries["residential_rank"].astype(int) == 50, "unitid"].iloc[0]) == 213367
+    assert 218238 not in set(libraries["unitid"].astype(int))
+    assert 164492 not in set(libraries["unitid"].astype(int))
+    by_id = current.set_index(current["unitid"].astype(int))
+
+    limestone = by_id.loc[218238]
+    lime = limestone["status_detail"] + " " + limestone["sold_listed_details"] + " " + limestone["source_url"]
+    assert limestone["status"] == "closed"
+    assert limestone["sale_price_published"] == "$10.5M"
+    assert "$10.5M" in lime
+    assert "$500,000" in lime
+    assert "$315,000" in lime
+    assert "HTC Global Services" in lime
+    assert "Oct 30" in lime
+    assert "did not take place" in lime
+    assert "data center" in lime
+    assert "library" not in lime.lower()
+    assert "wyff4.com/article/limestone-university-campus-offer-made/74346608" in lime
+    assert "foxcarolina.com/2026/11/05/tech-company-makes-105-million-bid-buy-limestone-university" in lime
+
+    anna = by_id.loc[164492]
+    anna_text = " ".join(
+        anna[["status_detail", "sold_listed_details", "source_url", "buyer_or_broker", "sale_price_published"]].astype(str)
+    )
+    assert anna["status"] == "closed"
+    assert anna["sale_price_published"] == "$175,000"
+    assert "David Roy" in anna_text
+    assert "2.4-acre" in anna_text
+    assert "$175,000" in anna_text
+    assert "roughly 260 acres" in anna_text
+    assert "last month" in anna_text
+    assert "258" not in anna_text
+    assert "Oct" not in (anna["status_detail"] + " " + anna["sold_listed_details"])
+    assert "Nov" not in (anna["status_detail"] + " " + anna["sold_listed_details"])
+    assert "92640505007" in anna_text
+    assert "828885" in anna_text
 
 
 def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
