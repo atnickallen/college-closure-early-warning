@@ -423,8 +423,12 @@ def test_seed_matches_watchlist_and_prices_are_quoted_from_the_note():
         if price:
             assert price in (row["sold_listed_details"] + " " + row["status_detail"])
         if row["property_disposition"] == "sold":
-            assert row["buyer_or_broker"]
             assert "http" in row["source_url"]
+            note = (row["sold_listed_details"] + " " + row["status_detail"]).lower()
+            if row["buyer_or_broker"]:
+                assert row["buyer_or_broker"]
+            else:
+                assert "buyer is not named" in note
         if row["property_disposition"] == "listed":
             assert "http" in row["source_url"]
     by_rank = curated.set_index(curated["watchlist_rank"].astype(int))
@@ -683,6 +687,82 @@ def test_nov9_limestone_and_anna_maria_are_current_and_the_top_50_is_unchanged()
     assert "Nov" not in (anna["status_detail"] + " " + anna["sold_listed_details"])
     assert "92640505007" in anna_text
     assert "828885" in anna_text
+
+
+def test_nov16_status_rows_leave_the_top_50_unchanged():
+    """Nov 16 facts are on their status rows, and the published top 50 is the same list."""
+    current = pd.read_csv(ROOT / "outputs" / "status_current.csv", dtype=str).fillna("")
+    libraries = pd.read_csv(ROOT / "outputs" / "top50_libraries.csv", dtype=str)
+    assert list(libraries["residential_rank"].astype(int)) == list(range(1, 51))
+    assert int(libraries.loc[libraries["residential_rank"].astype(int) == 50, "unitid"].iloc[0]) == 213367
+    library_ids = set(libraries["unitid"].astype(int))
+    by_id = current.set_index(current["unitid"].astype(int))
+
+    york = by_id.loc[214829]
+    york_text = york["status_detail"] + " " + york["sold_listed_details"] + " " + york["source_url"]
+    assert "53-acre" in york_text
+    assert "$7.4M" in york_text
+    assert york["sale_price_published"] == "$7.4M"
+    assert "York College of Pennsylvania" in york_text
+    assert "WellSpan Health" in york_text
+    assert "spring 2027" in york_text
+    assert "penncapital-star.com/education/penn-state-to-sell-york-campus-to-york-college" in york_text
+    assert york["event_date"] == ""
+    for month in ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "Jan ", "Feb ", "Mar ", "Apr ", "Jun ", "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "):
+        assert month not in (york["status_detail"] + " " + york["sold_listed_details"])
+    assert 214829 not in library_ids
+
+    spoon = by_id.loc[148991]
+    spoon_text = spoon["status_detail"] + " " + spoon["sold_listed_details"]
+    assert spoon["buyer_or_broker"] == ""
+    assert spoon["sale_price_published"] == "$60,000"
+    assert "$60,000" in spoon_text
+    assert "buyer is not named" in spoon_text.lower()
+    assert "208 South Johnson St" in spoon_text
+    assert "Nov 3, 2026" in spoon_text
+    assert "Dec 2, 2026" in spoon_text
+    assert "1.44 acres" in spoon_text
+    assert "3-story" in spoon_text
+    assert "spoon-river-11-3-2026" in spoon["source_url"]
+    assert 148991 not in library_ids
+
+    simon = by_id.loc[167792]
+    simon_text = simon["status_detail"] + " " + simon["sold_listed_details"] + " " + simon["source_url"]
+    assert simon["sale_price_published"] == ""
+    assert "JLL" in simon_text
+    assert "84 Alford Rd" in simon_text
+    assert "271 acres" in simon_text
+    assert "17 parcels" in simon_text
+    assert "400,000 SF" in simon_text
+    assert "33 buildings" in simon_text
+    assert "no asking price" in simon_text.lower()
+    assert "SimonsRock_OnePage.9.pdf" in simon_text
+    assert 167792 not in library_ids
+
+    marian = by_id.loc[239080]
+    marian_text = marian["status_detail"] + " " + marian["sold_listed_details"] + " " + marian["source_url"]
+    assert marian["status"] == "operating"
+    assert marian["property_disposition"] == "institutional_sale"
+    assert "Alvernia University" in marian_text
+    assert "Nov 9, 2026" in marian_text
+    assert "Congregation of Sisters of St. Agnes" in marian_text
+    assert "Bernardine Franciscan Sisters" in marian_text
+    assert "operations are unchanged" in marian_text.lower()
+    assert "alvernia-university-and-marian-university-announce-plans-to-unite" in marian_text
+    assert 239080 not in library_ids
+
+    asl = by_id.loc[432348]
+    asl_text = asl["status_detail"] + " " + asl["sold_listed_details"] + " " + asl["source_url"]
+    assert asl["status"] == "operating"
+    assert "University of Pikeville" in asl_text
+    assert "no meeting date" in asl_text.lower()
+    assert "December" in asl_text
+    assert "6-1" in asl_text
+    assert "$3.4M" in asl_text
+    assert asl["sale_price_published"] == ""
+    assert "no clawback" in asl_text.lower()
+    assert "cardinalnews.org/2026/11/09/months-after-throwing-beleaguered-law-school-a-financial-lifeline" in asl_text
+    assert 432348 not in library_ids
 
 
 def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
