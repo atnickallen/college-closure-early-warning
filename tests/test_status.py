@@ -266,6 +266,39 @@ def test_listed_badge_and_unpublished_buyer():
         }
     )
     assert listed == "Closed · Campus listed for sale (Example Broker)"
+    approved = status_badge(
+        {
+            "status": "operating",
+            "property_disposition": "listed",
+            "buyer_or_broker": "York College of Pennsylvania",
+            "status_detail": "Trustees approved selling the campus to York College of Pennsylvania.",
+            "sold_listed_details": "",
+        }
+    )
+    assert approved == "Open · Campus sale to York College of Pennsylvania approved"
+    assert "listed for sale" not in approved
+    under_contract = status_badge(
+        {
+            "status": "closed",
+            "property_disposition": "listed",
+            "buyer_or_broker": "Paul Warshauer / New Vision 4 Wells",
+            "status_detail": "Signed a $10M purchase agreement. The deal is in due diligence.",
+            "sold_listed_details": "",
+        }
+    )
+    assert under_contract == "Closed · Campus under contract (Paul Warshauer / New Vision 4 Wells)"
+    building = status_badge(
+        {
+            "status": "operating",
+            "property_disposition": "sold",
+            "buyer_or_broker": "",
+            "event_date": "2026-11-03",
+            "status_detail": "The former Macomb building sold. The buyer is not named.",
+            "sold_listed_details": "",
+        }
+    )
+    assert building == "Open · Former Macomb building sold 2026"
+    assert "campus" not in building.lower()
 
     auction = status_badge(
         {
@@ -763,6 +796,37 @@ def test_nov16_status_rows_leave_the_top_50_unchanged():
     assert "no clawback" in asl_text.lower()
     assert "cardinalnews.org/2026/11/09/months-after-throwing-beleaguered-law-school-a-financial-lifeline" in asl_text
     assert 432348 not in library_ids
+
+    assert by_id.loc[214829, "status_badge"] == "Open · Campus sale to York College of Pennsylvania approved"
+    assert "listed for sale" not in by_id.loc[214829, "status_badge"]
+    spoon_badge = by_id.loc[148991, "status_badge"]
+    assert spoon_badge == "Open · Former Macomb building sold 2026"
+    assert "building" in spoon_badge
+    assert "campus" not in spoon_badge.lower()
+
+    wells = by_id.loc[197230]
+    wells_text = " ".join(
+        wells[["status_detail", "sold_listed_details", "source_url", "buyer_or_broker", "sale_price_published", "status_badge"]].astype(str)
+    )
+    assert wells["status"] == "closed"
+    assert wells["sale_price_published"] == "$10M"
+    assert wells["status_badge"] == "Closed · Campus under contract (Paul Warshauer / New Vision 4 Wells)"
+    assert "Oct 30, 2026" in wells_text
+    assert "Paul Warshauer / New Vision 4 Wells" in wells_text
+    assert "due diligence" in wells_text.lower()
+    assert "Feb 15, 2027" in wells_text
+    assert "Hiawatha Institute" in wells_text
+    assert "$12.5M" in wells_text
+    assert "December" in wells_text
+    assert "113-acre" in wells_text
+    assert "$60M" in wells_text
+    assert "Main Building" in wells_text
+    assert "no demolition" in wells_text.lower()
+    assert "wxxinews.org/local-news/2026-11-02/wells-college-finds-new-buyer-for-historic-campus" in wells_text
+    assert "article_051c4cdb-61c5-4134-b41f-86dc1fa63d17" in wells_text
+    assert "Supreme Court" not in wells_text
+    assert "market-rate" not in wells_text.lower()
+    assert 197230 not in library_ids
 
 
 def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):

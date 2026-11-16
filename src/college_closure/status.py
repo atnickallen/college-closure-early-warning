@@ -426,13 +426,54 @@ def sale_year_label(event_date: Any) -> str:
     return years[0]
 
 
+def _sale_note(getter) -> str:
+    return " ".join(
+        part
+        for part in (_blank(getter("status_detail")), _blank(getter("sold_listed_details")))
+        if part
+    )
+
+
+def _named_buyer(buyer: str) -> str:
+    if not buyer or "unpublished" in buyer.lower():
+        return ""
+    return buyer
+
+
+def _sold_subject(note: str) -> str:
+    """Name a sold former building when the note is not a campus sale."""
+    if "campus" in note.lower():
+        return ""
+    match = re.search(
+        r"(?i)\bformer\s+([A-Za-z0-9'’.-]+(?:\s+[A-Za-z0-9'’.-]+)*?)\s+building\b",
+        note,
+    )
+    if not match:
+        return ""
+    return f"Former {match.group(1).strip()} building"
+
+
+def _listed_bit(note: str, buyer: str) -> str:
+    """A named buyer on a listing is a purchaser, not a broker, once the sale is approved or under contract."""
+    lowered = note.lower()
+    if buyer and ("purchase agreement" in lowered or "due diligence" in lowered or "under contract" in lowered):
+        return f"Campus under contract ({buyer})"
+    if buyer and "approved selling" in lowered:
+        return f"Campus sale to {buyer} approved"
+    bit = "Campus listed for sale"
+    if buyer:
+        bit += f" ({buyer})"
+    return bit
+
+
 def status_badge(row: pd.Series | dict[str, Any]) -> str:
     """Short label from curated fields only. Blank when status is blank."""
     getter = row.get if hasattr(row, "get") else lambda k, d=None: row[k] if k in row else d  # type: ignore[index]
     status = _blank(getter("status"))
     prop = _blank(getter("property_disposition"))
-    buyer = _blank(getter("buyer_or_broker"))
+    buyer = _named_buyer(_blank(getter("buyer_or_broker")))
     when = sale_year_label(getter("event_date"))
+    note = _sale_note(getter)
     parts: list[str] = []
     labels = {
         STATUS_OPEN: "Open",
@@ -442,23 +483,21 @@ def status_badge(row: pd.Series | dict[str, Any]) -> str:
     }
     if status in labels:
         label = labels[status]
-        if status == STATUS_MERGED and buyer and "unpublished" not in buyer.lower():
+        if status == STATUS_MERGED and buyer:
             label = f"Acquired by {buyer}"
         parts.append(label)
     elif status:
         parts.append(status)
     if prop == PROP_SOLD:
-        bit = "Campus sold"
+        subject = _sold_subject(note) or "Campus"
+        bit = f"{subject} sold"
         if when:
             bit += f" {when}"
-        if buyer and "unpublished" not in buyer.lower():
+        if buyer and subject == "Campus":
             bit += f" to {buyer}"
         parts.append(bit)
     elif prop == PROP_LISTED:
-        bit = "Campus listed for sale"
-        if buyer:
-            bit += f" ({buyer})"
-        parts.append(bit)
+        parts.append(_listed_bit(note, buyer))
     if not parts:
         return ""
     # Acquired + campus sold would be two clauses; institutional sales are not campus sales.
