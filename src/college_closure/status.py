@@ -460,10 +460,30 @@ def _listed_bit(note: str, buyer: str) -> str:
         return f"Campus under contract ({buyer})"
     if buyer and "approved selling" in lowered:
         return f"Campus sale to {buyer} approved"
+    if buyer and ("motion to confirm" in lowered or "pending court confirmation" in lowered):
+        return f"Campus sale pending court confirmation ({buyer})"
+    if buyer and ("approved the sale" in lowered or "approved sale of" in lowered):
+        return f"Campus sale court-approved ({buyer})"
+    if buyer and ("acquire the building" in lowered or "building sale agreed" in lowered):
+        return f"Building sale agreed ({buyer})"
+    if buyer and "unsold" in lowered:
+        return f"Campus for sale ({buyer})"
     bit = "Campus listed for sale"
     if buyer:
         bit += f" ({buyer})"
     return bit
+
+
+def _closure_bit(note: str) -> str:
+    """Operating schools with a directed or approved closure, and no property sale."""
+    lowered = note.lower()
+    if "wind-down" in lowered and "passhe" in lowered:
+        return "Closure ordered by summer 2028 (PASSHE wind-down plan)"
+    if "open until at least summer 2028" in lowered and (
+        "closure approved" in lowered or "approved the closure" in lowered
+    ):
+        return "Closure approved, open until at least summer 2028"
+    return ""
 
 
 def status_badge(row: pd.Series | dict[str, Any]) -> str:
@@ -498,6 +518,10 @@ def status_badge(row: pd.Series | dict[str, Any]) -> str:
         parts.append(bit)
     elif prop == PROP_LISTED:
         parts.append(_listed_bit(note, buyer))
+    else:
+        closure = _closure_bit(note)
+        if closure:
+            parts.append(closure)
     if not parts:
         return ""
     # Acquired + campus sold would be two clauses; institutional sales are not campus sales.
