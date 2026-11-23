@@ -24,6 +24,12 @@ from college_closure.status import (
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _by_unitid(frame: pd.DataFrame) -> pd.DataFrame:
+    """Index rows that have a numeric UNITID. Schools absent from IPEDS stay blank."""
+    work = frame[frame["unitid"].astype(str).str.fullmatch(r"\d+")].copy()
+    return work.set_index(work["unitid"].astype(int))
+
+
 def _school(**kwargs) -> pd.DataFrame:
     base = {
         "watchlist_rank": 1,
@@ -299,6 +305,66 @@ def test_listed_badge_and_unpublished_buyer():
     )
     assert building == "Open · Former Macomb building sold 2026"
     assert "campus" not in building.lower()
+    pending = status_badge(
+        {
+            "status": "closed",
+            "property_disposition": "listed",
+            "buyer_or_broker": "HTC Global Services",
+            "status_detail": "The receiver's motion to confirm was filed. The outcome has not been reported.",
+            "sold_listed_details": "",
+        }
+    )
+    assert pending == "Closed · Campus sale pending court confirmation (HTC Global Services)"
+    court = status_badge(
+        {
+            "status": "closed",
+            "property_disposition": "listed",
+            "buyer_or_broker": "Oppenheimer Development Properties",
+            "status_detail": "The judge approved the sale of the campus. The final price is not published.",
+            "sold_listed_details": "",
+        }
+    )
+    assert court == "Closed · Campus sale court-approved (Oppenheimer Development Properties)"
+    building_sale = status_badge(
+        {
+            "status": "closed",
+            "property_disposition": "listed",
+            "buyer_or_broker": "Biddeford Regional Center of Technology",
+            "status_detail": "The buyer is to acquire the building and equipment.",
+            "sold_listed_details": "",
+        }
+    )
+    assert building_sale == "Closed · Building sale agreed (Biddeford Regional Center of Technology)"
+    for_sale = status_badge(
+        {
+            "status": "closed",
+            "property_disposition": "listed",
+            "buyer_or_broker": "Kelleher & Sadowsky",
+            "status_detail": "The main campus is unsold.",
+            "sold_listed_details": "",
+        }
+    )
+    assert for_sale == "Closed · Campus for sale (Kelleher & Sadowsky)"
+    wind_down = status_badge(
+        {
+            "status": "operating",
+            "property_disposition": "not_applicable",
+            "buyer_or_broker": "",
+            "status_detail": "PASSHE directed a wind-down framework for closure by June 30, 2028.",
+            "sold_listed_details": "",
+        }
+    )
+    assert wind_down == "Open · Closure ordered by summer 2028 (PASSHE wind-down plan)"
+    still_open = status_badge(
+        {
+            "status": "operating",
+            "property_disposition": "not_applicable",
+            "buyer_or_broker": "",
+            "status_detail": "The board approved the closure. The campus is open until at least summer 2028.",
+            "sold_listed_details": "",
+        }
+    )
+    assert still_open == "Open · Closure approved, open until at least summer 2028"
 
     auction = status_badge(
         {
@@ -496,7 +562,7 @@ def test_oct26_status_facts_keep_the_residential_ranking():
     libraries = pd.read_csv(ROOT / "outputs" / "top50_libraries.csv", dtype=str)
     assert list(libraries["residential_rank"].astype(int)) == list(range(1, 51))
     assert int(libraries.loc[libraries["residential_rank"].astype(int) == 8, "unitid"].iloc[0]) == 179894
-    by_id = current.set_index(current["unitid"].astype(int))
+    by_id = _by_unitid(current)
 
     webster = by_id.loc[179894]
     webster_text = " ".join(
@@ -514,8 +580,8 @@ def test_oct26_status_facts_keep_the_residential_ranking():
 
     anna = by_id.loc[164492]
     anna_text = " ".join(anna[["status_detail", "sold_listed_details", "source_url"]].astype(str))
-    assert "2.4-acre" in anna_text
-    assert "Kelleher" not in anna_text
+    assert "~260-acre" in anna_text
+    assert "Kelleher & Sadowsky" in anna_text
 
     enc = by_id.loc[165644]
     assert enc["sale_price_published"] == "$21M"
@@ -541,7 +607,7 @@ def test_oct26_status_facts_keep_the_residential_ranking():
     landing = by_id.loc[161208]
     landing_text = landing["status_detail"] + " " + landing["sold_listed_details"]
     assert landing["status"] == "closed"
-    assert "landingschool.edu" in landing["source_url"]
+    assert "wmtw.com/article/maine-landing-school-sale" in landing["source_url"]
     assert landing["sale_price_published"] == ""
     assert "$" not in landing_text
     assert "Nov 10" not in landing_text
@@ -573,7 +639,7 @@ def test_oct26_status_facts_keep_the_residential_ranking():
     assert limestone["sale_price_published"] == "$10.5M"
     assert "$10.5M" in limestone["status_detail"]
     assert "HTC Global Services" in limestone["status_detail"]
-    assert "wyff4.com/article/limestone-university-campus-offer-made/74346608" in limestone["source_url"]
+    assert "docketbird.com/court-cases/First-National-Bank-of-Pennsylvania-v-Limestone-University" in limestone["source_url"]
 
 
 def test_nov2_status_and_listings_omit_unverified_details():
@@ -585,7 +651,7 @@ def test_nov2_status_and_listings_omit_unverified_details():
     assert int(libraries.loc[libraries["residential_rank"].astype(int) == 50, "unitid"].iloc[0]) == 213367
     assert 180258 not in set(libraries["unitid"].astype(int))
     assert "University of Providence" not in page
-    by_id = current.set_index(current["unitid"].astype(int))
+    by_id = _by_unitid(current)
 
     providence = by_id.loc[180258]
     providence_text = providence["status_detail"] + " " + providence["source_url"]
@@ -601,20 +667,20 @@ def test_nov2_status_and_listings_omit_unverified_details():
 
     anna = by_id.loc[164492]
     anna_text = anna["status_detail"] + " " + anna["sold_listed_details"]
-    assert "Lot 2" in anna_text
-    assert "David Roy" in anna_text
-    assert "$175,000" in anna_text
-    assert anna["sale_price_published"] == "$175,000"
+    assert "Kelleher & Sadowsky" in anna_text
+    assert "~260-acre" in anna_text
+    assert anna["sale_price_published"] == ""
     assert "258" not in anna_text
-    assert "92640505007" in anna["source_url"]
+    assert "paxton-anna-maria-campus-grant" in anna["source_url"]
 
     landing = by_id.loc[161208]
     landing_text = landing["status_detail"] + " " + landing["sold_listed_details"] + " " + landing["source_url"]
-    assert "Oct 30, 2026" in landing_text
+    assert "Nov 18, 2026" in landing_text
     assert "Biddeford Regional Center of Technology" in landing_text
-    assert "postponed" in landing_text.lower()
+    assert "acquire the building" in landing_text
     assert "biddefordbuzz" not in landing_text.lower()
     assert "$" not in (landing["status_detail"] + landing["sold_listed_details"])
+    assert "maine-landing-school-sale-biddeford-regional-center-of-technology/74469998" in landing["source_url"]
 
     claremont = by_id.loc[112251]
     claremont_text = claremont["status_detail"] + " " + claremont["sold_listed_details"] + " " + claremont["source_url"]
@@ -626,14 +692,13 @@ def test_nov2_status_and_listings_omit_unverified_details():
     assert "insidehighered.com" not in claremont_text.lower()
 
     augustine = by_id.loc[199582]
-    augustine_text = augustine["status_detail"] + " " + augustine["sold_listed_details"]
-    assert "$6.5M" in augustine_text
-    assert "$7.5M" in augustine_text
-    assert "Nov 9" in augustine_text
+    augustine_text = augustine["status_detail"] + " " + augustine["sold_listed_details"] + " " + augustine["source_url"]
+    assert "Malcomb Coley" in augustine_text
+    assert "Jan 8, 2027" in augustine_text
     assert "Nov 10, 2026" in augustine_text
-    assert "Avison Young" in augustine_text
+    assert "no campus sale" in augustine_text.lower()
     assert augustine["sale_price_published"] == ""
-    assert "where-does-st-augs-real-estate-deal-stand" in augustine["source_url"]
+    assert "judge-appoints-business-professional-to-make-decision-about-st-augustines-future" in augustine_text
 
     andrews = by_id.loc[199698]
     andrews_text = " ".join(
@@ -687,39 +752,33 @@ def test_nov9_limestone_and_anna_maria_are_current_and_the_top_50_is_unchanged()
     assert int(libraries.loc[libraries["residential_rank"].astype(int) == 50, "unitid"].iloc[0]) == 213367
     assert 218238 not in set(libraries["unitid"].astype(int))
     assert 164492 not in set(libraries["unitid"].astype(int))
-    by_id = current.set_index(current["unitid"].astype(int))
+    by_id = _by_unitid(current)
 
     limestone = by_id.loc[218238]
-    lime = limestone["status_detail"] + " " + limestone["sold_listed_details"] + " " + limestone["source_url"]
+    lime = " ".join(
+        limestone[["status_detail", "sold_listed_details", "source_url", "status_badge"]].astype(str)
+    )
     assert limestone["status"] == "closed"
     assert limestone["sale_price_published"] == "$10.5M"
     assert "$10.5M" in lime
-    assert "$500,000" in lime
-    assert "$315,000" in lime
     assert "HTC Global Services" in lime
-    assert "Oct 30" in lime
-    assert "did not take place" in lime
-    assert "data center" in lime
-    assert "library" not in lime.lower()
-    assert "wyff4.com/article/limestone-university-campus-offer-made/74346608" in lime
-    assert "foxcarolina.com/2026/11/05/tech-company-makes-105-million-bid-buy-limestone-university" in lime
+    assert "Nov 12, 2026" in lime
+    assert "Nov 20, 2026" in lime
+    assert "confirmed" not in lime.lower()
+    assert "approved" not in lime.lower()
+    assert "docketbird.com/court-cases/First-National-Bank-of-Pennsylvania-v-Limestone-University" in lime
 
     anna = by_id.loc[164492]
     anna_text = " ".join(
         anna[["status_detail", "sold_listed_details", "source_url", "buyer_or_broker", "sale_price_published"]].astype(str)
     )
     assert anna["status"] == "closed"
-    assert anna["sale_price_published"] == "$175,000"
-    assert "David Roy" in anna_text
-    assert "2.4-acre" in anna_text
-    assert "$175,000" in anna_text
-    assert "roughly 260 acres" in anna_text
-    assert "last month" in anna_text
+    assert anna["sale_price_published"] == ""
+    assert "Kelleher & Sadowsky" in anna_text
+    assert "~260-acre" in anna_text
+    assert "unsold" in anna_text
     assert "258" not in anna_text
-    assert "Oct" not in (anna["status_detail"] + " " + anna["sold_listed_details"])
-    assert "Nov" not in (anna["status_detail"] + " " + anna["sold_listed_details"])
-    assert "92640505007" in anna_text
-    assert "828885" in anna_text
+    assert "paxton-anna-maria-campus-grant" in anna_text
 
 
 def test_nov16_status_rows_leave_the_top_50_unchanged():
@@ -729,7 +788,7 @@ def test_nov16_status_rows_leave_the_top_50_unchanged():
     assert list(libraries["residential_rank"].astype(int)) == list(range(1, 51))
     assert int(libraries.loc[libraries["residential_rank"].astype(int) == 50, "unitid"].iloc[0]) == 213367
     library_ids = set(libraries["unitid"].astype(int))
-    by_id = current.set_index(current["unitid"].astype(int))
+    by_id = _by_unitid(current)
 
     york = by_id.loc[214829]
     york_text = york["status_detail"] + " " + york["sold_listed_details"] + " " + york["source_url"]
@@ -829,6 +888,93 @@ def test_nov16_status_rows_leave_the_top_50_unchanged():
     assert 197230 not in library_ids
 
 
+def test_nov23_status_labels_and_prices():
+    """Nov 23 labels match the verified facts, and the published top 50 is unchanged."""
+    current = pd.read_csv(ROOT / "outputs" / "status_current.csv", dtype=str).fillna("")
+    libraries = pd.read_csv(ROOT / "outputs" / "top50_libraries.csv", dtype=str)
+    assert list(libraries["residential_rank"].astype(int)) == list(range(1, 51))
+    assert int(libraries.loc[libraries["residential_rank"].astype(int) == 50, "unitid"].iloc[0]) == 213367
+    assert int(libraries.loc[libraries["unitid"].astype(int) == 140720, "residential_rank"].iloc[0]) == 44
+    by_name = current.set_index(current["inst_name"])
+    by_id = current.set_index(current["unitid"].astype(str))
+
+    mansfield = by_name.loc["Commonwealth University of Pennsylvania - Mansfield campus"]
+    mansfield_text = mansfield["status_detail"] + " " + mansfield["source_url"] + " " + mansfield["status_badge"]
+    assert mansfield["status"] == "operating"
+    assert mansfield["unitid"] == ""
+    assert mansfield["sale_price_published"] == ""
+    assert mansfield["status_badge"] == "Open · Closure ordered by summer 2028 (PASSHE wind-down plan)"
+    assert "Nov 17, 2026" in mansfield_text
+    assert "Dec 8, 2026" in mansfield_text
+    assert "June 30, 2028" in mansfield_text
+    assert "Feb 10, 2027" in mansfield_text
+    assert "passhe-moves-to-close-commonwealth-universitys-mansfield-campus" in mansfield_text
+    assert "state-official-calls-for-plan-to-close-pa-university" in mansfield_text
+
+    bacone = by_id.loc["206817"]
+    bacone_text = " ".join(
+        bacone[["status_detail", "sold_listed_details", "source_url", "sale_price_published", "status_badge"]].astype(str)
+    )
+    assert bacone["status"] == "closed"
+    assert bacone["sale_price_published"] == ""
+    assert "final price is not published" in bacone_text.lower()
+    assert "$200,000" in bacone_text
+    assert "148-acre" in bacone_text
+    assert "Nov 18, 2026" in bacone_text
+    assert bacone["status_badge"] == "Closed · Campus sale court-approved (Oppenheimer Development Properties)"
+    assert "article_aac6baf7-8970-4b04-8342-5f72b6fc2443" in bacone_text
+
+    landing = by_id.loc["161208"]
+    assert landing["status_badge"] == "Closed · Building sale agreed (Biddeford Regional Center of Technology)"
+    assert landing["sale_price_published"] == ""
+
+    detroit = by_name.loc["M State Detroit Lakes campus"]
+    detroit_text = detroit["status_detail"] + " " + detroit["source_url"] + " " + detroit["status_badge"]
+    assert detroit["unitid"] == ""
+    assert detroit["status"] == "operating"
+    assert detroit["property_disposition"] == "not_applicable"
+    assert detroit["sale_price_published"] == ""
+    assert detroit["status_badge"] == "Open · Closure approved, open until at least summer 2028"
+    assert "Nov 18, 2026" in detroit_text
+    assert "no property disposition" in detroit_text.lower()
+    assert "m-state-detroit-lakes-campus-closure-approved" in detroit_text
+
+    limestone = by_id.loc["218238"]
+    lime = " ".join(limestone[["status_detail", "sold_listed_details", "status_badge", "source_url"]].astype(str))
+    assert limestone["status_badge"] == "Closed · Campus sale pending court confirmation (HTC Global Services)"
+    assert "confirmed" not in lime.lower()
+    assert "approved" not in lime.lower()
+    assert "Nov 12, 2026" in lime
+    assert "Nov 20, 2026" in lime
+
+    anna = by_id.loc["164492"]
+    assert anna["status_badge"] == "Closed · Campus for sale (Kelleher & Sadowsky)"
+    assert "$100K" in anna["status_detail"]
+    assert "Nov 16, 2026" in anna["status_detail"]
+
+    augustine = by_id.loc["199582"]
+    assert augustine["property_disposition"] == "no_sale_found"
+    assert "Jan 8, 2027" in augustine["status_detail"]
+
+    hampshire = by_id.loc["166018"]
+    hampshire_text = hampshire["status_detail"] + " " + hampshire["source_url"]
+    assert hampshire["status"] == "operating"
+    assert hampshire["buyer_or_broker"] == ""
+    assert "6-0" in hampshire_text
+    assert "Nov 18, 2026" in hampshire_text
+    assert "no buyer" in hampshire_text.lower()
+    assert "planning-board-rejects-moratorium-for-hampshire-college" in hampshire_text
+    assert 166018 not in set(libraries["unitid"].astype(int))
+
+    paine = by_id.loc["140720"]
+    assert paine["status"] == "operating"
+    assert paine["status_badge"] == "Open"
+    assert "Lester McCorn" in paine["status_detail"]
+    assert "Tywana Hemby" in paine["status_detail"]
+    assert "Nov 10, 2026" in paine["status_detail"]
+    assert "paine-college-president-lester-a-mccorn-resigns" in paine["source_url"]
+
+
 def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
     curated_src = (ROOT / "data" / "status" / "status_curated.csv").read_bytes()
     dest_dir = tmp_path / "data" / "status"
@@ -861,7 +1007,7 @@ def test_run_status_check_does_not_rewrite_the_curated_file(tmp_path):
     assert (tmp_path / "outputs" / "status_current.csv").exists()
     refresh = (tmp_path / "outputs" / "status_refresh.md").read_text(encoding="utf-8")
     assert "not modified" in refresh
-    curated_ids = set(pd.read_csv(curated_path, dtype=str)["unitid"].astype(int))
+    curated_ids = set(pd.to_numeric(pd.read_csv(curated_path, dtype=str)["unitid"], errors="coerce").dropna().astype(int))
     for _, row in table.iterrows():
         expected = "curated" if int(row["unitid"]) in curated_ids else ""
         assert row["property_source"] == expected

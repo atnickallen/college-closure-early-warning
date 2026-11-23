@@ -180,11 +180,14 @@ def test_committed_explanations_cover_the_residential_top_50():
     assert "16,504" in str(davenport["physical_books"])
     assert "2021" in str(davenport["physical_books_source"])
     status = pd.read_csv(root / "outputs" / "status_current.csv")
-    assert set(libraries["unitid"].astype(int)) <= set(status["unitid"].astype(int))
-    top_status = status[status["unitid"].astype(int).isin(set(libraries["unitid"].astype(int)))]
+    status_ids = set(pd.to_numeric(status["unitid"], errors="coerce").dropna().astype(int))
+    assert set(libraries["unitid"].astype(int)) <= status_ids
+    top_status = status[pd.to_numeric(status["unitid"], errors="coerce").isin(set(libraries["unitid"].astype(int)))]
     webster = top_status[top_status["unitid"].astype(int) == 179894]
-    rest = top_status[top_status["unitid"].astype(int) != 179894]
+    paine = top_status[top_status["unitid"].astype(int) == 140720]
+    rest = top_status[~top_status["unitid"].astype(int).isin({179894, 140720})]
     assert webster["checked_at"].astype(str).str.startswith("2026-10-26").all()
+    assert paine["checked_at"].astype(str).str.startswith("2026-11-23").all()
     assert rest["checked_at"].astype(str).str.startswith("2026-10-19").all()
     assert top_status["source_url"].astype(str).str.contains("http").all()
     assert "$52.5M" in page
